@@ -68,6 +68,12 @@ const KNOWN_ROUTES: KnownRouteSource[] = [
         note: 'the Rock sokobridge_v4 frees is pushed off the ledge and lands as a stair up to the level',
     },
     {
+        id: 'elevator_cyan_rock_bridge',
+        to: { level: 'elevator_cyan' },
+        needs: [[{ level: 'sokobridge_v4' }]],
+        note: 'the Rock sokobridge_v4 frees is pushed west along the z 35 ledge the elevator rises to, and drops into the gap at x 39 as a bridge to the level',
+    },
+    {
         id: 'double_the_fun_gem_step',
         to: { level: 'double_the_fun' },
         needs: [[{ level: 'taking_the_lift' }]],
