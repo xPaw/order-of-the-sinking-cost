@@ -86,18 +86,6 @@ const KNOWN_ROUTES: KnownRouteSource[] = [
         note: 'the Gem landmines_v3 frees goes onto its Gem_Slot; the lights it powers open the way down to the level',
     },
     {
-        id: 'all_together_now_cup',
-        to: { level: 'all_together_now' },
-        needs: [
-            [{ level: 'chart_a_course' }],
-            [{ freezer: 95568981 }],
-            [{ freezer: 95568982 }],
-            [{ freezer: 95568983 }],
-            [{ freezer: 95568984 }],
-        ],
-        note: 'from the end2 room, which the sky hub Freezers open: the vertical magic Mirror and the Rock chart_a_course frees are pushed east, and the Rock in the corner cup bridges the deck to the level',
-    },
-    {
         id: 'mirror_falling_cage_pad',
         to: { pid: 115497407 },
         needs: [[{ level: 'cliff_hopping' }]],
