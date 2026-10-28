@@ -80,6 +80,7 @@ export interface GoalsViewInput {
 export interface GoalsView {
     goals: GoalView[];
     goalLevels: (goal: GoalView) => GoalLevel[];
+    goalLevelsFogged: (goal: GoalView) => boolean;
     goalSolved: (goal: GoalView) => number[];
     goalByKey: (key: string) => GoalView | null;
     goalFor: (key: string) => GoalView | null;
@@ -280,6 +281,15 @@ function goalLevelsOf(context: GoalsContext, goal: GoalView): GoalLevel[] {
         leadsTo: leadsTo(context, goal, level),
         onPlan: !onPlan || onPlan.has(level),
     }));
+}
+
+// whether fog hides an unsolved level that serves the goal
+function goalLevelsFoggedOf(context: GoalsContext, goal: GoalView): boolean {
+    const { progress } = context;
+    for (const level of levelsOf(context, goal)) {
+        if (progress.state[level] !== 'solved' && progress.hidden[level]) return true;
+    }
+    return false;
 }
 
 // the solved levels not under fog in a goal's scope: a tower's or an achievement's own levels, every one for the rest
@@ -608,6 +618,7 @@ function ladderOf(context: GoalsContext): GoalView[] {
  *   achievements, the children not under fog;
  * - goalLevels(goal): the unsolved levels not under fog that serve the goal, in list order, each with its group
  *   (levelGroup), its role for the goal, what it leads to and whether it is on the goal's cheapest plans;
+ * - goalLevelsFogged(goal): whether fog hides more of those levels;
  * - goalSolved(goal): the solved levels not under fog in the goal's scope;
  * - goalByKey(key) and goalFor(key): a goal by key, and the one the page shows (that one, else the active one).
  * Nothing under fog is named or counted: the endings are listed by their achievements' names, each once the one before
@@ -635,6 +646,7 @@ export function goalsView(view: GoalsViewInput): GoalsView {
     return {
         goals,
         goalLevels: (goal) => goalLevelsOf(context, goal),
+        goalLevelsFogged: (goal) => goalLevelsFoggedOf(context, goal),
         goalSolved: (goal) => goalSolvedOf(context, goal),
         goalByKey,
         goalFor,

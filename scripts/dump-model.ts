@@ -332,6 +332,7 @@ function modelDump(modules: Modules, camp: string, spoilersHidden: boolean): Can
         model: toPlain(rest),
         goalFor: M.goalFor('')?.key ?? null,
         goalLevels: goals.map((goal) => ({ key: goal.key, levels: toPlain(M.goalLevels(goal)) })),
+        goalLevelsFogged: goals.map((goal) => ({ key: goal.key, fogged: M.goalLevelsFogged(goal) })),
         goalSolved: goals.map((goal) => ({ key: goal.key, levels: M.goalSolved(goal) })),
         roles: goals.map((goal) => rolesOf(modules, goal)),
         orderNextSteps: nextStepOrders(modules, M, goals),

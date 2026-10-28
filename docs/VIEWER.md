@@ -1019,8 +1019,9 @@ gathers its unfinished children's; Completionist takes every level. Each level c
   follows, N counting the routes not under fog, or " · one of several routes" when fewer than 2 show. Under
   Completionist it is the Next steps label ([Next steps](#next-steps)).
 
-They are listed in the Next steps order. `goalSolved(goal)`: the solved levels not under fog in the goal's scope (a
-tower's or an achievement's own levels, every level for the rest). The page shows the goal picked, else the active
+They are listed in the Next steps order. `goalLevelsFogged(goal)`: whether fog hides an unsolved level that serves the
+goal. `goalSolved(goal)`: the solved levels not under fog in the goal's scope (a tower's or an achievement's own
+levels, every level for the rest). The page shows the goal picked, else the active
 one, else the last.
 
 ## Goal roles (viewer)
@@ -1161,6 +1162,8 @@ layer; a row names its layer only when it is not the one the map shows.
   whatever the goal, toggle and chips say, by name. A row is the pad icon, name, area and its layer when it is not the
   map's; the heading reads "N levels" and has no toggle. The map shows those levels alone. Clearing the box returns to
   the goal's list as it was.
+- "More levels under fog" closes the list while fog hides an unsolved level that serves the goal
+  (`goalLevelsFogged`), or, in a search, any level; never under Solved.
 - Groups (To do), each with its count: Play now, Not reachable yet, Locked; Solved lists the solved. Within a group the
   levels Required as one of several and off the goal's cheapest plans go last.
 - Ice cages your rank opens (To do, below the level groups, for the ending being worked toward only): the closed ice

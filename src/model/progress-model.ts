@@ -54,6 +54,7 @@ export interface ProgressModel {
     endings: EndingStatus[];
     goals: GoalView[];
     goalLevels: (goal: GoalView) => GoalLevel[];
+    goalLevelsFogged: (goal: GoalView) => boolean;
     goalSolved: (goal: GoalView) => number[];
     goalByKey: (key: string) => GoalView | null;
     goalFor: (key: string) => GoalView | null;
@@ -302,6 +303,7 @@ export function progressModel(camp: string): ProgressModel {
         endings,
         goals: goalView.goals,
         goalLevels: goalView.goalLevels,
+        goalLevelsFogged: goalView.goalLevelsFogged,
         goalSolved: goalView.goalSolved,
         goalByKey: goalView.goalByKey,
         goalFor: goalView.goalFor,

@@ -227,8 +227,16 @@ function drawGoalList(context: PanelContext): void {
         cages = rankCageGroupHtml(context, !rows);
     }
 
+    // a search lists every level, so any level under fog is more; the goal's list counts its own levels only
+    let moreFogged = false;
+    if (context.searching()) {
+        moreFogged = context.model.hiddenLevelCount > 0;
+    } else if (context.goal && !context.filters.solved) {
+        moreFogged = context.model.goalLevelsFogged(context.goal);
+    }
+
     let foot = '';
-    if (context.model.hiddenLevelCount) foot = `<div class="foot muted">More levels under fog</div>`;
+    if (moreFogged) foot = `<div class="foot muted">More levels under fog</div>`;
 
     $('#pgRows').innerHTML = (rows || emptyHtml(context)) + cages + foot;
     $('#pgCount').innerHTML = countHtml(context);
