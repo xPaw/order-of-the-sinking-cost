@@ -849,7 +849,7 @@ positions ([Endings](PROGRESSION.md#endings)):
   ([Second Endgame](PROGRESSION.md#second-endgame)), all four needed together (an AND), besides the walk's way in, so
   the walk's pockets inside the room stay. Where the walk finds no way in, the four are the way in. Gates already open
   are left out.
-- `all_together_now`: the set's gates above the room, in place of the walk's.
+- `all_together_now`: every gate the set's other levels open, all needed together (an AND).
 - The `endgame3` levels: one chain in set order, in place of the walk's. A level sits behind the gates opened only by
   levels before it in the set (the latest of those), leaving out a gate whose levels need the level itself. The first
   room has none, so it needs the way into the underworld.

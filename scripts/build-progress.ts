@@ -402,7 +402,8 @@ function assignSets(levelData: LevelsFile, levels: ProgressLevel[]): LevelSet[] 
 // than filling in for none. The gates of a replace 1 row are alternatives; those of a replace 0 row are all needed.
 // - The level that earns ENDGAME1 stands inside the gates of the gold room Sign.
 // - The endgame2 room is entered from below, through the gates of the sky towers' Signs under it (inside the x, y span
-//   of its levels), all of them; the level that earns ENDGAME2 lies above the room, behind the set's gates higher than the room.
+//   of its levels), all of them; the level that earns ENDGAME2 lies above the room, behind every gate the set's other
+//   levels open.
 // - The endgame3 rooms form one chain in set order: a level lies behind the gates opened only by levels before it in
 //   the set (the latest of those), leaving out a gate whose levels need the level itself; the first room has none.
 function buildEndgameWayIns(
@@ -449,8 +450,8 @@ function buildEndgameWayIns(
         }
         for (const i of floor) rows.push([i, lift.toSorted((a, b) => a - b), 0]);
         if (high !== undefined) {
-            const above = setGates(room).filter((fi) => freezers[fi].p[2] > roomZ && !freezers[fi].req.includes(high));
-            rows.push([high, above, 1]);
+            const below = setGates(room).filter((fi) => !freezers[fi].req.includes(high));
+            rows.push([high, below, 0]);
         }
     }
 

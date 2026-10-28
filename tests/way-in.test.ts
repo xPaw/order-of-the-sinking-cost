@@ -52,9 +52,21 @@ test("the end2 room's levels also need all four hub Freezers, one per sky tower"
 
     expect(skyGates).toHaveLength(4);
     expect(progress.wayInAll!.size).toBeGreaterThan(0);
-    for (const gates of progress.wayInAll!.values()) {
+    for (const [level, gates] of progress.wayInAll!) {
+        if (PROG.levels[level].a === 'ENDGAME2') continue;
         expect(gates.toSorted()).toEqual(skyGates.toSorted());
     }
+});
+
+test('all_together_now needs every Freezer the end2 room opens', () => {
+    const high = PROG.levels.findIndex((level) => level.n === 'all_together_now');
+    const gates = progress.wayInAll!.get(high)!;
+    const openers = new Set(gates.flatMap((gate) => PROG.freezers[gate].req.map((level) => PROG.levels[level].n)));
+
+    expect(openers).toContain('laser_pointer');
+    expect(openers).toContain('floor_plan_v3');
+    expect(openers).toContain('stone_economy');
+    expect(openers).not.toContain('all_together_now');
 });
 
 test('each sky tower hub Sign of a fresh campaign needs its Way', () => {
