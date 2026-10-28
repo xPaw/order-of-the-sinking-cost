@@ -56,6 +56,8 @@ export interface BaseProgress {
     signOk: (rule: SignRule) => boolean;
     /** Whether the hero has read a Sign (by pid); the Freezers it opens open only then. */
     signRead: (pid: number) => boolean;
+    /** Whether the save has smashed a Rock (by pid). */
+    rockSmashed: (pid: number) => boolean;
     /** Per Sign, the layer the walk reaches nowhere that a hero must get onto to read it; null for the others. */
     signAccess: Array<string | null>;
     /** Per Sign the hero cannot face yet, the closed Freezers whose opening lets the walk face it. */
@@ -170,7 +172,8 @@ export function computeProgress(status: ProgressStatus, history: History | null)
     const signOk = (rule: SignRule) => signRuleMet(rule, status, towers, goldFound);
     const signRead = (pid: number) => latestFlag(latest, pid, 'rank_satisfied');
     const gateOpen = freezersOpen(status, levelFlags, signRead);
-    const routes = metRoutes({ levelSolved: solved, freezerOpen: (index) => gateOpen[index], signRead });
+    const rockSmashed = (pid: number) => !!latest?.created.get(pid)?.destroyed;
+    const routes = metRoutes({ levelSolved: solved, freezerOpen: (index) => gateOpen[index], signRead, rockSmashed });
     const reach = reachOf(history, latest, teleporterStates, gateOpen, levelFlags, routes);
     const state = levelStates(levelFlags, reach);
     const unlocks = unlocksOf();
@@ -196,6 +199,7 @@ export function computeProgress(status: ProgressStatus, history: History | null)
         goldFound,
         signOk,
         signRead,
+        rockSmashed,
         signAccess: signAccessOf(reach),
         signWayIn: signWayInOf(reach, gateOpen),
         reach,

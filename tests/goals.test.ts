@@ -136,6 +136,7 @@ function setup({ rooms = 3, achievements = 0n, activated = [], visited = [] }: S
         signOk,
         // a Sign counts as read once its rule holds
         signRead: (pid: number) => signOk(PROG.signs.find((sign) => sign.pid === pid) ?? {}),
+        rockSmashed: () => false,
         solved: 0,
         hidden: state.map(() => false),
         towerHidden: towers.map(() => false),

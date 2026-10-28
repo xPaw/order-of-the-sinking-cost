@@ -166,6 +166,7 @@ export function requirementGraph(progress: BaseProgress): Graph {
         levelSolved: (level) => progress.state[level] === 'solved',
         freezerOpen: (freezerIndex) => progress.gateOpen[freezerIndex],
         signRead: progress.signRead,
+        rockSmashed: progress.rockSmashed,
     };
     const wayOfTower = new Map<number, number>();
     const wayOfRoute = new Map<KnownRoute, number>();
@@ -251,9 +252,10 @@ export function requirementGraph(progress: BaseProgress): Graph {
     (PROG.signs || []).forEach((sign, signIndex) => signId(sign, null, signIndex));
 
     // what a known route still asks for: each group of its needs not met yet, the need itself or an OR of the group's
-    const needId = (need: RouteNeed): number => {
+    const needId = (need: RouteNeed): number | undefined => {
         if ('level' in need) return levelId[need.level];
         if ('freezer' in need) return gateId[need.freezer];
+        if ('rock' in need) return undefined;
         return signIds.get('s' + need.sign)!;
     };
     const routeParts = (route: KnownRoute): number[] => {
@@ -261,8 +263,12 @@ export function requirementGraph(progress: BaseProgress): Graph {
         route.needs.forEach((group, groupIndex) => {
             if (group.some((need) => needMet(need, needsView))) return;
 
-            // an empty group is a need that is not known: there is nothing to plan
-            const members = group.map(needId);
+            // an empty group is a need that is not known, and a Rock to smash has no step: there is nothing to plan
+            const members: number[] = [];
+            for (const need of group) {
+                const id = needId(need);
+                if (id !== undefined) members.push(id);
+            }
             if (members.length === 0) return;
             if (members.length === 1) {
                 parts.push(members[0]);
@@ -276,6 +282,14 @@ export function requirementGraph(progress: BaseProgress): Graph {
     // a sky Way asks for its route's needs unless its quarter is reached
     for (const [route, wayId] of wayOfRoute) {
         if (!graph.met[wayId]) graph.parts[wayId] = routeParts(route);
+    }
+
+    // the way onto a layer the walk reaches nowhere also asks for the needs of the routes that lead onto it
+    for (const route of PROG.known_routes || []) {
+        if (route.onto === undefined) continue;
+
+        const layerId = accessId(route.onto);
+        if (!graph.met[layerId]) graph.parts[layerId].push(...routeParts(route));
     }
 
     // a route to a level whose needs are not met yet is one more way in to it

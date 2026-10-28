@@ -7,12 +7,14 @@ export interface NeedsView {
     levelSolved: (level: number) => boolean;
     freezerOpen: (freezer: number) => boolean;
     signRead: (pid: number) => boolean;
+    rockSmashed: (pid: number) => boolean;
 }
 
 /** Whether a save meets one need of a route. */
 export function needMet(need: RouteNeed, view: NeedsView): boolean {
     if ('level' in need) return view.levelSolved(need.level);
     if ('freezer' in need) return view.freezerOpen(need.freezer);
+    if ('rock' in need) return view.rockSmashed(need.rock);
     return view.signRead(PROG.signs[need.sign].pid);
 }
 

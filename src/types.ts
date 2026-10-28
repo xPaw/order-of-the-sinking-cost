@@ -203,7 +203,7 @@ export interface ProgressMap {
 export type EndgameWayIn = [level: number, freezers: number[], replace: number];
 
 /** What a known route asks for: a level solved, a Freezer open or a Sign read, by index into `levels`, `freezers`, `signs`. */
-export type RouteNeed = { level: number } | { freezer: number } | { sign: number };
+export type RouteNeed = { level: number } | { freezer: number } | { sign: number } | { rock: number };
 
 /** Where a known route takes the hero: a level's entrance, a teleporter (index into `teleporters`), or a position. */
 export type RouteTarget = { level: number } | { pad: number } | { at: Position };
@@ -212,7 +212,7 @@ export type RouteTarget = { level: number } | { pad: number } | { at: Position }
  * One row of data/progress.json `known_routes`: a route the walk does not find, written by hand. With every group of
  * `needs` met (all of the groups needed, one of the needs inside a group) the hero reaches `to`. `area` and `tower` mark a
  * sky Way: the sky Way area (index into `areas`) that leads to the hub quarter of the sky tower (index into `towers`)
- * whose hub pad `to` is.
+ * whose hub pad `to` is. `onto` (sky or underworld) marks the way onto that layer, which then asks for the route's needs.
  */
 export interface KnownRoute {
     id: string;
@@ -220,6 +220,7 @@ export interface KnownRoute {
     needs: RouteNeed[][];
     area?: number;
     tower?: number;
+    onto?: string;
 }
 
 /**

@@ -861,6 +861,7 @@ describe('unlock plans through cycles', () => {
             towers: [],
             signOk: () => true,
             signRead: () => true,
+            rockSmashed: () => false,
         };
     };
     test('a plan does not run through the key it is the plan of', () => {

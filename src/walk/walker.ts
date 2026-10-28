@@ -461,7 +461,7 @@ export function buildWalkGrid(
     placeWater(walkGrid);
 
     placePads(walkGrid);
-    placeElevators(walkGrid, unmovedRocks);
+    placeElevators(walkGrid);
     placeWardrobes(walkGrid);
     placeAttacks(walkGrid);
 

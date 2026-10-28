@@ -114,7 +114,7 @@ After the four sides:
 9. TELEPORT swaps from k, layer 2 only. Along each side, at k's z, the line wraps (inside the fast-travel box at map-room z) and crosses water and air. It steps by the hero's powered move from k, as step 2 gives it: the jump to the endpoint (to the midpoint in an ALTER beam) in an ENDPOINT beam parallel to the press, else 2ⁿ cells (3ⁿ with ALTER) in n DOUBLE beams, else one cell; it tests only the cells at multiples of that distance and skips the ones between, and a move with no landing has no line. With the powers a flood's pushes laid down, he swaps with those too. It ends at the first target, an existing Rock, a living Monster, a movable other than a Mirror, or a Mirror the line meets on its back or a closed side: the hero lands in its cell, then falls as in step 8, in layer 2. A Mirror's open sides come from its latest `theta_target`, else the level data's (`world.mirror_facings`): a flat one has two, a vertical one a single horizontal side ([Mirrors turning fire and beams](MOVEMENT.md#mirrors-turning-fire-and-beams)). It ends with no swap at a blocked cell (a solid voxel outside a THROUGH beam, a Tree, Sign, Treasure_Display or Judge, a shut Gate, a closed Freezer), a Mirror met on an open side (the line turns there; its turn is not modelled), a Wardrobe door edge, or back at k. The target lands in k (Swapped targets, below).
 10. Magic-mirror hops from k, also in walks on foot: each landing cell of k ([Magic-mirror hops](#magic-mirror-hops)) that is not blocked, reached by the fall of step 8, in layer p; for a cell between two facing Mirrors, both landings of a pair when neither is blocked.
 11. Travel from k (skipped by walks "on foot"):
-   - an elevator frame cell reaches the far frame cell if it is not blocked (per `world.elevators` mask: bit 1 bottom → top, bit 2 top → bottom). The mask is the one for the Rocks still resting on the platform: those of the stack that exist at their level-data cells, none, one or two or more; a Rock the save destroyed or moved off no longer counts;
+   - an elevator frame cell reaches the far frame cell if it is not blocked (per `world.elevators` mask: bit 1 bottom → top, bit 2 top → bottom). The mask is the one for the Rocks still resting on the platform: those of the stack that exist in their level-data column, none, one or two or more; a Rock the save destroyed or moved off no longer counts, while one that fell when a Rock below it was smashed still does;
    - a pad in k or the cell below, enabled: a MINOR pad reaches its target pad's landing cell, or for a Marker target (`to`) a search down from the Marker's cell inside its ground layer (no fall cap): a blocked cell or water deeper than 0.1 ends it with no landing; an attacked cell ends it, with the hero standing there in layer 1 (support not needed) and nowhere in layer 0; else the first open cell. A trip enables the target pad for the rest of the flood, as discovering the sending pad does in the game ([Teleporter pads and fast travel](MOVEMENT.md#teleporter-pads-and-fast-travel)): a MINOR pad that the save leaves disabled sends the hero on once a trip has brought him to it, and a hero already standing on it from earlier in the flood takes it then. A target held by a closed Freezer stays disabled, since the hero stays on his pad;
    - a discovered, enabled, existing MAJOR pad reaches every other such MAJOR pad (once per layer);
    - an enabled MAJOR pad also reaches the world pads its discovery reveals ([Pads revealed through the map rooms](#pads-revealed-through-the-map-rooms)).
@@ -863,11 +863,14 @@ routes the walk does not find. The walk keeps handling ordinary movement; a row 
 cannot model, and everything past the row's target works as usual. A row has:
 
 - `needs`: what the hero has to have done, all of the groups, one need of a group. A need is a level solved, a Freezer
-  open or a Sign read. A group with no need is one nobody knows yet; nothing meets it, so the walk never takes the row
-  and the plans show the row's step with nothing before it. A row with no group needs nothing.
+  open, a Sign read or a Rock smashed (the save has destroyed it). A group with no need is one nobody knows yet; nothing
+  meets it, so the walk never takes the row and the plans show the row's step with nothing before it. A Rock to smash
+  is no step in the plans either. A row with no group needs nothing.
 - `to`: where the hero lands: the entrance of a level, a teleporter pad, or the cell of another overworld entity (a
   Sign, a Level_Entry).
 - `area` and `tower`, for a sky Way only: the Way area, and the sky tower whose hub quarter it leads to.
+- `onto` (sky or underworld), for the way onto a layer: while the walk reaches nothing on that layer, the step onto it
+  (the way down to Low) asks for the row's needs too.
 
 A row names things by level name, area name and entity id; the build resolves them to indices and a missing one fails
 the build. Rows are added from a player's save history, a trace of the level data or the player's own account of the
@@ -986,7 +989,9 @@ fog; `goalsView()` adds the labels, counts and lists with fog applied.
     named by their areas ([Known routes](#known-routes)) and listed whenever their towers are; the sky hub, which
     holds the end2 room's `laser_pointer` and `all_together_now` (`all_together_now` solved; shown also once one of
     the four hub pads is discovered).
-  - Endgame Low, in this order: the underworld crossroads (DESCEND earned); the underworld hub (its MAJOR pad
+  - Endgame Low, in this order: the underworld crossroads (DESCEND earned); the six Low towers in their achievements'
+    order (tower active), each an achievement of its own, and an active one's pad the way into the underworld hub;
+    the underworld hub (its MAJOR pad
     discovered; shown also then); the eight end3 rooms of the set in their order, named by their first levels in the
     set (`allocate_heroes_end3`, `design_corner`, `river_exploit_v2`, `simplify_wizard`, `end2_mirror1`,
     `end3_off_topic_alt`, `environment_art_grid`, `end3_pipeline_setup`), each done when its exit Freezer is open

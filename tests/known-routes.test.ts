@@ -87,10 +87,11 @@ describe('a known route in the walk', () => {
 
 describe('the needs of a known route', () => {
     const routeWith = (needs: KnownRoute['needs']): KnownRoute => ({ id: 'r', to: { level: 2 }, needs });
-    const view = (solved: number[], open: number[] = [], read: number[] = []): NeedsView => ({
+    const view = (solved: number[], open: number[] = [], read: number[] = [], smashed: number[] = []): NeedsView => ({
         levelSolved: (level) => solved.includes(level),
         freezerOpen: (freezer) => open.includes(freezer),
         signRead: (pid) => read.includes(pid),
+        rockSmashed: (pid) => smashed.includes(pid),
     });
 
     test('every group needs one of its needs', () => {
@@ -105,6 +106,12 @@ describe('the needs of a known route', () => {
         expect(routeMet(route, view([], [4], []))).toBe(false);
         expect(routeMet(route, view([], [], [90]))).toBe(false);
         expect(routeMet(route, view([], [4], [90]))).toBe(true);
+    });
+
+    test('a Rock needs to be smashed', () => {
+        const route = routeWith([[{ level: 0 }], [{ rock: 7 }]]);
+        expect(routeMet(route, view([0]))).toBe(false);
+        expect(routeMet(route, view([0], [], [], [7]))).toBe(true);
     });
 
     test('a group with no need is one nothing meets', () => {

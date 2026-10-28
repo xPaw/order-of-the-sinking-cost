@@ -82,6 +82,7 @@ function progress({ state, wayIn = [], towers = [], rank = 0, extra = {} }: Prog
         signOk,
         // a Sign counts as read once its rule holds
         signRead: (pid: number) => signOk(ruleOf(pid)),
+        rockSmashed: () => false,
         needed: [],
         ...extra,
     };

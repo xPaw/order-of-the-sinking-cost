@@ -163,6 +163,7 @@ function setup({
         goldFound: 0,
         signOk,
         signRead: () => false,
+        rockSmashed: () => false,
         solved: 0,
         hidden: state.map(() => false),
         towerHidden: towers.map(() => false),

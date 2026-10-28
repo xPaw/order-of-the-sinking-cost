@@ -50,8 +50,6 @@ interface TowerSection {
     html: string;
     towerIndex: number;
     tower: TowerProgress | null;
-    required: number[];
-    dropdowns: number[];
 }
 
 /** What the map's selection for a level is built from. */
@@ -166,15 +164,8 @@ function whyHtml(context: PanelContext, levelIndex: number, behind: number[], ic
     return `<div class="muted">${escapeHtml(text[0].toUpperCase() + text.slice(1))}</div>`;
 }
 
-// a tower level also lists what its tower still needs
-function towerHtml(
-    context: PanelContext,
-    levelIndex: number,
-    towerIndex: number,
-    tower: TowerProgress,
-    required: number[],
-    dropdowns: number[],
-): string {
+// a tower level names its tower and how far along it is; the tower's own panel lists its levels
+function towerHtml(context: PanelContext, levelIndex: number, towerIndex: number, tower: TowerProgress): string {
     const level = context.levels[levelIndex];
     const shownLevels = tower.normal.filter((towerLevel) => !context.progress.hidden[towerLevel]).length;
     let count = towerLevelCount(tower, shownLevels);
@@ -185,10 +176,7 @@ function towerHtml(
 
     const name = towerEmblemHtml(tower) + escapeHtml(towerName(tower.t));
     const towerButton = `<button class="plain lnk" data-ptower="${towerIndex}">${name}</button>`;
-    let html = `<div class="h">${towerButton}${dropdownNote} · ${count}</div>`;
-    if (required.length) html += `<div class="hs">Required</div><div>${pick(context, required)}</div>`;
-    if (dropdowns.length) html += `<div class="hs">Dropdowns</div><div>${pick(context, dropdowns)}</div>`;
-    return html;
+    return `<div class="h">${towerButton}${dropdownNote} · ${count}</div>`;
 }
 
 // the other towers this level brings closer to done
@@ -209,27 +197,18 @@ function countsTowardHtml(context: PanelContext, levelIndex: number, towerIndex:
     return `<div class="h">Counts toward</div><div>${chips.join('')}</div>`;
 }
 
-// the level's tower with the levels it still needs, then the other towers the level counts toward
+// the level's tower, then the other towers the level counts toward
 function towerSection(context: PanelContext, levelIndex: number): TowerSection {
     const progress = context.progress;
     const towerIndex = context.towerOf(levelIndex);
     let tower: TowerProgress | null = null;
     if (towerIndex >= 0 && !progress.towerHidden[towerIndex]) tower = progress.towers[towerIndex];
 
-    const left = (levels: number[]): number[] =>
-        levels.filter((other) => other !== levelIndex && progress.state[other] !== 'solved' && !progress.hidden[other]);
-
     let html = '';
-    let required: number[] = [];
-    let dropdowns: number[] = [];
-    if (tower) {
-        required = left(tower.normal);
-        dropdowns = left(tower.drop).filter((dropdown) => !progress.hidden[dropdown]);
-        html += towerHtml(context, levelIndex, towerIndex, tower, required, dropdowns);
-    }
+    if (tower) html += towerHtml(context, levelIndex, towerIndex, tower);
 
     html += countsTowardHtml(context, levelIndex, towerIndex);
-    return { html, towerIndex, tower, required, dropdowns };
+    return { html, towerIndex, tower };
 }
 
 function requiresHtml(context: PanelContext, level: ProgressLevel): string {
@@ -294,12 +273,12 @@ function levelLinks(context: PanelContext, parts: LevelPanelParts): MapLink[] {
     ]);
 }
 
-// what the map highlights for the level: its requirements, unlocks, tower levels, gates and chain
+// what the map highlights for the level: its requirements, unlocks, tower, gates and chain
 function levelSelection(context: PanelContext, parts: LevelPanelParts): MapSelection {
     const { levelIndex, html, chain, gates, unlockedGates, towerInfo } = parts;
     const level = context.levels[levelIndex];
     const unlocks = context.progress.unlocks[levelIndex];
-    const { tower, towerIndex, required, dropdowns } = towerInfo;
+    const { tower, towerIndex } = towerInfo;
 
     const gateLevels = gates.flatMap((freezer) => freezer.req);
     let selectedTower: number | undefined;
@@ -313,8 +292,6 @@ function levelSelection(context: PanelContext, parts: LevelPanelParts): MapSelec
             levelIndex,
             ...level.req,
             ...unlocks.levels,
-            ...required,
-            ...dropdowns,
             ...gateLevels,
             ...chain.levels,
         ]),

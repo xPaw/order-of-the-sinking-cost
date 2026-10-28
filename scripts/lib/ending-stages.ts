@@ -109,6 +109,31 @@ const ENDING_SOURCES: EndingSource[] = [
                 name: { area: 'area_u_crossroads_low' },
                 done: { rule: 'achievement', name: 'DESCEND' },
             },
+            // the Low towers, each its own achievement; an active one's pad leads into the underworld hub
+            {
+                name: { tower: ['HEROES', 'MIRRORS', 'DOWNSTAIRS'] },
+                done: { rule: 'tower', tower: ['HEROES', 'MIRRORS', 'DOWNSTAIRS'] },
+            },
+            {
+                name: { tower: ['HEROES', 'SKIPPING', 'DOWNSTAIRS'] },
+                done: { rule: 'tower', tower: ['HEROES', 'SKIPPING', 'DOWNSTAIRS'] },
+            },
+            {
+                name: { tower: ['HEROES', 'PROMESST', 'DOWNSTAIRS'] },
+                done: { rule: 'tower', tower: ['HEROES', 'PROMESST', 'DOWNSTAIRS'] },
+            },
+            {
+                name: { tower: ['MIRRORS', 'SKIPPING', 'DOWNSTAIRS'] },
+                done: { rule: 'tower', tower: ['MIRRORS', 'SKIPPING', 'DOWNSTAIRS'] },
+            },
+            {
+                name: { tower: ['MIRRORS', 'PROMESST', 'DOWNSTAIRS'] },
+                done: { rule: 'tower', tower: ['MIRRORS', 'PROMESST', 'DOWNSTAIRS'] },
+            },
+            {
+                name: { tower: ['SKIPPING', 'PROMESST', 'DOWNSTAIRS'] },
+                done: { rule: 'tower', tower: ['SKIPPING', 'PROMESST', 'DOWNSTAIRS'] },
+            },
             {
                 name: { area: 'area_u_antipode_low' },
                 done: { rule: 'pads', pads: [LOW_HUB_MAJOR_PAD] },

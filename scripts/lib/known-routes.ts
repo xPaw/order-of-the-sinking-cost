@@ -12,15 +12,16 @@ import type {
     Teleporter,
 } from '../../src/types.ts';
 
-type NeedSource = { level: string } | { freezer: number } | { sign: number };
+type NeedSource = { level: string } | { freezer: number } | { sign: number } | { rock: number };
 type TargetSource = { level: string } | { pid: number };
 
 /**
  * One row of the table. `needs`: all of the groups, one of the needs inside a group; a need is a level (by name)
- * solved, a Freezer (by pid) open or a Sign (by pid) read. An empty group is a need that is not known: nothing meets
+ * solved, a Freezer (by pid) open, a Sign (by pid) read or a Rock (by pid) smashed. An empty group is a need that is not known: nothing meets
  * it. `to`: the level (by name) whose entrance the hero reaches, or the overworld entity (by pid) whose cell he
  * reaches. `area` and `tower` (a tower flag name such as HEROES) mark a sky Way: the Way area (by local area name) that
- * leads to the hub quarter of the sky tower, whose hub pad is `to`.
+ * leads to the hub quarter of the sky tower, whose hub pad is `to`. `onto` (sky or underworld) marks the way onto that
+ * layer, which then asks for the route's needs too.
  */
 interface KnownRouteSource {
     id: string;
@@ -28,6 +29,7 @@ interface KnownRouteSource {
     needs: NeedSource[][];
     area?: string;
     tower?: string;
+    onto?: string;
     note?: string;
 }
 
@@ -273,8 +275,21 @@ const KNOWN_ROUTES: KnownRouteSource[] = [
     {
         id: 'push_down_chain_ride',
         to: { level: 'push_down_chain' },
-        needs: [[{ level: 'promesst2.5_deeper' }]],
-        note: 'the light promesst2.5_deeper frees smashes the Rock stack on the elevator, which then carries the hero down to the level',
+        needs: [
+            [{ level: 'promesst2.5_deeper' }],
+            [{ level: 'taking_the_lift' }],
+            [{ level: 'drop_sokoban' }],
+            [{ level: 'under_pressure' }],
+            [{ level: 'strong_monsters_v2' }],
+            [{ level: 'stay_lit' }],
+            [{ level: 'bridgey3_abstract_art' }],
+            [{ level: 'overwrite' }],
+            [{ rock: 62941709 }],
+            [{ rock: 62941723 }],
+            [{ rock: 111153054 }],
+        ],
+        onto: 'underworld',
+        note: 'the elevator carries the hero down to the level once all three Rocks of its stack are smashed: Rubble smashed in both the SMASH and the ALTER beam smashes every Rock of its kind in the room; on the way the red Gem is moved across the sky through the Freezers of taking_the_lift, drop_sokoban, bridgey3_abstract_art, overwrite and the Strength levels',
     },
     {
         id: 'pass_through_v2_same_z_cage',
@@ -325,6 +340,8 @@ export interface RouteData {
     skyTower: (flagName: string) => number | undefined;
     /** The position of the overworld entity with this pid. */
     positionOf: (pid: number) => Position | undefined;
+    /** Whether the overworld has a Rock with this pid. */
+    isRock: (pid: number) => boolean;
 }
 
 function indexOrThrow(index: number, what: string): number {
@@ -341,6 +358,11 @@ function resolveNeed(source: NeedSource, data: RouteData): RouteNeed {
     if ('freezer' in source) {
         const freezer = data.freezers.findIndex((candidate) => candidate.pid === source.freezer);
         return { freezer: indexOrThrow(freezer, `Freezer ${source.freezer}`) };
+    }
+
+    if ('rock' in source) {
+        if (!data.isRock(source.rock)) throw new Error(`known_routes: no Rock ${source.rock}`);
+        return { rock: source.rock };
     }
 
     const sign = data.signs.findIndex((candidate) => candidate.pid === source.sign);
@@ -377,6 +399,13 @@ function resolveRoute(source: KnownRouteSource, data: RouteData): KnownRoute {
         const tower = data.skyTower(source.tower);
         if (tower === undefined) throw new Error(`known_routes: no sky tower ${source.tower}`);
         route.tower = tower;
+    }
+
+    if (source.onto !== undefined) {
+        if (source.onto !== 'sky' && source.onto !== 'underworld') {
+            throw new Error(`known_routes: no layer ${source.onto} to lead onto`);
+        }
+        route.onto = source.onto;
     }
 
     return route;

@@ -248,6 +248,7 @@ function resolveKnownRoutes(
     signs: Sign[],
     areas: Area[],
     teleporters: Teleporter[],
+    rockPids: Set<number>,
 ): KnownRoute[] {
     const skyTower = (flagName: string): number | undefined => {
         const towerFlags = FLAG_BITS[flagName] + FLAG_BITS.UPSTAIRS;
@@ -264,6 +265,7 @@ function resolveKnownRoutes(
         teleporters,
         skyTower,
         positionOf: (pid) => entityPosition(overworld, pid),
+        isRock: (pid) => rockPids.has(pid),
     });
 }
 
@@ -646,10 +648,12 @@ function main(): void {
     }
     pkg.close();
     const worldText = readTextIfPresent(paths.data('world.json'));
+    const rockPids = new Set<number>();
     if (worldText !== null) {
         const world: WorldFile = JSON.parse(worldText);
         for (const room of world.gold_rooms) room.tower = towers.findIndex((tower) => tower.pid === room.tower);
         addTowerPads(overworld, towers, world.teleporters);
+        for (const rock of world.world.rocks) rockPids.add(rock[0]);
         Object.assign(out, world);
     }
     if (out.areas && out.teleporters) {
@@ -661,6 +665,7 @@ function main(): void {
             signRows,
             out.areas,
             out.teleporters,
+            rockPids,
         );
     }
     out.ending_stages = buildEndingStages(out, FLAG_BITS);

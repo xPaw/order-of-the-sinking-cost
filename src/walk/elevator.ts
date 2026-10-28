@@ -4,6 +4,7 @@ import { addTo, FLOOR, keyOf } from './cells.ts';
 import type { GridShape } from './cells.ts';
 import { exists } from './groups.ts';
 import type { WalkGrid } from './walker.ts';
+import { latestCell } from './walls.ts';
 
 // Elevator mask bits: rides up from the bottom frame, rides down from the top frame
 const RIDES_UP = 1;
@@ -11,15 +12,16 @@ const RIDES_DOWN = 2;
 
 /**
  * An elevator that rides, in the level data: its two frame cells, which way it rides (RIDES_UP, RIDES_DOWN bits) with
- * no Rock on its platform and with one Rock left of the `stack` Rocks resting on it (bottom first), and the pid and
- * level-data existence of each frame (undefined: the frame has no `exists` entry).
+ * no Rock on its platform and with one Rock left of the Rocks stacked on it (`stackRows`: their indices into
+ * world.rocks, bottom first), and the pid and level-data existence of each frame (undefined: the frame has no `exists`
+ * entry).
  */
 export interface ElevatorFrames {
     bottom: number;
     top: number;
     mask: number;
     oneRockMask: number;
-    stack: number[];
+    stackRows: number[];
     bottomPid: number;
     bottomExistence: number | undefined;
     topPid: number;
@@ -35,6 +37,8 @@ function frameExistence(existence: number): number | undefined {
 /** The elevators of the level data that ride between two cells inside the grid, in list order. */
 export function levelElevators(shape: GridShape, world: World): ElevatorFrames[] {
     const elevators: ElevatorFrames[] = [];
+    const rockRow = new Map<number, number>();
+    world.rocks.forEach((rock, index) => rockRow.set(rock[0], index));
 
     for (const elevator of world.elevators || []) {
         const [
@@ -56,12 +60,18 @@ export function levelElevators(shape: GridShape, world: World): ElevatorFrames[]
         const top = keyOf(shape, topI, topJ, topZ);
         if (!mask || bottom < 0 || top < 0) continue;
 
+        const stackRows: number[] = [];
+        for (const pid of stack) {
+            const row = rockRow.get(pid);
+            if (row !== undefined) stackRows.push(row);
+        }
+
         elevators.push({
             bottom,
             top,
             mask,
             oneRockMask,
-            stack,
+            stackRows,
             bottomPid,
             bottomExistence: frameExistence(bottomExistence),
             topPid,
@@ -73,13 +83,20 @@ export function levelElevators(shape: GridShape, world: World): ElevatorFrames[]
 }
 
 /**
- * Which way an elevator rides, by how many of its stacked Rocks are still at their level-data cells: none rides by
- * `mask`, one by `oneRockMask`, two or more are not one push and ride nowhere.
+ * Which way an elevator rides, by how many of its stacked Rocks still exist in their level-data column (one that fell
+ * when a Rock below it was smashed is still on the platform): none rides by `mask`, one by `oneRockMask`, two or more
+ * are not one push and ride nowhere.
  */
-function rideMask(elevator: ElevatorFrames, unmovedRocks: Set<number>): number {
+function rideMask(walkGrid: WalkGrid, elevator: ElevatorFrames): number {
+    const { world, geometry, layerCells } = walkGrid;
     let left = 0;
-    for (const pid of elevator.stack) {
-        if (unmovedRocks.has(pid)) left++;
+    for (const index of elevator.stackRows) {
+        const [pid, column, row, z, existence] = world.rocks[index];
+        if (!exists(walkGrid, pid, existence)) continue;
+
+        const levelColumn = geometry.rockCells[index] % layerCells;
+        const cell = latestCell(walkGrid, pid, column, row, z);
+        if (cell >= 0 && cell % layerCells === levelColumn) left++;
     }
 
     if (left === 0) return elevator.mask;
@@ -89,10 +106,9 @@ function rideMask(elevator: ElevatorFrames, unmovedRocks: Set<number>): number {
 
 /**
  * Places the elevators: stepping onto the platform at one frame rides it to the other (RIDES_UP from the bottom,
- * RIDES_DOWN from the top); the platform holds the hero in both frame cells. `unmovedRocks`: the existing Rocks still
- * at their level-data cell.
+ * RIDES_DOWN from the top); the platform holds the hero in both frame cells.
  */
-export function placeElevators(walkGrid: WalkGrid, unmovedRocks: Set<number>): void {
+export function placeElevators(walkGrid: WalkGrid): void {
     const { grid, elevatorsAt } = walkGrid;
 
     for (const elevator of walkGrid.geometry.elevators) {
@@ -100,7 +116,7 @@ export function placeElevators(walkGrid: WalkGrid, unmovedRocks: Set<number>): v
         if (!exists(walkGrid, elevator.bottomPid, elevator.bottomExistence)) continue;
         if (!exists(walkGrid, elevator.topPid, elevator.topExistence)) continue;
 
-        const mask = rideMask(elevator, unmovedRocks);
+        const mask = rideMask(walkGrid, elevator);
         if (!mask) continue;
 
         grid[bottom] |= FLOOR;
