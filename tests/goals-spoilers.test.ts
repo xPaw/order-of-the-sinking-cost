@@ -195,16 +195,14 @@ describe('goals with spoilers hidden', () => {
         expect(secondEnding.children!.map((child) => child.label)).toEqual([
             'Crossroads High',
             'High Heroes',
-            'The Heroic Way',
             'High Mirrors',
-            'The Mirror Way',
             'High Skipping Stones',
-            'The Skipping Way',
             'High Beamcasters',
+            'The Heroic Way',
+            'The Mirror Way',
+            'The Skipping Way',
             'The Beam Way',
             'Antipode High',
-            'laser_pointer',
-            'all_together_now',
         ]);
         setSpoilersHidden(true);
     });

@@ -981,11 +981,11 @@ fog; `goalsView()` adds the labels, counts and lists with fog applied.
   requirement graph](#the-requirement-graph)). A done stage stays listed with its done mark and the first one not
   done is the active child. The order is fixed: every stage is needed, so none is "on the plan" more than another, and
   the children carry no `onPlan`.
-  - Endgame High, in this order: the sky crossroads (ASCEND earned); per sky tower, the tower with its solved normal
-    levels of the number it needs (tower active), then its Way (the tower's hub Freezer open), named by its area
-    ([Known routes](#known-routes)) and listed whenever its tower is; the sky hub (all four hub Freezers open; shown
-    also once one of the four hub pads is discovered); `laser_pointer`, the end2 room's level (solved);
-    `all_together_now` (solved).
+  - Endgame High, in this order: the sky crossroads (ASCEND earned); the four sky towers, each with its solved normal
+    levels of the number it needs (tower active); the four Ways in the towers' order (the tower's hub Freezer open),
+    named by their areas ([Known routes](#known-routes)) and listed whenever their towers are; the sky hub, which
+    holds the end2 room's `laser_pointer` and `all_together_now` (`all_together_now` solved; shown also once one of
+    the four hub pads is discovered).
   - Endgame Low, in this order: the underworld crossroads (DESCEND earned); the underworld hub (its MAJOR pad
     discovered; shown also then); the eight end3 rooms of the set in their order, named by their first levels in the
     set (`allocate_heroes_end3`, `design_corner`, `river_exploit_v2`, `simplify_wizard`, `end2_mirror1`,

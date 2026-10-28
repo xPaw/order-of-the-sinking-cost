@@ -67,48 +67,38 @@ const ENDING_SOURCES: EndingSource[] = [
                 done: { rule: 'tower', tower: ['HEROES', 'UPSTAIRS'] },
             },
             {
-                name: { route: 'heroes_way' },
-                done: { rule: 'freezers', freezers: [HIGH_HEROES_FREEZER] },
-            },
-            {
                 name: { tower: ['MIRRORS', 'UPSTAIRS'] },
                 done: { rule: 'tower', tower: ['MIRRORS', 'UPSTAIRS'] },
-            },
-            {
-                name: { route: 'mirror_way' },
-                done: { rule: 'freezers', freezers: [HIGH_MIRRORS_FREEZER] },
             },
             {
                 name: { tower: ['SKIPPING', 'UPSTAIRS'] },
                 done: { rule: 'tower', tower: ['SKIPPING', 'UPSTAIRS'] },
             },
             {
-                name: { route: 'skipping_way' },
-                done: { rule: 'freezers', freezers: [HIGH_SKIPPING_FREEZER] },
-            },
-            {
                 name: { tower: ['PROMESST', 'UPSTAIRS'] },
                 done: { rule: 'tower', tower: ['PROMESST', 'UPSTAIRS'] },
+            },
+            {
+                name: { route: 'heroes_way' },
+                done: { rule: 'freezers', freezers: [HIGH_HEROES_FREEZER] },
+            },
+            {
+                name: { route: 'mirror_way' },
+                done: { rule: 'freezers', freezers: [HIGH_MIRRORS_FREEZER] },
+            },
+            {
+                name: { route: 'skipping_way' },
+                done: { rule: 'freezers', freezers: [HIGH_SKIPPING_FREEZER] },
             },
             {
                 name: { route: 'beam_way' },
                 done: { rule: 'freezers', freezers: [HIGH_BEAM_FREEZER] },
             },
+            // the sky hub with the end2 room above it: laser_pointer, then all_together_now
             {
                 name: { area: 'area_s_antipode_high' },
-                done: {
-                    rule: 'freezers',
-                    freezers: [HIGH_HEROES_FREEZER, HIGH_MIRRORS_FREEZER, HIGH_SKIPPING_FREEZER, HIGH_BEAM_FREEZER],
-                },
-                seen: [HIGH_HEROES_HUB_PAD, HIGH_MIRRORS_HUB_PAD, HIGH_SKIPPING_HUB_PAD, HIGH_BEAM_HUB_PAD],
-            },
-            {
-                name: { level: 'laser_pointer' },
-                done: { rule: 'solved', level: 'laser_pointer' },
-            },
-            {
-                name: { level: 'all_together_now' },
                 done: { rule: 'solved', level: 'all_together_now' },
+                seen: [HIGH_HEROES_HUB_PAD, HIGH_MIRRORS_HUB_PAD, HIGH_SKIPPING_HUB_PAD, HIGH_BEAM_HUB_PAD],
             },
         ],
     },

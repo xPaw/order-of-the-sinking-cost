@@ -49,12 +49,10 @@ const ENDING_STAGES: EndingStages[] = [
         stages: [
             { name: { area: 0 }, done: { rule: 'achievement', name: 'ASCEND' }, seen: [] },
             { name: { tower: 0 }, done: { rule: 'tower', tower: 0 }, seen: [] },
-            { name: { route: 0 }, done: { rule: 'freezers', freezers: [0] }, seen: [] },
             { name: { tower: 1 }, done: { rule: 'tower', tower: 1 }, seen: [] },
+            { name: { route: 0 }, done: { rule: 'freezers', freezers: [0] }, seen: [] },
             { name: { route: 1 }, done: { rule: 'freezers', freezers: [1] }, seen: [] },
-            { name: { area: 1 }, done: { rule: 'freezers', freezers: [0, 1] }, seen: [] },
-            { name: { level: 2 }, done: { rule: 'solved', level: 2 }, seen: [] },
-            { name: { level: 3 }, done: { rule: 'solved', level: 3 }, seen: [] },
+            { name: { area: 1 }, done: { rule: 'solved', level: 3 }, seen: [] },
         ],
     },
     {
@@ -231,33 +229,34 @@ describe('the second ending as stages', () => {
         expect(labels(goals, 'ENDGAME2')).toEqual([
             'Crossroads High',
             'High Heroes',
-            'The First Way',
             'High Mirrors',
+            'The First Way',
             'The Second Way',
             'Antipode High',
-            'laser_pointer',
-            'all_together_now',
         ]);
-        expect(dones(goals, 'ENDGAME2')).toEqual([true, true, true, false, false, false, false, false]);
+        expect(dones(goals, 'ENDGAME2')).toEqual([true, true, false, true, false, false]);
         expect(activeLabels(goals, 'ENDGAME2')).toEqual(['High Mirrors']);
     });
 
     test("a tower is done once active, its Way once the tower's hub Freezer is open", () => {
         const goals = view(setup({ ascended: true, active: [true, true], open: [true, false] }));
-        expect(dones(goals, 'ENDGAME2')).toEqual([true, true, true, true, false, false, false, false]);
+        expect(dones(goals, 'ENDGAME2')).toEqual([true, true, true, true, false, false]);
         expect(activeLabels(goals, 'ENDGAME2')).toEqual(['The Second Way']);
     });
 
-    test('a tower activated whose hub Freezer is closed leaves its Way the active stage', () => {
-        const goals = view(setup({ ascended: true, active: [true, false] }));
-        expect(dones(goals, 'ENDGAME2')).toEqual([true, true, false, false, false, false, false, false]);
+    test('towers activated whose hub Freezers are closed leave the first Way the active stage', () => {
+        const goals = view(setup({ ascended: true, active: [true, true] }));
+        expect(dones(goals, 'ENDGAME2')).toEqual([true, true, true, false, false, false]);
         expect(activeLabels(goals, 'ENDGAME2')).toEqual(['The First Way']);
     });
 
-    test('the hub is done when every hub Freezer is open, the room and the ending when solved', () => {
-        const goals = view(setup({ ascended: true, active: [true, true], open: [true, true], solved: [2] }));
-        expect(dones(goals, 'ENDGAME2')).toEqual([true, true, true, true, true, true, true, false]);
-        expect(activeLabels(goals, 'ENDGAME2')).toEqual(['all_together_now']);
+    test('the hub stays active with every hub Freezer open until the ending level is solved', () => {
+        const open = view(setup({ ascended: true, active: [true, true], open: [true, true], solved: [2] }));
+        expect(dones(open, 'ENDGAME2')).toEqual([true, true, true, true, true, false]);
+        expect(activeLabels(open, 'ENDGAME2')).toEqual(['Antipode High']);
+
+        const solved = view(setup({ ascended: true, active: [true, true], open: [true, true], solved: [2, 3] }));
+        expect(dones(solved, 'ENDGAME2')).toEqual([true, true, true, true, true, true]);
     });
 
     test('before the sky is reached the crossroads is the active stage', () => {
@@ -279,14 +278,13 @@ describe('the second ending as stages', () => {
         expect(wayKeys).toEqual(['g0', 'g1']);
     });
 
-    test('a place is named once its area shows and a level once it is not under fog', () => {
-        const goals = view(setup({ ascended: true }), { areaShown: false, hiddenLevels: [2] });
+    test('a place is named once its area shows', () => {
+        const goals = view(setup({ ascended: true }), { areaShown: false });
         expect(labels(goals, 'ENDGAME2')).toEqual([
             'High Heroes',
-            'Way to the High Heroes sign',
             'High Mirrors',
+            'Way to the High Heroes sign',
             'Way to the High Mirrors sign',
-            'all_together_now',
         ]);
         expect(endingOf(goals, 'ENDGAME2').fogged).toBe(true);
     });
@@ -295,11 +293,9 @@ describe('the second ending as stages', () => {
         const goals = view(setup({ ascended: true }), { namedAreas: [SECOND_WAY_AREA] });
         expect(labels(goals, 'ENDGAME2')).toEqual([
             'High Heroes',
-            'Way to the High Heroes sign',
             'High Mirrors',
+            'Way to the High Heroes sign',
             'The Second Way',
-            'laser_pointer',
-            'all_together_now',
         ]);
     });
 
