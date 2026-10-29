@@ -1206,7 +1206,8 @@ sign has its own mark between a sign not ready and a sign read.
 
 The results column holds the search box above the goal's list. The map's buttons float over the map, inside its
 frame: the layer switch (one segmented pill, Overworld | High | Low with the current segment gold; only the layers the
-fog has uncovered; a click switches once the layer's image is decoded, the pill dimmed meanwhile), the Reachable switch
+fog has uncovered; a campaign opens on the hero's layer and later redraws keep the layer shown; a click switches once
+the layer's image is decoded, the pill dimmed meanwhile), the Reachable switch
 and the zoom pill (+ | −). A view the map frames keeps clear of them.
 
 Working out a save holds the page still for a moment: a save opened, a change the live folder brings, a campaign

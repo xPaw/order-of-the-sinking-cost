@@ -104,7 +104,7 @@ export function renderProgress(model: ProgressModel): void {
     $('#bnCopy')?.addEventListener('click', (event) => void copyPath(event));
     context.loadGoal();
     context.computeMatches();
-    if (PROG.map) context.mapLayer = startLayer(mapKeep('pgMap'), mapFog);
+    if (PROG.map) context.mapLayer = startLayer(mapKeep('pgMap'), mapFog, model.hero);
     hooks.apply = (redraw) => applyFilters(context, redraw);
     hooks.panelOpen = () => context.current !== null;
     if (PROG.map) startMap(context);

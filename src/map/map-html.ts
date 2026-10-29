@@ -2,14 +2,14 @@
 // fog and hatch groups, the repeated copies, the buttons over the map; the overlay switches and the view kept per campaign
 import { PROG } from '../data.ts';
 import type { Fog } from '../fog.ts';
-import { AREA_LAYERS, layerName } from '../model/layers.ts';
+import { AREA_LAYERS, layerName, mapLayerOf } from '../model/layers.ts';
 import { ZOOM_STEP } from '../panzoom.ts';
 import type { PanZoomKeep } from '../panzoom.ts';
 import { readPreference, state } from '../shared.ts';
 import type { MapLayer } from '../types.ts';
 import { escapeHtml } from '../util.ts';
 import { OVERLAY_ICONS } from './icons.ts';
-import type { MapOverlay } from './map-view.ts';
+import type { MapOverlay, MapPoint } from './map-view.ts';
 import { wrapCopies } from './torus.ts';
 
 /**
@@ -158,10 +158,15 @@ export function knownLayers(fog: Fog | null | undefined): string[] | null {
     return ['ground'];
 }
 
-/** The layer a map opens on: the remembered one, else ground, and with fog shown one the player has uncovered. */
-export function startLayer(keep: MapKeep, fog: Fog | null | undefined): string {
+/**
+ * The layer a map opens on: the remembered one, else the hero's, else ground, and with fog shown one the player has
+ * uncovered.
+ */
+export function startLayer(keep: MapKeep, fog: Fog | null | undefined, hero: MapPoint | null | undefined): string {
     const known = knownLayers(fog);
-    const layer = keep.layer || 'ground';
+    let layer = 'ground';
+    if (keep.layer) layer = keep.layer;
+    else if (hero) layer = mapLayerOf(hero.z);
     if (known && !known.includes(layer)) return known[0];
     return layer;
 }

@@ -468,7 +468,7 @@ export class MapView {
         this.panel = options.panel;
         this.controls = find(this.box, '.ctl', HTMLElement);
         this.keep = mapKeep(id);
-        this.currentLayer = startLayer(this.keep, options.fog);
+        this.currentLayer = startLayer(this.keep, options.fog, options.hero);
         this.fogOn = !!options.fog;
         this.known = knownLayers(options.fog);
 
