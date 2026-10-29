@@ -1,23 +1,32 @@
 // The Steam libraries on this machine: the Steam root (the registry on Windows; ~/.steam/steam, ~/.local/share/Steam
-// or the Flatpak's on Linux), every library its libraryfolders.vdf lists, then the default Windows path.
+// or the Flatpak's on Linux), every library its libraryfolders.vdf lists, then on Windows the default Steam path.
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 export const GAME_NAME = 'Order of the Sinking Star';
 export const APP_ID = '499170';
 const DEFAULT_STEAM = 'C:\\Program Files (x86)\\Steam';
+const IS_WINDOWS = process.platform === 'win32';
 
-function steamRoots(): string[] {
-    if (process.platform !== 'win32') {
-        const home = homedir();
-        return [
-            join(home, '.steam', 'steam'),
-            join(home, '.local', 'share', 'Steam'),
-            join(home, '.var', 'app', 'com.valvesoftware.Steam', '.local', 'share', 'Steam'),
-        ].filter((root) => existsSync(join(root, 'steamapps')));
+// the Linux Steam roots that exist, each once: ~/.steam/steam is usually a link to ~/.local/share/Steam
+function linuxSteamRoots(): string[] {
+    const home = homedir();
+    const candidates = [
+        join(home, '.steam', 'steam'),
+        join(home, '.local', 'share', 'Steam'),
+        join(home, '.var', 'app', 'com.valvesoftware.Steam', '.local', 'share', 'Steam'),
+    ];
+
+    const roots = new Set<string>();
+    for (const candidate of candidates) {
+        if (existsSync(join(candidate, 'steamapps'))) roots.add(realpathSync(candidate));
     }
+    return [...roots];
+}
+
+function windowsSteamRoots(): string[] {
     try {
         const output = execFileSync('reg', ['query', 'HKCU\\Software\\Valve\\Steam', '/v', 'SteamPath'], {
             encoding: 'utf8',
@@ -32,8 +41,15 @@ function steamRoots(): string[] {
 }
 
 export function steamLibraries(): string[] {
+    let roots: string[];
+    if (IS_WINDOWS) {
+        roots = windowsSteamRoots();
+    } else {
+        roots = linuxSteamRoots();
+    }
+
     const libraries: string[] = [];
-    for (const steam of steamRoots()) {
+    for (const steam of roots) {
         libraries.push(steam);
         const vdf = join(steam, 'steamapps', 'libraryfolders.vdf');
         if (existsSync(vdf)) {
@@ -41,6 +57,7 @@ export function steamLibraries(): string[] {
             for (const match of text.matchAll(/"path"\s+"([^"]+)"/g)) libraries.push(match[1].replaceAll('\\\\', '\\'));
         }
     }
-    libraries.push(DEFAULT_STEAM);
+
+    if (IS_WINDOWS) libraries.push(DEFAULT_STEAM);
     return libraries;
 }

@@ -274,9 +274,12 @@ export function savePathHtml(attributes: string): string {
         '<path d="M10.5 3.5v-.5a1.5 1.5 0 0 0-1.5-1.5H3A1.5 1.5 0 0 0 1.5 3v6A1.5 1.5 0 0 0 3 10.5h.5"/></svg>';
     const tail = /[\\/][^\\/]+[\\/][^\\/]+$/.exec(SAVE_PATH)?.[0] ?? '';
     const head = SAVE_PATH.slice(0, SAVE_PATH.length - tail.length);
-    const text = `<span class="bptext"><span class="bphead">${escapeHtml(head)}</span><span class="bptail">${escapeHtml(tail)}</span></span>`;
-    const title = `Copy the folder path: ${SAVE_PATH}`;
-    return `<button class="plain bpath" ${attributes} title="${escapeHtml(title)}">${text}<span class="copyicon">${icon}</span></button>`;
+    const headHtml = `<span class="bphead">${escapeHtml(head)}</span>`;
+    const tailHtml = `<span class="bptail">${escapeHtml(tail)}</span>`;
+    const text = `<span class="bptext">${headHtml}${tailHtml}</span>`;
+    const title = escapeHtml(`Copy the folder path: ${SAVE_PATH}`);
+    const copyIcon = `<span class="copyicon">${icon}</span>`;
+    return `<button class="plain bpath" ${attributes} title="${title}">${text}${copyIcon}</button>`;
 }
 
 export function pickerHelpHtml(): string {

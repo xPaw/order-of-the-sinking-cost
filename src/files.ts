@@ -149,11 +149,18 @@ export async function addFiles(list: SaveFile[]): Promise<void> {
     await showSave(note);
 }
 
+const WINDOWS_SAVE_PATH = '%USERPROFILE%\\Saved Games\\Order of the Sinking Star';
+const PROTON_SAVE_PATH =
+    '~/.local/share/Steam/steamapps/compatdata/499170/pfx/drive_c/users/steamuser/Saved Games/Order of the Sinking Star';
+
+// a desktop Linux browser, where the game runs under Proton
+function onLinux(): boolean {
+    const agent = navigator.userAgent;
+    return agent.includes('Linux') && !agent.includes('Android');
+}
+
 /** Where the game keeps its saves: on Linux, in the Proton prefix of the default Steam library. */
-export const SAVE_PATH =
-    /Linux/.test(navigator.userAgent) && !/Android/.test(navigator.userAgent)
-        ? '~/.local/share/Steam/steamapps/compatdata/499170/pfx/drive_c/users/steamuser/Saved Games/Order of the Sinking Star'
-        : '%USERPROFILE%\\Saved Games\\Order of the Sinking Star';
+export const SAVE_PATH = onLinux() ? PROTON_SAVE_PATH : WINDOWS_SAVE_PATH;
 
 const DEMO_DIR = 'No save loaded';
 

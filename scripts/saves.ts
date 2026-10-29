@@ -14,7 +14,13 @@ function protonSaves(): string | null {
     return null;
 }
 
-export const savesDir = () =>
-    process.env.SOKO_SAVES ||
-    (process.platform !== 'win32' && protonSaves()) ||
-    join(homedir(), 'Saved Games', GAME_NAME);
+export function savesDir(): string {
+    if (process.env.SOKO_SAVES) return process.env.SOKO_SAVES;
+
+    if (process.platform !== 'win32') {
+        const proton = protonSaves();
+        if (proton) return proton;
+    }
+
+    return join(homedir(), 'Saved Games', GAME_NAME);
+}
