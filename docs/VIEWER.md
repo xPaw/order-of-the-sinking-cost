@@ -1154,11 +1154,12 @@ The page has three columns: the sidebar (300 px), the map and the results list. 
 narrower one scrolls sideways. Panels (the sidebar, the list and the map) share the game's sign border: a gold ring
 round a dark fill with an inset gold rule, drawn with `corner-shape` where the browser has it and with plain rounded
 corners where it does not; the map draws the rule over its image. The slim bar shown before a save is opened has the
-thin gold ring only. It holds a one-line message, the save folder's path as muted text that copies it when clicked (a copy icon follows it), and one
-primary button that opens or reconnects the save folder (or picks a snapshot where the browser has no folder picker).
-Headings and the
-title are in a system serif in small capitals; the body is the system font. Buttons over the map and the list's toggle
-are dark glass in a thin gold border.
+thin gold ring only. It holds a one-line message, the save folder's path as muted text that copies it when clicked (a
+copy icon follows it; on Linux the path is the one in Steam's Proton prefix, and a path too long for the line shortens
+in the middle, keeping its last two folders, with the whole path in its tooltip), and one primary button that opens or
+reconnects the save folder (or picks a snapshot where the browser has no folder picker). Headings and the title are in
+a system serif in small capitals; the body is the system font. Buttons over the map and the list's toggle are dark glass
+in a thin gold border.
 
 The sidebar is one panel whose sections are split by thin gold rules. From the top: the header, Goals (Completionist
 folds open to the areas, each a row with its solved count over its levels not under fog; with areas on more than one

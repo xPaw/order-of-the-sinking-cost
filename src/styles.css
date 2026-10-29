@@ -833,7 +833,8 @@ h2 {
     color: var(--title);
     font-weight: 600;
 }
-/* the path is one line that shortens with an ellipsis, leaving room for the banner's button on the same line */
+/* the path is one line that shortens with an ellipsis in the middle, leaving room for the banner's button on the same
+   line */
 .bpath {
     flex: 0 1 auto;
     min-width: 0;
@@ -853,9 +854,23 @@ h2 {
 }
 .bptext {
     min-width: 0;
+    display: flex;
+    white-space: nowrap;
+}
+/* the path shortens in the middle: the head gives way, down to a few letters, and the last two folders only on a
+   line too short for them and those letters */
+.bphead,
+.bptail {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+}
+.bphead {
+    min-width: 4ch;
+}
+.bptail {
+    flex: none;
+    max-width: calc(100% - 4ch);
 }
 .banner .primary {
     flex: none;

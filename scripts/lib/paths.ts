@@ -1,49 +1,17 @@
 // Shared locations: the project root and its data/ folder, and the game and save folders.
 //
-// Game folder: --game, else $SOKO_GAME, else found through the Steam install (registry, then every library in
-// libraryfolders.vdf), else the default Steam path. Saves: $SOKO_SAVES, else
-// %USERPROFILE%\Saved Games\Order of the Sinking Star.
-import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+// Game folder: --game, else $SOKO_GAME, else found in the Steam libraries (steam.ts), else the default Steam path.
+// Saves: saves.ts.
+import { existsSync, statSync } from 'node:fs';
 import { dirname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs, type ParseArgsOptionsConfig } from 'node:util';
 import { savesDir } from '../saves.ts';
+import { GAME_NAME, steamLibraries } from './steam.ts';
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const GAME_NAME = 'Order of the Sinking Star';
-const DEFAULT_STEAM = 'C:\\Program Files (x86)\\Steam';
 
 let gameFolder: string | null = null;
-
-function steamRoot(): string | null {
-    try {
-        const output = execFileSync('reg', ['query', 'HKCU\\Software\\Valve\\Steam', '/v', 'SteamPath'], {
-            encoding: 'utf8',
-            stdio: ['ignore', 'pipe', 'ignore'],
-        });
-        const match = /SteamPath\s+REG_SZ\s+(.+)/.exec(output);
-        if (match) return match[1].trim();
-    } catch {
-        // no Steam registry key (not Windows, or Steam is not installed)
-    }
-    return null;
-}
-
-function steamLibraries(): string[] {
-    const libraries: string[] = [];
-    const steam = steamRoot();
-    if (steam) {
-        libraries.push(steam);
-        const vdf = join(steam, 'steamapps', 'libraryfolders.vdf');
-        if (existsSync(vdf)) {
-            const text = readFileSync(vdf, 'utf8');
-            for (const match of text.matchAll(/"path"\s+"([^"]+)"/g)) libraries.push(match[1].replaceAll('\\\\', '\\'));
-        }
-    }
-    libraries.push(DEFAULT_STEAM);
-    return libraries;
-}
 
 function findGame(): string {
     if (process.env.SOKO_GAME) return process.env.SOKO_GAME;

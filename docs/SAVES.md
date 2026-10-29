@@ -5,7 +5,11 @@ with every version the game reads. Types are in [Notation](README.md#notation).
 
 ## Files and versions
 
-The saves live in `%USERPROFILE%\Saved Games\Order of the Sinking Star\`.
+The saves live in `%USERPROFILE%\Saved Games\Order of the Sinking Star\`. On Linux the game runs under Proton, and the
+same folder is in the game's prefix:
+`<library>/steamapps/compatdata/499170/pfx/drive_c/users/steamuser/Saved Games/Order of the Sinking Star/`, where
+`<library>` is the Steam library that holds the game: `~/.local/share/Steam` by default, or
+`~/.var/app/com.valvesoftware.Steam/.local/share/Steam` with the Flatpak of Steam.
 
 | File | Written | Read | Changes between versions |
 |---|---|---|---|

@@ -149,8 +149,11 @@ export async function addFiles(list: SaveFile[]): Promise<void> {
     await showSave(note);
 }
 
-/** Where the game keeps its saves. */
-export const SAVE_PATH = '%USERPROFILE%\\Saved Games\\Order of the Sinking Star';
+/** Where the game keeps its saves: on Linux, in the Proton prefix of the default Steam library. */
+export const SAVE_PATH =
+    /Linux/.test(navigator.userAgent) && !/Android/.test(navigator.userAgent)
+        ? '~/.local/share/Steam/steamapps/compatdata/499170/pfx/drive_c/users/steamuser/Saved Games/Order of the Sinking Star'
+        : '%USERPROFILE%\\Saved Games\\Order of the Sinking Star';
 
 const DEMO_DIR = 'No save loaded';
 

@@ -264,13 +264,19 @@ function pickerHelpText(): string {
     return `${noPicker} Pick the save folder as a one-time snapshot.`;
 }
 
-/** A button of the save folder's path as muted text followed by a copy icon; a click copies the path. */
+/**
+ * A button of the save folder's path as muted text followed by a copy icon; a click copies the path. A path too long
+ * for its line shortens in the middle and keeps its last two folders ("Saved Games/Order of the Sinking Star").
+ */
 export function savePathHtml(attributes: string): string {
     const icon =
         '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/>' +
         '<path d="M10.5 3.5v-.5a1.5 1.5 0 0 0-1.5-1.5H3A1.5 1.5 0 0 0 1.5 3v6A1.5 1.5 0 0 0 3 10.5h.5"/></svg>';
-    const text = `<span class="bptext">${escapeHtml(SAVE_PATH)}</span>`;
-    return `<button class="plain bpath" ${attributes} title="Copy the folder path">${text}<span class="copyicon">${icon}</span></button>`;
+    const tail = /[\\/][^\\/]+[\\/][^\\/]+$/.exec(SAVE_PATH)?.[0] ?? '';
+    const head = SAVE_PATH.slice(0, SAVE_PATH.length - tail.length);
+    const text = `<span class="bptext"><span class="bphead">${escapeHtml(head)}</span><span class="bptail">${escapeHtml(tail)}</span></span>`;
+    const title = `Copy the folder path: ${SAVE_PATH}`;
+    return `<button class="plain bpath" ${attributes} title="${escapeHtml(title)}">${text}<span class="copyicon">${icon}</span></button>`;
 }
 
 export function pickerHelpHtml(): string {

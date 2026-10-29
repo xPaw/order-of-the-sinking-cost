@@ -10,8 +10,10 @@ runs the tests, `npm run typecheck` type-checks the TypeScript modules, `npm run
 (`npm run fmt:check` only checks). The scripts import the page's TypeScript modules directly, which needs Node 24 (its
 built-in type stripping).
 
-Game folder: `--game DIR`, else `$SOKO_GAME`, else the Steam install. Saves: `$SOKO_SAVES`, else
-`%USERPROFILE%\Saved Games\Order of the Sinking Star`.
+Game folder: `--game DIR`, else `$SOKO_GAME`, else the Steam install (the registry on Windows; `~/.steam/steam`,
+`~/.local/share/Steam` or the Flatpak's on Linux, and every library in its `libraryfolders.vdf`). Saves: `$SOKO_SAVES`,
+else `%USERPROFILE%\Saved Games\Order of the Sinking Star` on Windows, or that folder in the Proton prefix
+(`steamapps/compatdata/499170/pfx/drive_c/users/steamuser/`) of the first Steam library that has it on Linux.
 
 ## Pipeline, in run order
 

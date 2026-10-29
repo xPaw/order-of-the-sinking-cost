@@ -15,7 +15,11 @@ you what is left to do, what to play next and how to get there, without showing 
 ## What it shows
 
 Open the viewer at [sinkingstar.xpaw.me](https://sinkingstar.xpaw.me/), then drag your save folder onto the page or
-use **Open save folder**. The folder is `%USERPROFILE%\Saved Games\Order of the Sinking Star`.
+use **Open save folder**. The folder is `%USERPROFILE%\Saved Games\Order of the Sinking Star`. On Linux the game runs
+under Proton, and the folder is in its prefix, by default
+`~/.local/share/Steam/steamapps/compatdata/499170/pfx/drive_c/users/steamuser/Saved Games/Order of the Sinking Star`.
+With the Flatpak of Steam, `~/.local/share/Steam` is `~/.var/app/com.valvesoftware.Steam/.local/share/Steam`, and a game
+in another Steam library has its prefix in that library's `steamapps/compatdata`.
 
 - **Goals**: a ladder of what is left: the three endings in order, then the achievements (the towers
   among them) and Completionist, each with a count ("23 left", "3 / 16"). The first goal not done is the current one, and the list
