@@ -22,7 +22,7 @@ thread deletes it ("Successfully removed file '%' due to %."). `overworld.histor
 never removed.
 
 A solved level that is entered again and left without winning keeps a `.history` again: one GAP record, next 2, with
-the hero at the level's start if no move was made (the reason is inferred).
+the hero at the level's start if no move was made.
 
 On quit the main loop stops when its quit flag is set. The shutdown then stops audio, signals the campaign save thread
 and waits for it ("Save thread stopped."). The save thread empties its whole queue before it obeys the stop flag.
@@ -72,9 +72,8 @@ Version 33:
 | u32 n, n × Pid | opened Freezers (`Freezer`) on the overworld |
 | u32 n, n × Pid | opened Freezers in other levels |
 
-The level state and opened Freezers can lag a level win: a Status file has been seen without the win, and without the
-overworld Freezers it opens, while the overworld history already had the hero standing in one of those Freezers'
-cells. The next Status, written after another level was entered, held both (seen once, cause not checked).
+The level state and opened Freezers can lag a level win: the history may already show the hero where a win opened a
+Freezer while Status lacks both (seen in play, cause unconfirmed). The next Status written holds them.
 
 Older files leave fields out or carry legacy ones. A field the file lacks keeps its default: 0 or empty, and 1 for
 overworld reached.
@@ -163,8 +162,6 @@ u32 n; n × action { u8 Action_Type; ... }
 | 3 OCEAN_CHANGE | Pid, u32 index, u8 old, u8 new (10 bytes with the type) |
 | 4 SCRAPE_CHANGE | s16 x, y, z, u8 old, u8 new, u8 axis |
 
-The overworld history holds OCEAN_CHANGE actions (seen in mip levels 2 and 3).
-
 An Activator reset destroys an entity and clones it again under the same Pid: one record holds the destroyed action,
 then the created one. The later action is the entity's state.
 
@@ -208,12 +205,8 @@ SAILOR, `cleric` → PRIESTESS, `moonman` → PROMESST, ...). It is 0 when the e
 moves: START 23 (level start), RESET 22 (a checkpoint record of its own), RIDE_ON_LILY 20 or RIDE_ON_ROVER 24 (CARRY),
 0 (GAP, restart, the commit before an undo); their character is 0.
 
-Seen in the saves: level 0 holds icons 0, 1, 2, 3, 6, 20 and characters 0..15 (intro and overworld 10, `beam_rooms`
-8, `dual_screen` 9, `drop_tool` 4). Higher levels hold icons 1, 2, 3, 6, 20, nearly always with character 0. Icon 24
-appears in merged (mip ≥ 1) overworld records, where the largest icon of the merged moves wins. Icons 18, 19, 22 have
-not been seen. No overworld record has CHECKPOINT. `intro` has two: one in level 1 (flags 1, WALK, character 10), a
-checkpoint that landed on its move's record and survived a merge, and a merged level-2 record. A puzzle level's history
-can hold many CHECKPOINT records (`skipping_stones` has 26).
+Icon 24 appears in merged (mip ≥ 1) overworld records, where the largest icon of the merged moves wins. Overworld
+records never carry CHECKPOINT; `intro` and puzzle levels do (a puzzle level's history can hold many).
 
 ### Entity diff blob
 
@@ -248,8 +241,7 @@ count + elements, each element plain data or a resource name as above.
 ### Move_Transaction and Single_Move
 
 A record's Move_Transactions are the multi-turn movers still open when it was committed: lily, rover and falling
-transactions (flags `IS_LILY_TRANSACTION`, `IS_ROVER_TRANSACTION`). The hero's own step is never among them; in both
-saves the hero's Pid appears in no Single_Move. The only path data in a history is each record's hero position.
+transactions (flags `IS_LILY_TRANSACTION`, `IS_ROVER_TRANSACTION`). The hero's own step is never among them, so the only path data in a history is each record's hero position.
 
 Both are metadata-serialized. Each struct is written as its u16 `VERSION` constant, then each serializable leaf member
 whose version range contains that version: plain data raw, dynamic arrays as s64 count + elements (struct elements
@@ -279,7 +271,7 @@ is condensed. GAP commits skip the condense.
 **Condense(k)**, while level k+1 exists and `uncondensed(k)` ≥ 25:
 1. Take the oldest uncondensed record, i0 = count − uncondensed.
 2. Merge records i0..i0+24 into one. Stop early at the first CHECKPOINT record, which is merged too; the merged record
-   then has CHECKPOINT (the `intro` record above is one).
+   then has CHECKPOINT.
 3. `uncondensed(k)` −= the number merged. If i0 was 0, `index_in_next(k)` = count(k+1).
 4. Append the merged record to level k+1, add 1 to `uncondensed(k+1)` and condense level k+1.
 
@@ -287,7 +279,7 @@ Then **forget(k)**, on every level but the top one. to_forget = count − capaci
 1): take the end move (`first` + `span`) of level k+1's record `index_in_next(k)`, find the record i < to_forget whose
 `first` equals it, and drop records 0..i−1 (normally 25). `index_in_next(k)` then goes up by 1 (−1 past the end), and
 level k−1's `index_in_next` goes down by i. A level settles at 401..425 records. GAP commits can push it a little past
-425 (426 seen). Level 7 is never trimmed.
+425. Level 7 is never trimmed.
 
 **Merge** keeps:
 - `first` of the oldest record, `span` = the sum;
@@ -314,9 +306,6 @@ if the history flag is set, else a GAP), then pops GAP records. Undo never rever
 
 **Load** replays the coarsest non-empty level forward in full, then each finer level from the record whose `first`
 equals the end move of the coarser level's last record.
-
-In the saves seen, level 0 holds a few hundred records, up to its capacity, GAP records among them; a long campaign
-fills levels 0-3, a short one levels 0-1. Every file stores capacity 400 on levels 0-6 and 99999 on level 7.
 
 ### Reading the current state
 

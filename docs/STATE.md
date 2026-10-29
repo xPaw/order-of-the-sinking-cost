@@ -7,13 +7,10 @@ areas.
 
 Format: [`<level>.history` (undo state)](SAVES.md#levelhistory-undo-state). How state is read from it: [Overworld state from the save](#overworld-state-from-the-save).
 
-- Each level keeps its own undo history. For the overworld it is the only record of entity state: fog, pins, teleporters, rocks, lilies, voice logs, existence.
-- Level 0 holds one record per committed move. Up to 8 mip levels each condense 25 records of the level below. Capacity 400 per level for levels 0-6; level 7 is never trimmed. Older moves survive only as end-of-block states (every 25, 625, 15625 moves).
-- Each record holds the hero's position after its block, the level time and the rover timer ([Rovers](MOVEMENT.md#rovers)), and CHANGE, CREATION_OR_DESTRUCTION, OCEAN_CHANGE and SCRAPE_CHANGE actions with old and new values.
+- For the overworld the history is the only record of entity state: fog, pins, teleporters, rocks, lilies, voice logs, existence. Records, mip levels and thinning: [Thinning](SAVES.md#thinning).
+- Each record holds the hero's position after its block, the level time and the rover timer ([Rovers](MOVEMENT.md#rovers)), and CHANGE, CREATION_OR_DESTRUCTION, OCEAN_CHANGE and SCRAPE_CHANGE actions with old and new values. The current value of a field is the newest value in the history, else the level data.
 - Undo never reverts a Fog_Of_War CHANGE in play, but the undone record is freed, so a region cleared during an undone move is not saved.
-- The current value of a field is the newest value in the history, else the level data.
 - When `Settings.level_data_version` differs from the save's, the level's world state is reset ("World state has been reset, because we changed this level."). On the overworld the discovered MAJOR teleporters are then carried over.
-- Single_Moves in a record are the open multi-turn movers (lily, rover, falling); the hero's step is never among them.
 
 ## Overworld state from the save
 
@@ -29,9 +26,7 @@ CREATION_OR_DESTRUCTION destroyed it is gone. A later-keyed CHANGE overrides a c
 replayed and reverted by the undo replayer (old or new side per direction; CREATION 2, OCEAN_CHANGE 3).
 
 **Hero position** = the s32 × 3 of the record with the largest key that has a non-zero span and a non-zero position.
-Every record's position is a kept hero position: one per move for the newest 401..425 moves, then one per 25, 625,
-15625 moves. Each 25 commits drop 25 per-move positions at once; undo deletes coarse records. Single_Moves never hold
-the hero's path.
+Every record's position is a kept hero position ([Reading the current state](SAVES.md#reading-the-current-state)).
 
 **PROTECTION at a kept position**: the Guy's `skill_flags` CHANGEs in key order; a position is protected when the
 latest change at or before its record key holds PROTECTION (else the level-data `skill_flags`).
@@ -61,9 +56,9 @@ latest change at or before its record key holds PROTECTION (else the level-data 
 
 ### Dragons, Rocks and the rest
 
-- Dragon state in the save: position, `theta_target`, `dead_t`, `status_flags` DEAD, existence, CREATION records (TRANSMUTE). Every DEAD Monster in the saves also has `dead_t` = 1.
+- Dragon state in the save: position, `theta_target`, `dead_t`, `status_flags` DEAD, existence, CREATION records (TRANSMUTE). A DEAD Monster has `dead_t` = 1.
 - Rocks: position CHANGEs (pushes, falls), CREATION_OR_DESTRUCTION (TRANSMUTE crystals with runtime Pids in namespace 1023, Activator resets), `properties` (SKIPPING, FLIPPING_TARGET after a sink, MIRRORABLE on crystals).
-- Lilies: position, `moving_direction`, `kick_direction` CHANGEs. `moving_direction` is NONE in the level data and returns to NONE (0) when the Lily stops (seen 0 → 1 → 0 and 4 → 0). A Lily's first non-zero recorded `moving_direction` (EAST 1, NORTH 2, WEST 3, SOUTH 4) is the way its first move went.
+- Lilies: position, `moving_direction`, `kick_direction` CHANGEs. `moving_direction` is NONE in the level data and returns to NONE (0) when the Lily stops. A Lily's first non-zero recorded `moving_direction` (EAST 1, NORTH 2, WEST 3, SOUTH 4) is the way its first move went.
 - Activators: the saved `discovered` field is set when the hero comes near (within about 8 cells), not only on contact.
 - Turbulence: runtime entities made at the cells of sunk stones. Their `particle_group_id` changes in almost every record; it is noise, not state.
 - Promesst_Light `powered` (1-byte bool), Gate `open`, Switch `pressed`, Group `exists`, member `entity_flags`, Voice_Log `played`, View_Giver `activation_order`, Area_Pin `activated`, Guy `skill_flags`.
@@ -83,14 +78,14 @@ Data: `data/fog.json`. The type table spells `Fog_Of_War` plainly. `Fog_Volume` 
 - Non-primary `Fog_Of_War` (all in the sky): one `region_states` entry (none with `clear_as_part_of_room`), set PARTIAL when any hero is inside `position ± props.box_extents` (half-open; the point is moved to its copy nearest the box, so boxes that cross the seam cover both sides). `create_overhang` boxes also build overhang geometry; `only_overhang_no_fog` ones draw no fog.
 - `Fog_Of_War_Z` sets its region's vertical extent: `[z − descent, z + ascent]` (4.5 / 6.5 when negative). The first one per region wins.
 - **Saved state**: `region_states` is entity state (`NoEditorSave`, empty in level data). It is in `overworld.history` as CHANGE actions on the fog Pids, each carrying the whole array. Current state = the `new` of the action with the largest record key ([Overworld state from the save](#overworld-state-from-the-save)). No action = all FILLED. Nothing in Status.
-- Undo never reverts a fog CHANGE in play, but the undone record and its CHANGE are freed. A region cleared during a move that was then undone is not in the saved history: after a reload it is FILLED again unless a hero stands in it (the first frame clears it) or a later move cleared it. Nothing else brings back a clear lost to undo.
+- A region cleared during a move that was then undone is not in the saved history: after a reload it is FILLED again unless a hero stands in it or a later move cleared it ([Reading the current state](SAVES.md#reading-the-current-state)).
 - A new campaign starts with ground regions 44, 45, 54, 55, 56 and 65 cleared around the start (hero at (81, 76, 0)) and 2 Area_Pins activated (`data/fog.json` `start`).
 - The viewer takes the element-wise maximum of every kept `region_states` value per fog Pid: kept history only moves towards cleared.
 
 ## Areas
 
 - An area is an `Area_Pin` (`local_area_name`, `local_area_image`, `map_label_marker_id`, `activated`) plus the `Marker`s with `script_name` `local_area` whose `script_target_entity_id` is that pin: oriented boxes (position, orientation, scale, `props.box_extents`).
-- Every frame the game resets `current_area_pin` to 0 and the best priority to +∞ (skipped while the active hero entry has no living Guy: every Guy in it has DEAD in `status_flags`), then walks the Entity_Manager's Marker array, skipping zero-extent boxes. A `local_area` box holding a hero is a candidate. The box test uses the hero's `position` (not `visual_position`), moved to its copy nearest the box as in [Wrapping](WORLD.md#wrapping) (by the fast-travel box for boxes at map-room z). A candidate counts only if its `float_parameter` is strictly lower (`<`) than the best so far, and only a candidate whose pin is `activated` updates the best priority and the current pin. On equal priority the first in the array wins. The array is in record order: the level loader reads the entity records in file order and registers each one, which appends it to its type's array. Destroying an entity swaps the last one of its type into its place, but no Spawner prototype, transmute or smash on the overworld is a Marker, so the order holds in play. With no box, or inside a level, it is 0. Status keeps the pin's Pid. A second pin slot in the area state takes every candidate box, whatever its pin's activation; nothing reads it.
+- Every frame the game resets `current_area_pin` to 0 and the best priority to +∞ (skipped while the active hero entry has no living Guy: every Guy in it has DEAD in `status_flags`), then walks the Entity_Manager's Marker array, skipping zero-extent boxes. A `local_area` box holding a hero is a candidate. The box test uses the hero's `position` (not `visual_position`), moved to its copy nearest the box as in [Wrapping](WORLD.md#wrapping) (by the fast-travel box for boxes at map-room z). A candidate counts only if its `float_parameter` is strictly lower (`<`) than the best so far, and only a candidate whose pin is `activated` updates the best priority and the current pin. On equal priority the first in the array wins. The array is in file record order, and no Marker is ever destroyed on the overworld, so the order holds in play. With no box, or inside a level, it is 0. Status keeps the pin's Pid.
 - A level is entered from its Level_Entry's cell ([Winning and other inputs](SKILLS.md#winning-and-other-inputs)), so the area shown there is the box rule at the entry's position. An entry outside every `local_area` box shows no area.
 - Since an unactivated pin's box doesn't lower the best priority, a box inside a lower-`float_parameter` box is named only while the outer pin is not activated. The overworld has such nested boxes. So in an overlap the named area depends on the save's activated pins.
 - The local area map, opened by TAB inside a map room, shows `current_area_pin`'s name and image ([Wrapping](WORLD.md#wrapping)).

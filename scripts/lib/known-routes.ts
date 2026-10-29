@@ -73,13 +73,13 @@ const KNOWN_ROUTES: KnownRouteSource[] = [
         id: 'elevator_cyan_rock_bridge',
         to: { level: 'elevator_cyan' },
         needs: [[{ level: 'sokobridge_v4' }]],
-        note: 'the Rock sokobridge_v4 frees is pushed west along the z 35 ledge the elevator rises to, and drops into the gap at x 39 as a bridge to the level',
+        note: 'the Rock sokobridge_v4 frees is pushed west to x 42, south off the elevator landing onto the south row of the z 35 ledge and west along it, and drops into the gap at x 39 as a bridge to the level; the Activator beside its Spawner puts it back for another use',
     },
     {
         id: 'double_the_fun_gem_step',
         to: { level: 'double_the_fun' },
         needs: [[{ level: 'taking_the_lift' }]],
-        note: 'the Gem taking_the_lift frees is pushed beside the 1-high pillar the level stands on, as a step up',
+        note: 'the Gem taking_the_lift frees is pushed off the plateau and across the courtyard to the east side of the 1-high pillar the level stands on; the hero rides the elevator at (28, 71) up to the z 40 platform and drops from its west edge onto the Gem, a step level with the level',
     },
     {
         id: 'sender_simplified_gem_slot',
@@ -192,7 +192,7 @@ const KNOWN_ROUTES: KnownRouteSource[] = [
         id: 'crystal_island_rock_bridge',
         to: { level: 'crystal_island' },
         needs: [[{ level: 'push_down_chain' }]],
-        note: 'four of the Rocks on the shallow strip south of it are pushed into the water at x 106, one after another, bridging north to the level',
+        note: 'the four Rocks on the shallow strip are pushed into the water one after another at x 106, y 72 to 75, bridging from the strip to the level',
     },
     {
         id: 'green_goblins_step_down',

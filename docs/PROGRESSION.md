@@ -24,10 +24,10 @@ overworld level data.
   - Any other type is never satisfied.
 - `tower_flags`: does not gate the entry. It assigns the level to the Tower whose `tower_flags` is exactly equal.
 - `dropdown`: a tower level that is optional for the tower. Counted in `total/solved_dropdown_levels`, not in `levels_required`. All dropdowns solved = the tower's gold status.
-- `achievement`: when a SOLVED entry's state is applied (in practice on the overworld load after the win), the achievement is granted (bit 0 also set) and the rank raised ([Achievements and ranks](#achievements-and-ranks)). `Level_Entry.achievement` is the field's only reader (2 sites).
+- `achievement`: when a SOLVED entry's state is applied (in practice on the overworld load after the win), the achievement is granted (bit 0 also set) and the rank raised ([Achievements and ranks](#achievements-and-ranks)). `Level_Entry.achievement` is the field's only reader.
 - `currently_broken` or `currently_disfavored`: the entry is destroyed at every level load, so it never exists in play. Drop it from all counts.
 - `Level_Entry.demo_phase` is never read by gameplay. Only `Sign.demo_phase` is read, by a level-export path (with `demo_bounds` markers). `*choice_demoN` in level sets is ignored.
-- `context_type` (OPTIONAL 1, DIFFICULT 2, ORDERING 4, EASY 8, OTHER) and `context_details`: designer metadata. No game code reads them; only the serializer and the editor.
+- `context_type` (OPTIONAL 1, DIFFICULT 2, ORDERING 4, EASY 8, OTHER) and `context_details`: designer metadata, read by no game code.
 
 ### Freezer
 
@@ -41,9 +41,9 @@ overworld level data.
 A Sign is read when a hero stands in the cell next to it and faces it, with no closed Freezer in the Sign's own cell
 and no Fence between the two cells. Reading tests the Sign's setting once, at that moment. If it holds,
 `rank_satisfied` is set and the unlock pass reruns, which opens the Freezers that list the Sign. Nothing else tests
-the setting: not each turn and not the overworld load. A rank reached, a tower activated or a gold-room count met while
-the Sign is unread opens nothing until a hero reads it. The flag stays set, and the history keeps it (it comes back on
-load). A Freezer's Sign gate is met exactly when the Sign's `rank_satisfied` is set.
+the setting, so a rank reached, a tower activated or a gold-room count met while the Sign is unread opens nothing
+until a hero reads it. The flag stays set and the history keeps it. A Freezer's Sign gate is met exactly when the
+Sign's `rank_satisfied` is set.
 
 | Sign setup | Satisfied when read and |
 |---|---|
@@ -64,9 +64,8 @@ sets none that way.
 
 ## Status.sokoban_status fields
 
-In file order. The names are labels for each field's use: the game has none. No type information describes the status
-struct, the save code writes the counters raw, and the Steam side has achievements only (the game calls
-Get/SetAchievement, RequestUserStats and StoreStats, never SetStat, and its Steam schema holds no stats). Byte layout and versions: [Status.sokoban_status (campaign status)](SAVES.md#statussokoban_status-campaign-status).
+In file order. The names are labels for each field's use: the game has none. The save code writes the counters raw,
+and the Steam side has achievements only (no stats). Byte layout and versions: [Status.sokoban_status (campaign status)](SAVES.md#statussokoban_status-campaign-status).
 
 | File position | Name |
 |---|---|
@@ -78,11 +77,11 @@ Get/SetAchievement, RequestUserStats and StoreStats, never SetStat, and its Stea
 | u32 | counter 0: gems taken with T (a Gem with `inventory_index` < 0 in the hero's cell; "GemDustoff"; [TRANSMUTE and the other skills](SKILLS.md#transmute-and-the-other-skills)) |
 | u32 | counter 1: gems dropped with T onto a Gem_Slot (the hero's latest inventory gem) |
 | u32 | counter 2: Artifacts picked up (every kind, wands included) |
-| u32 | counter 3: never incremented (0 in every save seen) |
-| u32 | counter 4: Friendly_Dragon follow/unfollow toggles (TOGGLE_FRIENDLY_DRAGON, dragon within 1.25 of the hero); not seen above 0 |
+| u32 | counter 3: never incremented |
+| u32 | counter 4: Friendly_Dragon follow/unfollow toggles (TOGGLE_FRIENDLY_DRAGON, dragon within 1.25 of the hero) |
 | u32 | counter 5: successful P1 wand uses ("p1wand_success") |
 | u32 | counter 6: beams turned by a torc (cw/ccw/180) |
-| u32 | counter 7: prism uses that succeeded ("PrismSuccess"); not seen above 0 |
+| u32 | counter 7: prism uses that succeeded ("PrismSuccess") |
 | u32 | counter 8: entering an enabled Level_Entry |
 | u32 | counter 9: ACTIVATE actions handled (counted before mirror and teleport handling) |
 | s64 | **artifacts**: bit 1 << `Artifact.kind`, set only for kinds 3-6 (SPEED_CONTROL, UNDO_SIDE_PANEL, _EXTENDED, _VERY_EXTENDED) on pickup. Kinds 0-2 (PROMESST_1/2/3_WAND) set `Guy.inventory_flags` instead (WAND 0x400, TORC 0x800, PRISM 0x1000); 7 SPAWNER_MORPH only counts in counter 2. No level holds kind ≥ 3 and nothing reads the bits (time control is gated by `levels_solved > 0` or level `time_tutorial`), so it is always 0. Loading the overworld clears the bit of each Artifact still present there |
@@ -137,8 +136,7 @@ when a hero reads it at that rank or higher ([Sign `rank_satisfied`](#sign-rank_
 
 In `intro`, the `intro_end1_freezer_thaw` box and the Signs `intro_end2_sign` / `intro_end3_sign` follow the rank (Signs
 there ask for 1, 3, 5 and 255). `end3_promesst_red` and `end3_skipping_red` each have a rank-1 Sign. `intro_69_sign`
-shows different text at rank 0. A Freezer's `color_frozen` tint (white on most, one of many colours on the rest) is
-styling, not a rule.
+shows different text at rank 0. A Freezer's `color_frozen` tint is styling, not a rule.
 
 **100 % as the game defines it** = COMPLETIONIST = SOLVED for every overworld Level_Entry that is not `currently_broken`
 or `currently_disfavored`. "Required" for tower progress = non-dropdown entries with the tower's `tower_flags`, up to
@@ -185,18 +183,15 @@ least n ([Freezer](#freezer)).
 - Winning a room sets its combination's bit and a campaign flag at index stage offset + region (offsets 0, 4, 10, 14
   for stages 1..4), and each `~controller` entity with a matching bit runs an unlock, with a "freezers are about…"
   sound ("register_current_end1_or_end3_flags_as_completed"). The combination bits are not in
-  `Status.sokoban_status`: the Status of a finished save holds nothing specific to `end1`, and its string table is
-  empty. They live in the level's own state (inferred).
+  `Status.sokoban_status`; they live in the level's own state (inferred).
 - When a stage's list is done and the 3 s timer has run out, the stage goes up by one, the bits clear, and the bark
   `end1_dimension_<stage>` of the finished stage plays.
 - Freezers at levels 1–4 stand at (24, 22), (30, 22), (30, 16) and (24, 16), each holding a Rock. Level 5 (23, 15) is
   the END1_EXIT Door to overworld `~end1`.
 - A hero on END1_EXIT sets ESCAPE_FROM_PRELUDE and wins the level at once.
-- The `end1` history at stage 1 already has the Level_State `misc_flags` RETURN_TO_PRELUDE set (4 → 12), the Freezer
-  (24, 22, 4) unfrozen and the Judge's `state_int0` at 1 (0 → 1).
-- Opened-Freezer list B of a save past `end1` holds only the `intro` Freezers (7 Pids: (47, 44, 0), (45, 47, 0),
-  (46, 48, 0) twice, (44, 48, 0) twice and (45, 52, 2)), none of `end1`'s, as the `judge_unlock_level` exclusion
-  ([Freezer](#freezer)) gives.
+- At stage 1 the Level_State `misc_flags` has RETURN_TO_PRELUDE set, the Freezer (24, 22, 4) is unfrozen and the
+  Judge's `state_int0` is 1.
+- `end1`'s Freezers are never in opened list B, because of the `judge_unlock_level` exclusion ([Freezer](#freezer)).
 
 So in `end1` the hero pushes the released Rocks onto the controller Switches, plays each combination's room, and
 leaves at stage 5.
@@ -212,11 +207,10 @@ leaves at stage 5.
    Their pads are the MAJOR pads of the sky hub (z 37 and 38). Activation enables no map-room twin: a twin is enabled
    when its hub pad is first stepped on, so the first visit to the hub is on foot.
 3. Walk to the sky hub by The Heroic Way (`area_s_heroes_way`), a sky path from the east of `catching_fire_v2`
-   (55, 123, 54) west to the hub. Seen in a save: the hero goes through the cell of the Freezer (55, 120, 54), which
+   (55, 123, 54) west to the hub. The hero goes through the cell of the Freezer (55, 120, 54), which
    `catching_fire_v2` opens, and down by the dragon Monsters stacked at (55..56, 119..121, 46..52), to the dragon room
    (x 36..53, y 119..126, z 45) with its Priestess Wardrobes and the room below it at z 37, crosses north over more
-   dragons (the player's account), and follows one-way MINOR pads west to the hub. So this way needs
-   `catching_fire_v2`. A second
+   dragons, and follows one-way MINOR pads west to the hub. So this way needs `catching_fire_v2`. A second
    way in (unconfirmed): `skip_stack_1` opens the Freezer (48, 147, 44) on the edge of the pocket of the Heroic Way's
    east pad (44, 135, 38), and `skip_stack_1` itself stands behind a Freezer that `catching_fire_v2` opens.
 4. The four Freezers (−15, 144, 37), (−23, 147, 37), (−13, 152, 37) and (−9, 146, 38) each open with one sky tower.
@@ -227,11 +221,9 @@ leaves at stage 5.
    [Routes that need these mechanics](MOVEMENT.md#routes-that-need-these-mechanics)). The hub's four tower pads stand
    in four separate pockets on foot, each by its tower's Sign, and the sky has one Way area per tower kind (The Heroic
    Way, The Mirror Way, The Skipping Way, The Beam Way). Second Endgame takes all four sky towers, each reached by its
-   own Way (the player's account). An active sky tower does not open its hub Freezer until its Sign is read (High
-   Mirrors active, its Sign unread, its Freezer (−23, 147, 37) closed). Reading a tower's Sign needs its quarter: south
-   for High Heroes, west for High Mirrors, north for High Skipping Stones and east for High Beamcasters. The levels
-   each Way passes are the viewer's table of known routes, the place for routes the walk does not find
-   ([Known routes](VIEWER.md#known-routes)).
+   own Way. An active sky tower does not open its hub Freezer until its Sign is read. Reading a tower's Sign needs its
+   quarter: south for High Heroes, west for High Mirrors, north for High Skipping Stones and east for High
+   Beamcasters. The levels each Way passes are the viewer's table of known routes ([Known routes](VIEWER.md#known-routes)).
 5. The elevator's top opens onto the end2 room (z 44). There `laser_pointer` needs 11 levels: `allocate_heroes_v2` →
    `end2_heroes_1_2` → `end2_heroes_1_5`; `end2_mirror_3` → `mirror_prelude_v2_fix` → `peak_toggle`;
    `place_slot_4x4_pushstyle` → `color_picker` → `place_promesst_rooms`; `stack_prelude_pushstyle`. The set's other
@@ -251,22 +243,18 @@ leaves at stage 5.
      (−6, 151, 44) opens (−7, 150) and (−9, 152) and shuts the notted (−7, 152). Row 152 runs east to (−13, 153),
      then across the seam to a PROTECTION Wardrobe (−13, −1, 47).
    - The corner cup: (−7, 141, 46) is a floor Fence fenced on all four sides at z 46. The air cell above it,
-     (−7, 141, 47), is the only corner joining A (west of it) and B1 (north of it). A hero stepping in from A or B1
-     falls into the cup and is trapped. Anything in the cup holds up (−7, 141, 47), so a Rock pushed south into it
-     from (−7, 142, 47) would bridge B1 to A.
+     (−7, 141, 47), is the only corner joining A (west) and B1 (north). A hero stepping in from either falls into the
+     cup and is trapped. Anything in the cup holds up (−7, 141, 47), so a Rock pushed south into it from
+     (−7, 142, 47) would bridge B1 to A.
    - The room's magic Mirrors: the vertical (−10, 143, 44), θ 180, arms west and up, in the `chart_a_course`
      Freezer; the flat (−8, 153, 44), θ 0, arms west and south; after `laser_pointer`, the flat one (0, 149, 47), θ 0,
      on the Rover (0, 149, 46), θ 180, whose track is x 0..−3. The Rover's Mirror is in screen 1, the others in
-     screen 0. As placed no hop reaches A or B: the vertical Mirror's landings (−10, 143, 45..51) all fall back to
-     the room floor; the Rover Mirror's west arm reaches West at (−23, 149, 47), but that cell is in screen 0, so the
-     mirage is not processed; its other hops stay in B or drop into the z 44 east room. So the `laser_pointer` gate
-     opens nothing by itself.
-   - Into B1 (inferred from the rules, not seen in a save): push the vertical magic Mirror east 3 times along row 143
-     at z 44, to (−7, 143), the hero walking (−11 → −9, 143). It crosses `chart_a_course`'s Level_Entry (−8, 143) and
-     ends on `sidestone_zach_2_end2`'s cell (−7, 143); Level_Entries block no move
-     ([A move](MOVEMENT.md#a-move)). Then from (−10, 143, 44) ACTIVATE: d = 3 on the west arm maps 3 up the up arm,
-     to the floor Fence (−7, 143, 47). Nothing is nearer on either arm (the west arm meets the wall at (−12, 143) first), the flat Mirror has no target, and the Rover's Mirror is in
-     another room. Any d ≥ 3 lands at or above (−7, 143, 47) and falls onto it. That opens B1.
+     screen 0. As placed no hop reaches A or B, so the `laser_pointer` gate opens nothing by itself.
+   - Into B1 (inferred from the rules): push the vertical magic Mirror east 3 times along row 143 at z 44, to
+     (−7, 143), the hero walking (−11 → −9, 143). It crosses `chart_a_course`'s Level_Entry (−8, 143) and ends on
+     `sidestone_zach_2_end2`'s cell (−7, 143); Level_Entries block no move ([A move](MOVEMENT.md#a-move)). Then from
+     (−10, 143, 44) ACTIVATE: d = 3 on the west arm maps 3 up the up arm, to the floor Fence (−7, 143, 47). Any d ≥ 3
+     lands at or above it and falls onto it. That opens B1.
    - How the hero gets from B1 into A is open ([Progression and the viewer's model](UNCONFIRMED.md#progression-and-the-viewers-model)).
 8. Win `all_together_now`. It opens its exit gate (−9, 132, 47). From there the hero drops to the rank-3 gate
    (−9, 134, 0) and the `~end2` Door.
@@ -281,8 +269,8 @@ leaves at stage 5.
    riding down from the sky once the elevator's stack is cleared from the top ([Elevators](MOVEMENT.md#elevators)).
    The pad's map-room twin (62, 119, 78) starts disabled, and only the twins of five underworld pads enable it:
    (97, 69, −21), (48, 68, −21), (81, 51, −21), (86, 105, −18) and (61, 86, −21). No ground pad's discovery chain
-   names an underworld pad, and from the ground (every Freezer open but that ring) no walk, elevator or MINOR pad
-   enters an underworld cell. The underworld hub's minor pads land outside the pocket.
+   names an underworld pad, and no walk, elevator or MINOR pad enters an underworld cell from the ground. The
+   underworld hub's minor pads land outside the pocket.
 3. The underworld hub (−15, 147, −21) holds the Low towers and `4wc` levels. On foot it is a sealed pocket, even
    with every Freezer open. Its ways in:
    - Its MAJOR pad (−11, 147, −21), from the twin (38, 138, 78). That twin starts disabled and undiscovered. The twin
@@ -296,47 +284,40 @@ leaves at stage 5.
      Gate (2, 126), flavor 33390, has no Switch: only an OPEN beam opens it. The monster Gates open only while a living
      Monster is in their screen room; none was found nearby.
 4. The first end3 room, A (heroes), is reached only from the hub. It is a pocket: the hall (y 136–141)
-   and the room (x 1–7, y 129–135, z −24). No pad, Door or elevator from outside leads into it. Besides its own exits
-   and the back door from room H (the Freezer (−11, 129), below), its only link is a chute from the hub:
-   (−15, 146, −21) → (−15, 145..144, −22) → (−15, 143..142, −23) → (−15, 141, −24) into the hall. It drops one z
-   every 2 cells, so it is one-way down. It
-   starts behind the Gate (−15, 147, −21), closed, a Promesst glyph gate of flavor 9; no overworld gate of
-   that mesh and flavor has a Switch, and it is in no Group. So only an OPEN bump opens it
+   and the room (x 1–7, y 129–135, z −24). Besides its own exits and the back door from room H (the Freezer
+   (−11, 129), below), its only link is a chute from the hub: (−15, 146, −21) → (−15, 145..144, −22) →
+   (−15, 143..142, −23) → (−15, 141, −24) into the hall. It drops one z every 2 cells, so it is one-way down. It
+   starts behind the Gate (−15, 147, −21), closed, a Promesst glyph gate of flavor 9 with no Switch and in no Group.
+   In play it ends open, with all the hub's pads discovered. The only opener the rules give is an OPEN bump
    ([Gates, switches and buttons](MOVEMENT.md#gates-switches-and-buttons)): a mover in an OPEN beam, and in no ALTER
    beam, moving into it. The beam has to arrive at z −21 along row 147 from the east, along row 148, along column −16
-   or −14, or along column −15 from y 149–151 (the Sign (−15, 152) stops it beyond). No light in the level data
-   reaches any of those cells, as placed or with every gate open; only contrived placements of two new Mirrors do. The hub holds no light, Mirror or mover. Beams pass solids and stop only at entities
-   ([Promesst beams and powers](MOVEMENT.md#promesst-beams-and-powers)), so the walls between do not matter. What
-   gets an OPEN beam there is open ([Progression and the viewer's model](UNCONFIRMED.md#progression-and-the-viewers-model)).
-   - Row 147 from the east crosses a goblin field: floor at z −22, x 54..70, y 141..153. Goblins ride plain Mirrors
-     (not magic, not `mirrorable`, all θ 90, open sides south and east) at x 56, 60, 64 and 68 in rows 143 and 151,
-     and at x 60, 64 and 68 in row 147. A Rock stands on a pillar at (62, 147, −21) and Rubble lies at
-     (56, 147, −22). Pads at (58, 145), (66, 145), (58, 149) and (66, 149), z −22, all lead to the Floor
-     (62, 153, −21) at the south end of a jetty (61..63, 154..157, −21). The jetty and the Floor drop into the field
-     and the pads lead back, so jetty and field are one pocket.
-   - The field is entered from the north, off a Lily highway. The river along y 160 (y 4 across the seam) at z −21
-     runs the whole world width, flowing west, so it is a ring. One Lily rides it. Each highway stop has an Activator
-     whose Spawner puts that Lily back on the river just upstream of the stop: (62, 159), (78, 0), (104, 3),
-     (118, 5), (135, 7), (151, 3) and (−15, 5, −18). The home stop (22, 6) puts it back at (26, 7), off the river.
-     (62, 159, −21) is the field's stop: from it the Freezer (62, 158, −21), which needs the sky level `chain_gang`,
-     leads onto the jetty. No current touches the Lily's home, so it leaves only when a skipping stone kicks it
-     (derived from the rules, not seen in a save). The Rock (19, 8, −21) on the home island's west tip is pushed west
-     from the Freezer cell (20, 8), which `wrap_music` opens. It skips west along row 8 round the world and comes in
-     from the east to the Gate (29, 8, −22), flavor 111876, which holds it up while closed. While the hero stands on
-     the Gate's only Switch (29, 9, −21), on the island's path, the stone passes over and at (26, 8) kicks the Lily
-     south. The Lily drifts onto the river at (26, 4) and flows west past the island's south shore (20..22, 5), where
-     the hero boards it. A stop's Activator puts the Lily on the river with no kick. How the hero first reaches the
-     island or any stop is not known.
-   - A hand-off through the notch at (71, 147) fails: no light of any colour reaches (71, 146) heading north, even
-     with the Gem (71, 71) gone, every gate open and rocks letting beams through. Even with a beam there, the three
-     row-147 Mirrors turn a west-bound beam south, and the Rock (62, 147) sits in the row. So the hub Gate has no
-     OPEN source as placed.
+   or −14, or along column −15 from y 149–151 (the Sign (−15, 152) stops it beyond). Beams pass solids and stop only
+   at entities ([Promesst beams and powers](MOVEMENT.md#promesst-beams-and-powers)). No light in the level data
+   reaches those cells, and the hub holds no light, Mirror or mover. What opens it is not known (unconfirmed;
+   [Progression and the viewer's model](UNCONFIRMED.md#progression-and-the-viewers-model)).
+   - Row 147 from the east crosses a goblin field: floor at z −22, x 54..70, y 141..153, with goblins riding plain
+     Mirrors in rows 143, 147 and 151. The Mirrors turn in play from their level-data θ 90 (cause unconfirmed). A
+     Rock stands on a pillar at (62, 147, −21). Pads at (58, 145), (66, 145), (58, 149) and (66, 149), z −22, lead to
+     the Floor (62, 153, −21) at the south end of a jetty (61..63, 154..157, −21); jetty and field are one pocket.
+     No light reaches (71, 146) heading north, and the row-147 Mirrors as placed turn a west-bound beam south, so the
+     hub Gate has no OPEN source as placed.
+   - The field is entered from the north, off a Lily highway: the river along y 160 (y 4 across the seam) at z −21
+     runs the whole world width, flowing west, so it is a ring, and one Lily rides it. Each highway stop has an
+     Activator whose Spawner puts that Lily back on the river just upstream of the stop: (62, 159), (78, 0),
+     (104, 3), (118, 5), (135, 7), (151, 3) and (−15, 5, −18). The home stop (22, 6) puts it back at (26, 7), off the
+     river. (62, 159, −21) is the field's stop: from it the Freezer (62, 158, −21), which needs `chain_gang`, leads
+     onto the jetty. The home Lily leaves only when a skipping stone kicks it (derived from the rules): the Rock
+     (19, 8, −21), pushed west from the Freezer cell (20, 8) (opened by `wrap_music`), skips round the world and
+     comes in from the east to the Gate (29, 8, −22), flavor 111876. While the hero stands on its only Switch
+     (29, 9, −21), the stone passes over and at (26, 8) kicks the Lily south onto the river at (26, 4), which flows
+     west past the island's south shore (20..22, 5), where the hero boards it. How the hero first reaches the island
+     or any stop is not known (unconfirmed).
 5. The end3 rooms (x −22..30, y 103..139, z −24; to players Exit Low, northwest of the crossroads on the Low layer)
-   hold the whole `endgame3` set, in the eight rooms below, as one chain. Each room's first levels are enabled, so the order is physical. Between rooms stand Freezers and switch Gates. The
-   Switches sit in floor pits at z −25 and −26 (flavors 33331–33339, 33390, 333310–333313); each pit pad at z −25
-   targets the next room's Marker. With every Freezer closed each room is its own pocket, so no room can be entered
-   early (the viewer's walk on the level data). The order (the viewer's walk, with each pit's Switch taken as
-   pressable once the hero is in the pit):
+   hold the whole `endgame3` set, in the eight rooms below, as one chain. Each room's first levels are enabled, so the
+   order is physical. Between rooms stand Freezers and switch Gates. The Switches sit in floor pits at z −25 and −26
+   (flavors 33331–33339, 33390, 333310–333313); each pit pad at z −25 targets the next room's Marker. With every
+   Freezer closed each room is its own pocket, so no room can be entered early. The order is the viewer's walk, with
+   each pit's Switch taken as pressable once the hero is in the pit (unconfirmed):
    1. heroes (x 2–6, y 130–134), exit (10, 136) in its Freezer, which needs all 4 levels. Its levels hang from one root,
       `allocate_heroes_end3` (4, 134), which stands in the switch Gate (4, 134), flavor 33332. Its Switch
       (−4, 132, −25) is in the west pit, so the west pit comes before any level of room A, and the east pit (Switch
@@ -379,21 +360,19 @@ leaves at stage 5.
   the rank-5 Freezer (84, 23, 1). North, column 38 leads to the cross hub (z 2, x 22–48, y 63–76).
 - The exit is the Stairs (57, 0, 2) → (57, 0, 10) → the INTRO_FINAL_EXIT Door. At rank 3 the bottom pocket is small
   and drops one way to z 0. At rank 5 it joins the credits rooms (z 2, x 50–92, y 0–7) through the rank-5 Freezers
-  (59, 0, 2) and (63, 6, 2). From any arrival, with every gate open and Rocks passable, a walk on foot never reaches
-  the credits rooms or the exit, but a teleport does: a magic Mirror pushed east of the cross hub and a light's
-  beam take the hero into the credits rooms at rank 1, and from there the Stairs (57, 0) lead up to the exit with
-  every rank-3 and rank-5 Freezer closed (seen in a save). The credits rooms drop one way to the z 0 hallway, south of
-  (49, 7, 2). The way out is the Door (45, 47, 0) to `overworld:start`. It sits in a Freezer whose Sign has
-  `unlock_freezers_with_rank` 255, so it is open from the start; the opening run walks through its cell (seen in the
-  default save).
-- Every arrival can leave by that Door; INTRO_FINAL_EXIT is not needed. After `end1` a hero was seen leaving by the
-  credits rooms' drop and the z 0 hallway. The walks below are inferred: the rules are checked, the walks are not
-  seen in a save ([Progression and the viewer's model](UNCONFIRMED.md#progression-and-the-viewers-model)):
-  - from `~end1` (45, 50, 2), inside the thaw box: (44, 49, 2), down the Stairs (44, 48) to z 0, then (44, 47, 0),
-    (44, 46, 0), (45, 46, 0) and north into the Door, the way the opening run entered it. The Stairs (46, 48) work
-    the same way. (45, 48, 0) is solid, so the stair bottoms reach the Door only round its side;
+  (59, 0, 2) and (63, 6, 2). A walk on foot never reaches the credits rooms or the exit, but a teleport does: a
+  magic Mirror pushed east of the cross hub and a light's beam take the hero into the credits rooms at rank 1, and
+  from there the Stairs (57, 0) lead up to the exit with every rank-3 and rank-5 Freezer closed (seen in play). The
+  credits rooms drop one way to the z 0 hallway, south of (49, 7, 2).
+- The way out is the Door (45, 47, 0) to `overworld:start`, in a Freezer whose Sign has `unlock_freezers_with_rank`
+  255, so it is open from the start. Every arrival can leave by it (inferred,
+  [Progression and the viewer's model](UNCONFIRMED.md#progression-and-the-viewers-model)); INTRO_FINAL_EXIT is not
+  needed:
+  - from `~end1` (45, 50, 2), inside the thaw box: (44, 49, 2), down the Stairs (44, 48) (or (46, 48)) to z 0, then
+    (44, 47, 0), (44, 46, 0), (45, 46, 0) and north into the Door; (45, 48, 0) is solid, so the stair bottoms reach
+    the Door only round its side;
   - from `~end2` (50, 50, 2): through `intro_end2_freezer` (rank 3), the hall at rows 53–54 and `intro_end1_freezer`
-    (45, 52, 2) (rank 1), north into the thaw box, then as from `~end1`;
+    (rank 1), north into the thaw box, then as from `~end1`;
   - from `~end3` (40, 50, 2): through `intro_end3_freezer` (rank 5), the hall and (45, 52, 2), then as from `~end1`.
 - Beyond lie the credits rooms: the Signs of Group `full_game_only`, the `credits` and `creditsbard` Markers and
   the `credits_art_*` Groups, with rank-3 and rank-5 freezers inside. The post-credits Level_Entries are there; they
@@ -403,8 +382,8 @@ leaves at stage 5.
   closes. That branch writes nothing to Status. The shutdown save writes what earlier frames queued and nothing new
   ([Files and versions](SAVES.md#files-and-versions)), so the history's last record is the cell before the Door, and
   Status still names `intro`: the next start loads `intro` at that cell.
-- A "The End" menu exists (`menu_the_end`, `menu_the_end_console_continue` "Return to Lobby"), but no caller of the
-  menu-mode setter passes it: it never opens on PC (console only, inferred).
+- A "The End" menu exists (`menu_the_end`, `menu_the_end_console_continue` "Return to Lobby"), but it never opens on
+  PC (console only, inferred).
 
 ### No "finished" flag
 
@@ -419,13 +398,11 @@ leaves at stage 5.
 
 - A campaign is a save subfolder holding Status.sokoban_status. All campaigns play the same game; no alternate mode, no new game plus.
 - The first campaign folder is the **localized** `campaign_name_default` (en `default`, de `Standard`, fr `Par défaut`, ru `по умолчанию`, ...). If the in-memory name is empty when saving, the literal `default` is used.
-- At startup the most recent campaign is loaded. "Start a New Campaign" names the folder from random localized words `campaign_name_h_*` + `m_*` + `s_*` + `p_*`, concatenated, retried on collision. The `menu_campaign_limit_reached` dialog ("You already have % saved campaigns...") would say 4, but nothing ever opens it: campaigns are unlimited.
+- At startup the most recent campaign is loaded. "Start a New Campaign" names the folder from random localized words `campaign_name_h_*` + `m_*` + `s_*` + `p_*`, concatenated, retried on collision. Campaigns are unlimited (the `menu_campaign_limit_reached` dialog never opens).
 - A level set (`.level_set`, "campaign" in code strings) is an ordered level list. `*choice` after level i: after a win at i return to the overworld (`OVERWORLD_DUE_TO_CHOICE`). `*worlds_collide` = mode 2. Otherwise the game advances to the next level of the set.
 - The active set is chosen by level name: the set holding the level, preferring sets that are not `drafts*`/`tests*`/`render_tests*`/`gyms*`/`unplaced_levels`, and skipping `design_illustrations` once the overworld is reached. `Door.switch_to_level_set` switches by set name. Level sets don't split completion.
-- On campaign load the game goes to the `overworld` set (if allowed), else to the saved current level. A campaign
-  saved in `intro` after the overworld was reached loads into `intro` (seen in a save); which check refuses the
-  overworld there is not known.
-- Status `current level` keeps naming a level after the player leaves it, until Status is saved again. File times can't tell leaving from playing: the order and delay of history and Status writes vary.
+- On campaign load the game goes to the `overworld` set (if allowed), else to the saved current level. A campaign saved in `intro` after the overworld was reached loads into `intro` (seen in play); which check refuses the overworld there is not known (unconfirmed).
+- Status `current level` keeps naming a level after the player leaves it, until Status is saved again.
 - Teleporting the hero to a link Marker (a Door's `target_link`, a level-set switch with a link, the start-link arrival) in the INTRO level runs every Wardrobe's door-in reset on the hero ([Wardrobes](SKILLS.md#wardrobes)). Overworld pads don't.
 
 ## In-game progress displays
@@ -453,4 +430,4 @@ leaves at stage 5.
 - Every Level_Entry without `unlocked_by_id*` has `enabled_t_target = 1` in the data (open from the start). The gated ones have 0, except `falloff_dragons`, `skybridge`, `zap_bridge` and `detachment`, which have 1, so they are open from the start too (the unlock pass only evaluates a gate while `enabled_t_target == 0`). No entry has `solved_t_target` set; none is broken or disfavored. A few are `dropdown`; the tower levels have `tower_flags`. So COMPLETIONIST = every overworld level name SOLVED. The Level_Entries in `intro` and the one in `end3_promesst_red` don't count.
 - `achievement` carriers (all on the overworld): GOLD_HM `worlds_collide_heroes_and_mirrors_v3`, GOLD_HS `worlds_collide_heroes_and_stones`, GOLD_HP `worlds_collide_heroes_and_promesst_v4`, GOLD_MS `worlds_collide_mirrors_and_stones_v2`, GOLD_MP `worlds_collide_alt`, GOLD_SP `worlds_collide_ps`, HEROES `heroes3_21_condensed`, MIRRORS `mundane_mirror`, SKIPPING `skipping_shores_v3`, PROMISE `promesst2_streamlined`, ENDGAME1 `end1`, ENDGAME2 `all_together_now`, ENDGAME3 `end3_pipeline_aesthetics`.
 - `demo_phase` is set on some entries; the game doesn't read it.
-- The overworld's `level_name`s are all unique.
+- The overworld's `level_names` are all unique.

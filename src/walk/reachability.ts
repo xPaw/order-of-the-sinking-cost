@@ -243,6 +243,15 @@ function routeCell(walk: Walker, route: KnownRoute, levelCells: number[]): numbe
 }
 
 /**
+ * The seed of an entered level. A hero stood on its entrance, so one inside an attacked cell was held there by
+ * PROTECTION (over air too): that cell seeds the PROTECTION layer. Any other entrance seeds its `land`.
+ */
+function enteredSeed(walk: Walker, levelCell: number): Seed {
+    if (walk.fire.has(levelCell)) return [levelCell, PROTECTED];
+    return walk.land(levelCell);
+}
+
+/**
  * The seeds of the main flood: the current hero, the kept hero positions, the entered levels, the activated Area_Pins,
  * the discovered teleporters and the targets of the known routes whose needs are met. `dead`: the kept positions inside
  * a wall, which seed nothing.
@@ -260,7 +269,7 @@ function seedsOf(
     const dead = addKeptHeroSeeds(walk, history, seeds);
 
     PROG.levels.forEach((_, levelIndex) => {
-        if (entered[levelIndex]) seeds.push(walk.land(levelCells[levelIndex]));
+        if (entered[levelIndex]) seeds.push(enteredSeed(walk, levelCells[levelIndex]));
     });
 
     for (const [pid, x, y, z] of PROG.world.area_pins) {

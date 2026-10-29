@@ -68,20 +68,18 @@ is in CHANGE form: every field carries the type's default as the old value and t
 field missing from the blob holds the type default (position 0, scale 1, ...). Fields come in index order,
 `Undoable_Entity_Data` fields first, then the type's own (bit 0x1000).
 
-Pids are scoped to the level. The save's `.history` refers to them raw, but the same Pid appears in several levels
-with unrelated types: many Pids occur in more than one level, often with different types. The namespace is
-not a level id. A level mixes many namespaces (the overworld mostly 101, 73, 80, 121, 135, 115) and one
-namespace spans hundreds of levels. `#1021-1` is the `Level_State` in every level that has one. Cross-entity references
-(`unlocked_by_id`, `extension_of`, `target_id`, `map_label_marker_id`, ...) resolve inside the same level (nearly
-all; every one on the overworld).
+Pids are scoped to the level. The save's `.history` refers to them raw, but the same Pid appears in several levels,
+often with different types. The namespace is not a level id: a level mixes many namespaces (the overworld mostly 101,
+73, 80, 121, 135, 115) and one namespace spans hundreds of levels. `#1021-1` is the `Level_State` in every level that
+has one. Cross-entity references (`unlocked_by_id`, `extension_of`, `target_id`, `map_label_marker_id`, ...) resolve
+inside the same level.
 
 ### The grid
 
 - At every level load the walls rebuild computes `Settings.grid` (corner and size) from the level's contents; a level
   with no Settings entity gets one, computed the same way. The stored grid counts only with `Settings.lock_grid`:
   then its x and y are kept, and it seeds the computed box in z. Wrapping plays no part: a wrapping level gets the
-  computed box too, and wraps by it ([Wrapping](WORLD.md#wrapping)). In the shipped levels the computed box equals
-  the stored one in every wrapping level without `lock_grid`.
+  computed box too, and wraps by it ([Wrapping](WORLD.md#wrapping)).
 - The box is the union of: each Wall_Set's `wall_data` box turned and moved by the set (both corners, corner and
   corner + dimensions − 1, rotated by its orientation, its position added, then min and max per axis, truncated to
   int); each Ocean_Map's grid box, turned and moved by the map's orientation and position the same way; the cells of every Guy, Rock, Door, Gate, Promesst_Light, Monster and Gem; and
@@ -139,8 +137,7 @@ nl × str16 material name
 ```
 
 A LOD's index buffer holds each list twice, the second copy with reversed winding (for mirrored placements). A front
-face winds counter-clockwise seen from outside (inferred from the meshes: a flat floor tile's triangles all wind
-counter-clockwise seen from above). Texture row 0 is v = 0 (inferred, checked by eye).
+face winds counter-clockwise seen from outside (inferred). Texture row 0 is v = 0 (inferred).
 Positions are in metres in the entity's space: world = rotate(quaternion) · (scale × p) + position.
 `base.materials[i]`, when non-empty, overrides material `i`.
 
@@ -150,9 +147,7 @@ A normal and a tangent are each 10-10-10-2 unsigned normalised: x in bits 0..9, 
 A skinned mesh's bone indices point into the skeleton of the model's `data-common/<name>.anim` in
 `data/animation.package`: `Anim`, u16, u16, u16, u16 bone count (byte 10), the file's offsets, a rest transform, then at
 byte 74 one u16 parent bone index per bone (0xffff for the root). Everything after the parents (the bind pose and the
-curves) is not decoded. In the queen's bind pose the arms stretch out along y at shoulder height with the face towards
-+x, and each arm and finger bone's vertices lie far from the body; the cape's strands hang from the shoulders on their
-own bones.
+curves) is not decoded.
 
 ### `data-pc/<name>.texture`
 
@@ -275,8 +270,7 @@ after `@` in the source: `@v14` → `v14`, `@NoSerialize` → `NoSerialize`.
 `enum_type_flags` is 0x10000 on the types declared `enum_flags` and 0 on the other enums. Nearly all of those are
 `*_Flags`, plus the member `Flags` enum and Jai's own `Struct_*_Flags`. The runtime tests the bit itself: the value
 printer writes such an enum as its set names joined by ` | `, and the command-line parser refuses an argument "declared
-enum_flags". `Mesh_Index_Format` has 0x40000 as well. Nothing reads that bit: no code tests bit 18 of an enum's flags or uses
-0x40000 as a test mask, so it has no effect. No Type_Info for the flags enum names it.
+enum_flags". `Mesh_Index_Format` has 0x40000 as well, which nothing reads.
 
 ### Reading the schema out of the binary
 
