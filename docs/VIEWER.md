@@ -1054,6 +1054,8 @@ fog; `goalsView()` adds the labels, counts and lists with fog applied.
   the step onto its pad; an achievement its tower's (the TOWER_* ones), its unsolved levels, or its rank marker
   (ASCEND, DESCEND); Achievements their children's; Completionist every unsolved level. A goal done asks
   for nothing. Endgame's own targets leave its children out: they are a view of the gold-room k of n on its plan.
+  Endgame High and Endgame Low also ask for what their stages not done ask for (below), after their own level, so
+  their lists hold the stages' levels and the levels that lead to them, even while a stage is under fog.
 - Progress: an ending, its plan steps left that fog does not hide, its own level counted; Endgame, until its Sign
   has the teleporters it needs, the Antipode teleporters visited of that need (4), the in-game bar on the Sign, then
   its plan steps left; a tower, its solved normal levels of the number it needs; a ground tower under Endgame the

@@ -33,6 +33,21 @@ interface KnownRouteSource {
     note?: string;
 }
 
+// what the way down to the underworld asks for: routes that start in the underworld ask for it too
+const LOW_WAY_NEEDS: NeedSource[][] = [
+    [{ level: 'promesst2.5_deeper' }],
+    [{ level: 'taking_the_lift' }],
+    [{ level: 'drop_sokoban' }],
+    [{ level: 'under_pressure' }],
+    [{ level: 'strong_monsters_v2' }],
+    [{ level: 'stay_lit' }],
+    [{ level: 'bridgey3_abstract_art' }],
+    [{ level: 'overwrite' }],
+    [{ rock: 62941709 }],
+    [{ rock: 62941723 }],
+    [{ rock: 111153054 }],
+];
+
 const KNOWN_ROUTES: KnownRouteSource[] = [
     {
         id: 'heroes_way',
@@ -275,21 +290,21 @@ const KNOWN_ROUTES: KnownRouteSource[] = [
     {
         id: 'push_down_chain_ride',
         to: { level: 'push_down_chain' },
-        needs: [
-            [{ level: 'promesst2.5_deeper' }],
-            [{ level: 'taking_the_lift' }],
-            [{ level: 'drop_sokoban' }],
-            [{ level: 'under_pressure' }],
-            [{ level: 'strong_monsters_v2' }],
-            [{ level: 'stay_lit' }],
-            [{ level: 'bridgey3_abstract_art' }],
-            [{ level: 'overwrite' }],
-            [{ rock: 62941709 }],
-            [{ rock: 62941723 }],
-            [{ rock: 111153054 }],
-        ],
+        needs: LOW_WAY_NEEDS,
         onto: 'underworld',
         note: 'the elevator carries the hero down to the level once all three Rocks of its stack are smashed: Rubble smashed in both the SMASH and the ALTER beam smashes every Rock of its kind in the room; on the way the red Gem is moved across the sky through the Freezers of taking_the_lift, drop_sokoban, bridgey3_abstract_art, overwrite and the Strength levels',
+    },
+    {
+        id: 'far_cl_no_walls_pit_fire_mirrors',
+        to: { level: 'far_cl_no_walls_pit' },
+        needs: LOW_WAY_NEEDS,
+        note: 'by standing in a dragon fire that Mirrors carried by monsters reflect: the monsters turn toward the hero and turn their Mirrors with them',
+    },
+    {
+        id: 'goblin_hat_v2_fire_mirrors',
+        to: { level: 'goblin_hat_v2' },
+        needs: LOW_WAY_NEEDS,
+        note: 'the same fire and Mirrors as far_cl_no_walls_pit',
     },
     {
         id: 'pass_through_v2_same_z_cage',

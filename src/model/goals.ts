@@ -236,8 +236,19 @@ export function goalLadder(progress: BaseProgress & { plans: Plans }, status: { 
     const achievements: AchievementsGoal = parent({ key: 'achievements', kind: 'achievements' }, achievementGoals);
     if (endings.length && antipodeGoals.length) endings[0].children = antipodeGoals;
 
+    // an ending not earned asks for its stages not done besides its own level (still targets[0]), so its roles reach
+    // the levels that lead into them
     endings.forEach((ending, position) => {
-        if (stageLists[position].length) ending.children = stageLists[position];
+        const stageList = stageLists[position];
+        if (!stageList.length) return;
+
+        ending.children = stageList;
+        if (ending.done) return;
+        for (const stage of stageList) {
+            for (const id of stage.targets) {
+                if (!ending.targets.includes(id)) ending.targets.push(id);
+            }
+        }
     });
 
     const levelsLeft = unsolved([...levels.keys()]);
