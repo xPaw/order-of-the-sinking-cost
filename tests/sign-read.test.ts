@@ -1,45 +1,18 @@
 // A Sign opens its Freezers once it is read (`rank_satisfied` in the history), not when its rule holds; a Sign whose rule
 // holds and is not read is a step of its own in the plans of the Freezers it opens
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { beforeAll, describe, expect, test } from 'vitest';
 import { freshCampaign, walkLoaded } from '../scripts/lib/walk-fingerprint.ts';
-import { savesDir } from '../scripts/saves.ts';
 import { PROG } from '../src/data.ts';
 import { computeProgress } from '../src/model/progress.ts';
 import type { CampaignProgress } from '../src/model/progress.ts';
 import { unlockPlan } from '../src/model/plans.ts';
-import { latestOf, overrideLatest, parseHistory, parseStatus } from '../src/save.ts';
 import { signStateOf } from '../src/model/unlocking.ts';
-
-const READ = Uint8Array.of(1);
-
-// the rank 1 Sign by the Bard and Druid area (its two Freezers) and a tower Sign (its Freezer)
-const RANK_ONE_SIGN_PID = 111245225;
-const TOWER_SIGN_PID = 115348482;
+import { campaign, RANK_ONE_SIGN_PID, TOWER_SIGN_PID } from './fixtures.ts';
 
 const signIndexOf = (pid: number) => PROG.signs.findIndex((sign) => sign.pid === pid);
 const planKeys = (progress: CampaignProgress, gateIndex: number) => [
     ...unlockPlan(progress, ['gate', gateIndex])!.nodes.keys(),
 ];
-
-// the fresh campaign at `rank`, with the Signs of `readPids` read in its history
-function campaign(rank: number, readPids: number[] = [], openedPids: number[] = []) {
-    const { status, history } = freshCampaign();
-    const read = new Set(readPids);
-    const latest = latestOf(history);
-    const readHistory = { ...history };
-    overrideLatest(readHistory, {
-        ...latest,
-        get: (pid: number, field: string) => {
-            if (field === 'rank_satisfied' && read.has(pid)) return READ;
-            return latest.get(pid, field);
-        },
-    });
-
-    const openedFreezers = [...status.openedFreezers, ...openedPids];
-    return computeProgress({ ...status, rank, openedFreezers }, readHistory);
-}
 
 beforeAll(async () => {
     await walkLoaded();
@@ -133,38 +106,40 @@ describe('a save without a history', () => {
     });
 });
 
-const hasSave =
-    Boolean(process.env.SOKO_SAVES) &&
-    existsSync(join(savesDir(), 'default', 'Status.sokoban_status')) &&
-    existsSync(join(savesDir(), 'default', 'overworld.history'));
-
-describe.skipIf(!hasSave)('the snapshot save', () => {
-    const readFile = (name: string) => new Uint8Array(readFileSync(join(savesDir(), 'default', name)));
+describe('a synthetic campaign at rank 1 with Signs read', () => {
     let progress: CampaignProgress;
 
     beforeAll(() => {
-        const status = parseStatus(readFile('Status.sokoban_status'));
-        progress = computeProgress(status, parseHistory(readFile('overworld.history')));
+        progress = campaign(1, [RANK_ONE_SIGN_PID, TOWER_SIGN_PID]);
     });
 
     test('a Sign read in the history has its Freezers open', () => {
+        let checked = 0;
         for (const sign of PROG.signs) {
             if (sign.status || !progress.signRead(sign.pid)) continue;
             for (const gateIndex of sign.gates) {
                 const freezer = PROG.freezers[gateIndex];
                 const signCount = (freezer.signs || []).length;
-                if (freezer.req.length === 0 && signCount === 1) expect(progress.gateOpen[gateIndex]).toBe(true);
+                if (freezer.req.length !== 0 || signCount !== 1) continue;
+
+                checked++;
+                expect(progress.gateOpen[gateIndex]).toBe(true);
             }
         }
+        expect(checked).toBeGreaterThan(0);
     });
 
     test('a Sign whose rule holds and which is not read is a step of the plans of its Freezers, unless they are listed open', () => {
+        let checked = 0;
         for (const [signIndex, sign] of PROG.signs.entries()) {
             if (sign.status || progress.signRead(sign.pid) || !progress.signOk(sign)) continue;
             for (const gateIndex of sign.gates) {
                 if (progress.gateOpen[gateIndex]) continue;
+
+                checked++;
                 expect(planKeys(progress, gateIndex)).toContain('s' + signIndex);
             }
         }
+        expect(checked).toBeGreaterThan(0);
     });
 });

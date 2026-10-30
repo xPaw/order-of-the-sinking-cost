@@ -6,11 +6,8 @@
 // it pushes into water makes no bridge. The live searches take every cell of the start region as a push cell for every
 // push of a Rock, where the room search walks the hero over the cells as the earlier pushes left them, so a bridge the
 // answer lacks passes when the Rock pushed alone, as the room search pushes it, never sinks there.
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import { beforeAll, describe, expect, test } from 'vitest';
-import { savesDir } from '../scripts/saves.ts';
-import { freshCampaign, readSaveFolder, walkLoaded } from '../scripts/lib/walk-fingerprint.ts';
+import { freshCampaign, walkLoaded } from '../scripts/lib/walk-fingerprint.ts';
 import type { Campaign } from '../scripts/lib/walk-fingerprint.ts';
 import { PROG } from '../src/data.ts';
 import { DEMO_STATUS, demoHistory } from '../src/demo-save.ts';
@@ -35,8 +32,7 @@ import type { TeleporterState } from '../src/walk/teleporters.ts';
 import { buildWalkGrid } from '../src/walk/walker.ts';
 import type { WalkGrid } from '../src/walk/walker.ts';
 import { fenced } from '../src/walk/walls.ts';
-
-const STATUS_FILE = 'Status.sokoban_status';
+import { RANK_ONE_SIGN_PID, syntheticCampaign, TOWER_SIGN_PID } from './fixtures.ts';
 
 /** What a walker is built from: the save's latest values, the pads' states and the closed Freezers. */
 interface WalkerState {
@@ -181,18 +177,15 @@ function inputs() {
             state: () => ({ latest: NO_HISTORY, pads: teleporterStatesOf(null), closed: allFreezersClosed }),
         },
         { name: 'demo save', state: () => stateOf(DEMO_STATUS, demoHistory()) },
-    ];
-
-    const snapshot = join(savesDir(), 'default');
-    if (process.env.SOKO_SAVES && existsSync(join(snapshot, STATUS_FILE))) {
-        list.push({
-            name: 'snapshot',
+        {
+            name: 'rank 1 campaign with two Signs read',
             state: () => {
-                const { status, history } = readSaveFolder(snapshot);
+                const readPids = [RANK_ONE_SIGN_PID, TOWER_SIGN_PID];
+                const { status, history } = syntheticCampaign({ rank: 1, readPids });
                 return stateOf(status, history);
             },
-        });
-    }
+        },
+    ];
 
     return list;
 }

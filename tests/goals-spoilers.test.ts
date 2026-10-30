@@ -1,14 +1,10 @@
-// With spoilers hidden, no goal names or counts anything under fog: the demo ("Example: a new game") and, when
-// SOKO_SAVES names a folder of snapshots, its default save, read-only
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+// With spoilers hidden, no goal names or counts anything under fog: the demo ("Example: a new game") and a campaign
+// at rank 1 with the ground shown and a few Signs read
 import { beforeAll, describe, expect, test, vi } from 'vitest';
-import { savesDir } from '../scripts/saves.ts';
 import { PROG, worldReady } from '../src/data.ts';
-import { parseHistory, parseStatus } from '../src/save.ts';
 import { setProgressCache } from '../src/model/progress.ts';
 import { towerName } from '../src/model/towers.ts';
-import { setSpoilersHidden, state } from '../src/shared.ts';
+import { setSpoilersHidden } from '../src/shared.ts';
 import { showDemo } from '../src/files.ts';
 import { progressModel } from '../src/model/progress-model.ts';
 import type { ProgressModel } from '../src/model/progress-model.ts';
@@ -16,6 +12,7 @@ import { freezerTowers } from '../src/model/goals.ts';
 import type { GoalKind } from '../src/model/goals.ts';
 import type { PlanStep } from '../src/model/requirements.ts';
 import { achievementName } from '../src/model/achievements.ts';
+import { RANK_ONE_SIGN_PID, registerCampaign, syntheticCampaign, TOWER_SIGN_PID } from './fixtures.ts';
 
 // the page, without its DOM
 vi.mock('../src/view.ts', () => ({ show() {}, async showSave() {} }));
@@ -26,32 +23,14 @@ vi.mock('../src/model/layers.ts', async (importOriginal) => ({
 }));
 
 const DEMO = 'No save loaded',
-    LIVE = 'default';
-const hasSave = (camp: string) =>
-    Boolean(process.env.SOKO_SAVES) &&
-    existsSync(join(savesDir(), camp, 'Status.sokoban_status')) &&
-    existsSync(join(savesDir(), camp, 'overworld.history'));
+    SYNTHETIC = 'Synthetic campaign';
+const READ_SIGN_PIDS = [RANK_ONE_SIGN_PID, TOWER_SIGN_PID];
 
 beforeAll(async () => {
     await worldReady;
     setProgressCache(new WeakMap());
     await showDemo();
-    if (!hasSave(LIVE)) return;
-    const read = (name: string) => new Uint8Array(readFileSync(join(savesDir(), LIVE, name)));
-    state.files.set(`${LIVE}/Status.sokoban_status`, {
-        path: `${LIVE}/Status.sokoban_status`,
-        parsed: parseStatus(read('Status.sokoban_status')),
-        file: null,
-        buf: null,
-        error: null,
-    });
-    state.files.set(`${LIVE}/overworld.history`, {
-        path: `${LIVE}/overworld.history`,
-        parsed: parseHistory(read('overworld.history')),
-        file: null,
-        buf: null,
-        error: null,
-    });
+    registerCampaign(SYNTHETIC, syntheticCampaign({ rank: 1, readPids: READ_SIGN_PIDS, groundShown: true }));
 });
 
 // every goal text the page may show: labels, a ground tower's next step and what each listed level leads to
@@ -120,9 +99,13 @@ describe('goals with spoilers hidden', () => {
         expect(model.goals[0].progress).toBe(null);
         checkHidden(model);
     });
-    test.skipIf(!hasSave(LIVE))('the snapshot save names and counts nothing under fog', () => {
+    test('a campaign with the ground shown names and counts nothing under fog', () => {
         setSpoilersHidden(true);
-        const model = progressModel(LIVE);
+        const model = progressModel(SYNTHETIC);
+        expect(model.progress.hidden.filter(Boolean).length).toBeGreaterThan(0);
+        expect(model.progress.hidden.filter((hidden) => !hidden).length).toBeGreaterThan(0);
+        expect(model.progress.towerHidden.some(Boolean)).toBe(true);
+        expect(model.progress.towerHidden.some((hidden) => !hidden)).toBe(true);
         checkHidden(model);
         expect(model.goals.filter((goal) => goal.active).length).toBeLessThanOrEqual(1);
     });
@@ -157,23 +140,27 @@ describe('goals with spoilers hidden', () => {
         }
         setSpoilersHidden(true);
     });
-    test.skipIf(!hasSave(LIVE))('no ending counts a sign step whose sign is under fog', () => {
+    test('no ending counts a sign step whose sign is under fog', () => {
         setSpoilersHidden(true);
-        const model = progressModel(LIVE);
+        const model = progressModel(SYNTHETIC);
         const { plans } = model.progress;
-        let signSteps = 0;
+        let shownSteps = 0;
+        let hiddenSteps = 0;
         for (const goal of model.goals) {
             for (const target of goal.targets) {
                 for (const stepId of plans.steps[target] || []) {
                     const node = plans.G.node[stepId];
                     if (node?.t !== 's' || node.id === undefined) continue;
 
-                    signSteps++;
-                    expect(model.stepShown(node), plans.G.keys[stepId]).toBe(model.signSet.has(node.id));
+                    const inSet = model.signSet.has(node.id);
+                    if (inSet) shownSteps++;
+                    else hiddenSteps++;
+                    expect(model.stepShown(node), plans.G.keys[stepId]).toBe(inSet);
                 }
             }
         }
-        expect(signSteps).toBeGreaterThan(0);
+        expect(shownSteps).toBeGreaterThan(0);
+        expect(hiddenSteps).toBeGreaterThan(0);
     });
     test('with spoilers shown every ending is listed, and its achievement goes by its Steam name', () => {
         setSpoilersHidden(false);

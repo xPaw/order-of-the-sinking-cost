@@ -56,8 +56,8 @@ streams in `world.json` and `progress.json` differ between zlib implementations,
 
 ## Checks and tools
 
-- `npm test`: the tests in `tests/`. The ones on a real save read the `default` campaign of the folder `$SOKO_SAVES`
-  names (read-only) and are skipped when it is not set. `tests/walk-data.test.ts` fails when `data/walk.json` is stale; run
+- `npm test`: the tests in `tests/`. None reads a real save; the ones on a campaign build one in code
+  (`tests/fixtures.ts`). `tests/walk-data.test.ts` fails when `data/walk.json` is stale; run
   `npm run data:walk` after a change to the walk.
 - `npm run docs:check`: every link in `docs/*.md` reaches a file and a heading, no page has two headings with the same
   anchor, and nothing cites a section by number.

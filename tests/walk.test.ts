@@ -1,25 +1,16 @@
-// The walk model on save snapshots, read-only: parsing, reachability, level roles and next steps. The save tests run
-// only when SOKO_SAVES names a folder of snapshots, so a save that is still being played never decides a test.
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+// The walk model on a synthetic campaign: reachability, level roles and next steps
 import { beforeAll, describe, expect, test } from 'vitest';
-import { savesDir } from '../scripts/saves.ts';
 import { PROG, worldReady } from '../src/data.ts';
-import { latestOf, parseHistory, parseStatus, protectedHeroes } from '../src/save.ts';
+import { latestOf, protectedHeroes } from '../src/save.ts';
 import type { ParsedHistory } from '../src/history-file.ts';
-import type { Status } from '../src/status-file.ts';
+import type { DemoStatus } from '../src/status-file.ts';
 import type { Seed } from '../src/walk/flood.ts';
 import { walker } from '../src/walk/walker.ts';
 import { ROLE } from '../src/model/level-roles.ts';
 import { nextSteps } from '../src/model/next-steps.ts';
 import { computeProgress, setProgressCache } from '../src/model/progress.ts';
 import type { CampaignProgress } from '../src/model/progress.ts';
-
-const read = (camp: string, name: string) => new Uint8Array(readFileSync(join(savesDir(), camp, name)));
-const hasSave = (camp: string) =>
-    Boolean(process.env.SOKO_SAVES) &&
-    existsSync(join(savesDir(), camp, 'Status.sokoban_status')) &&
-    existsSync(join(savesDir(), camp, 'overworld.history'));
+import { RANK_ONE_SIGN_PID, syntheticCampaign, TOWER_SIGN_PID } from './fixtures.ts';
 
 beforeAll(async () => {
     await worldReady;
@@ -40,7 +31,7 @@ test('static roles', () => {
 // kept hero positions outside the cells reachability() fills (seeded as it seeds them: a position that lands nowhere
 // or in deep water seeds nothing), not counting the dead ones inside a wall no beam runs through nor the ones that land
 // nowhere (a hero riding a Lily over deep water)
-function heroesOutside(status: Status, history: ParsedHistory, progress: CampaignProgress) {
+function heroesOutside(status: DemoStatus, history: ParsedHistory, progress: CampaignProgress) {
     const latest = latestOf(history),
         levels = PROG.levels;
     const { flood, land, deep, insideWall, cellOf, heroSeed } = walker(
@@ -73,15 +64,19 @@ function heroesOutside(status: Status, history: ParsedHistory, progress: Campaig
     });
 }
 
-describe.each([['default', 2]])('save %s', (camp, maxOutside) => {
-    const run = hasSave(camp) ? test : test.skip;
-    run('parses, walks and lists next steps', () => {
-        const status = parseStatus(read(camp, 'Status.sokoban_status')),
-            history = parseHistory(read(camp, 'overworld.history'));
-        expect(status.levels.length).toBeGreaterThan(0);
-        expect(history.actions.length).toBeGreaterThan(0);
+describe('a campaign at rank 1 with two Signs read', () => {
+    test('walks and lists next steps', () => {
+        const readPids = [RANK_ONE_SIGN_PID, TOWER_SIGN_PID];
+        const { status, history: campaignHistory } = syntheticCampaign({ rank: 1, readPids });
+        const startHero = campaignHistory.hero!;
+        const history: ParsedHistory = {
+            ...campaignHistory,
+            heroes: new Map([[startHero.join(','), startHero]]),
+            heroAt: [[0, startHero, true]],
+            records: 0,
+            error: null,
+        };
         expect(history.hero).toBeTruthy();
-        expect(history.heroes.size).toBeGreaterThan(0);
         const progress = computeProgress(status, history),
             levels = PROG.levels;
         expect(progress.reach).toBeTruthy();
@@ -97,6 +92,6 @@ describe.each([['default', 2]])('save %s', (camp, maxOutside) => {
         progress.needed.forEach((needed, i) => {
             if (needed) expect(progress.state[i]).not.toBe('solved');
         });
-        expect(heroesOutside(status, history, progress).length).toBeLessThanOrEqual(maxOutside);
+        expect(heroesOutside(status, history, progress).length).toBe(0);
     });
 });

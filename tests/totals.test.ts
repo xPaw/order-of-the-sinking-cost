@@ -1,51 +1,30 @@
 // The Signs row of the sidebar's Find on the map: the signs that open Freezers, found when read, over the ones not
-// under fog, and the ones ready to read (their rule holds); and, when SOKO_SAVES names a folder of snapshots, its default save, read-only
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+// under fog, and the ones ready to read (their rule holds); and a campaign at rank 1 with the ground shown
 import { beforeAll, describe, expect, test, vi } from 'vitest';
-import { savesDir } from '../scripts/saves.ts';
 import { PROG, worldReady } from '../src/data.ts';
 import type { Sign } from '../src/types.ts';
-import { parseHistory, parseStatus } from '../src/save.ts';
 import { setProgressCache } from '../src/model/progress.ts';
 import type { BaseProgress } from '../src/model/progress.ts';
 import { signRuleMet } from '../src/model/unlocking.ts';
 import type { SignRule } from '../src/model/unlocking.ts';
 import { totalsOf } from '../src/model/totals.ts';
 import type { ShownAt } from '../src/model/totals.ts';
-import { setSpoilersHidden, state } from '../src/shared.ts';
+import { setSpoilersHidden } from '../src/shared.ts';
 import { showDemo } from '../src/files.ts';
 import { progressModel } from '../src/model/progress-model.ts';
+import { RANK_ONE_SIGN_PID, registerCampaign, syntheticCampaign, TOWER_SIGN_PID } from './fixtures.ts';
 
 // the page, without its DOM
 vi.mock('../src/view.ts', () => ({ show() {}, async showSave() {} }));
 
-const LIVE = 'default';
-const hasSave = (camp: string) =>
-    Boolean(process.env.SOKO_SAVES) &&
-    existsSync(join(savesDir(), camp, 'Status.sokoban_status')) &&
-    existsSync(join(savesDir(), camp, 'overworld.history'));
+const SYNTHETIC = 'Synthetic campaign';
+const READ_SIGN_PIDS = [RANK_ONE_SIGN_PID, TOWER_SIGN_PID];
 
 beforeAll(async () => {
     await worldReady;
     setProgressCache(new WeakMap());
     await showDemo();
-    if (!hasSave(LIVE)) return;
-    const read = (name: string) => new Uint8Array(readFileSync(join(savesDir(), LIVE, name)));
-    state.files.set(`${LIVE}/Status.sokoban_status`, {
-        path: `${LIVE}/Status.sokoban_status`,
-        parsed: parseStatus(read('Status.sokoban_status')),
-        file: null,
-        buf: null,
-        error: null,
-    });
-    state.files.set(`${LIVE}/overworld.history`, {
-        path: `${LIVE}/overworld.history`,
-        parsed: parseHistory(read('overworld.history')),
-        file: null,
-        buf: null,
-        error: null,
-    });
+    registerCampaign(SYNTHETIC, syntheticCampaign({ rank: 1, readPids: READ_SIGN_PIDS, groundShown: true }));
 });
 
 // the totals of a save that has only a rank: no tower active, no gold room found, no Freezer open, nothing found
@@ -132,16 +111,23 @@ describe('the Signs row', () => {
         expect(model.stats.signs).toEqual([0, 0]);
     });
 
-    test.skipIf(!hasSave(LIVE))('the snapshot save counts the Signs not under fog by their reading', () => {
+    test('a campaign with the ground shown counts the Signs not under fog by their reading', () => {
         setSpoilersHidden(true);
-        const model = progressModel(LIVE);
+        const model = progressModel(SYNTHETIC);
         const shownSigns: Sign[] = [];
+        let hiddenSigns = 0;
         PROG.signs.forEach((sign, i) => {
-            if (!sign.status && model.signSet.has(i)) shownSigns.push(sign);
+            if (sign.status) return;
+            if (model.signSet.has(i)) shownSigns.push(sign);
+            else hiddenSigns++;
         });
+        expect(shownSigns.length).toBeGreaterThan(0);
+        expect(hiddenSigns).toBeGreaterThan(0);
 
         const read = shownSigns.filter((sign) => model.progress.signRead(sign.pid));
         const ready = shownSigns.filter((sign) => !model.progress.signRead(sign.pid) && model.progress.signOk(sign));
+        expect(read.length).toBeGreaterThan(0);
+        expect(ready.length).toBeGreaterThan(0);
         expect(model.stats.signs).toEqual([read.length, shownSigns.length]);
         expect(model.stats.signsReady).toBe(ready.length);
     });
