@@ -226,6 +226,9 @@ interface MapInsets {
 // the map drawn last
 export let activeMap: MapView | null = null;
 
+// the layer images of each map by its id, kept while the page makes the map's html again
+const terrainImages = new Map<string, TerrainImages>();
+
 // told when a drag, pinch or eased zoom of a map ends
 let gestureEndListener: (() => void) | null = null;
 
@@ -476,7 +479,15 @@ export class MapView {
         this.keep.layer = this.currentLayer;
 
         this.labelsGroup = find(this.svg, 'g.lbl', SVGGElement);
-        this.terrain = new TerrainImages(find(this.box, ':scope > .terrain', HTMLElement));
+        const terrainHolder = find(this.box, ':scope > .terrain', HTMLElement);
+        let terrain = terrainImages.get(id);
+        if (terrain) {
+            terrain.attach(terrainHolder);
+        } else {
+            terrain = new TerrainImages(terrainHolder);
+            terrainImages.set(id, terrain);
+        }
+        this.terrain = terrain;
         this.terrainGroup = find(this.svg, `#${id}-w`, SVGGElement);
         this.fogGroup = find(this.svg, '.fog', SVGGElement);
         this.fogCore = find(this.svg, '.fogc', SVGGElement);

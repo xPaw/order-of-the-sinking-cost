@@ -117,7 +117,7 @@ class LayerCopies {
  * shown as many copies as the view reaches; the copies of a layer are made when the layer is first shown.
  */
 export class TerrainImages {
-    private readonly holder: HTMLElement;
+    private holder: HTMLElement;
     private readonly layers = new Map<string, LayerCopies>();
     private shownLayer: string | null = null;
     private view: ViewCorner | null = null;
@@ -126,6 +126,16 @@ export class TerrainImages {
     private placements = 0;
 
     constructor(holder: HTMLElement) {
+        this.holder = holder;
+    }
+
+    /**
+     * Moves the images into the holder of the map's html made again, so the layers decoded so far are not decoded
+     * again (and shown as their thumbnails meanwhile).
+     */
+    attach(holder: HTMLElement): void {
+        holder.classList.toggle('crisp', this.holder.classList.contains('crisp'));
+        holder.append(...this.holder.children);
         this.holder = holder;
     }
 
