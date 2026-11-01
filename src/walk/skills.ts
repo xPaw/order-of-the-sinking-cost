@@ -10,6 +10,7 @@ import type { WalkGrid } from './walker.ts';
 
 // walk layers: any skill (0), PROTECTION, TELEPORT, TRANSMUTE (a hero who left a TRANSMUTE Wardrobe by its door: he
 // pushes nothing and turns what he bumps into a crystal)
+export const ANY_SKILL = 0;
 export const PROTECTED = 1;
 export const WIZARD = 2;
 export const TRANSMUTING = 3;

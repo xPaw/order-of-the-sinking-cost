@@ -16,7 +16,7 @@ overworld Guy's data `skill_flags` hold no PROTECTION.
 - Door-in: a skill Wardrobe resets the hero to QUEEN | SINGLE_PUSH (258), which drops CHARM and every other skill. An inventory Wardrobe clears `inventory_flags`, and a TAKE_GEMS hero's carried Gems are destroyed. The door-in priority chain only picks a sound.
 - So skills stack: leave one door, enter a second Wardrobe through its back or side, leave its door holding both.
 - SINGLE_PUSH comes back only through: a door-in reset; the INTRO return (teleporting the hero to a link Marker in a level whose `special_level` is INTRO runs every Wardrobe's door-in reset); un-transmuting (the crystal Rock stores the Guy's skill and inventory and restores them, inventory minus bit 0x20000); a Spawner-made Guy (`Spawner.skill_flags | QUEEN`); the SAILOR Wardrobes, whose skills include SINGLE_PUSH.
-- On the overworld only Wardrobe doors change the skill. Teleporter pads, leaving a level, the wizard swap and the hero swap keep it. Undo and load restore it like any saved field.
+- On the overworld only Wardrobe doors and fast travel change the skill: fast travel through a MAJOR pad leaves the hero with no skill. MINOR pads, leaving a level, the wizard swap and the hero swap keep it. Undo and load restore it like any saved field.
 - Fire does not cross a Wardrobe door edge.
 
 ## A direction press

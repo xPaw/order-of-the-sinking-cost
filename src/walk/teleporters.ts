@@ -10,7 +10,7 @@ import type { FloodState } from './flood.ts';
 import { exists } from './groups.ts';
 import { deep, layerOf } from './ocean.ts';
 import { push } from './queue.ts';
-import { LAYER_COUNT, PROTECTED } from './skills.ts';
+import { ANY_SKILL, LAYER_COUNT, PROTECTED } from './skills.ts';
 import { blocked, land, standable } from './support.ts';
 import type { WalkGrid } from './walker.ts';
 
@@ -187,26 +187,28 @@ export function minorLanding(walkGrid: WalkGrid, floodState: FloodState, padInde
 /**
  * A hero (walk layer `layer`) on pad `padIndex`: an enabled pad reaches the pads its discovery reveals, and sends the
  * hero on: a discovered MAJOR pad to every enabled, discovered MAJOR pad, a MINOR pad to its target pad or point. A
- * MINOR pad's trip enables its target pad, which was disabled until then.
+ * MINOR pad's trip enables its target pad, which was disabled until then. A MINOR pad keeps the hero's walk layer;
+ * fast travel (a MAJOR pad or a reveal) lands him with no skill.
  */
 function usePad(walkGrid: WalkGrid, floodState: FloodState, padIndex: number, layer: number): void {
     const { teleporters, teleporterStates, teleporterIndexOf } = walkGrid;
     if (!padEnabled(walkGrid, floodState, padIndex)) return;
 
+    // a revealed pad is reached by fast travel, which takes the hero's skill
     if (floodState.reveal) {
         for (const revealed of walkGrid.revealedPads[padIndex]) {
-            push(walkGrid, floodState, padCell(walkGrid, floodState, revealed), layer);
+            push(walkGrid, floodState, padCell(walkGrid, floodState, revealed), ANY_SKILL);
         }
     }
 
     const pad = teleporters[padIndex];
 
     if (pad.major) {
-        if (teleporterStates[padIndex].disc && !floodState.majorDone[layer]) {
-            floodState.majorDone[layer] = true;
+        if (teleporterStates[padIndex].disc && !floodState.majorDone[ANY_SKILL]) {
+            floodState.majorDone[ANY_SKILL] = true;
 
             for (const majorPad of walkGrid.majorPads) {
-                push(walkGrid, floodState, padCell(walkGrid, floodState, majorPad), layer);
+                push(walkGrid, floodState, padCell(walkGrid, floodState, majorPad), ANY_SKILL);
             }
         }
 
@@ -221,8 +223,7 @@ function usePad(walkGrid: WalkGrid, floodState: FloodState, padIndex: number, la
 }
 
 /**
- * Takes the pads in `cell` and in the cell below it, but not one frozen in a closed Freezer. A pad keeps the hero's
- * skill: on the overworld only Wardrobe doors change it.
+ * Takes the pads in `cell` and in the cell below it, but not one frozen in a closed Freezer.
  */
 export function padStep(walkGrid: WalkGrid, floodState: FloodState, cell: number, layer: number): void {
     let padCellKey = cell;
