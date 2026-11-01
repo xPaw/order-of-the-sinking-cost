@@ -288,6 +288,18 @@ const KNOWN_ROUTES: KnownRouteSource[] = [
         note: 'from the corridor north of the pad that pachinko_rescue_w frees, the downward vertical Mirror high above it throws the hero ten cells west, over the chasm_3 room, and he drops into it',
     },
     {
+        id: 'druid_multismash_v3_smashed_column',
+        to: { level: 'druid_multismash_v3' },
+        needs: [[{ rock: 111225816 }], [{ rock: 111225812 }], [{ rock: 111225814 }]],
+        note: 'the column of three Rocks west of the level is smashed by the SMASH beam and then the multi beam, which snipperclips_diagonal frees, and the hero walks down the column to the level',
+    },
+    {
+        id: 'red_yellow_alter_smashed_corridor',
+        to: { level: 'red_yellow_alter_with_intro_v2' },
+        needs: [[{ rock: 111225459 }], [{ rock: 111225465 }], [{ rock: 111225467 }]],
+        note: 'the three Rocks in the corridor west of the level are smashed by the SMASH beam and then the multi beam, and the hero walks through to the level',
+    },
+    {
         id: 'push_down_chain_ride',
         to: { level: 'push_down_chain' },
         needs: LOW_WAY_NEEDS,
