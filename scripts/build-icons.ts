@@ -129,6 +129,7 @@ const ENTITY_TYPES = new Set([
     'View_Giver',
     'Tower',
     'Treasure_Display',
+    'Area_Pin',
 ]);
 
 // The glow colours of the Level_Entry groups (`glow` in data/progress.json), each near the median of its group's
@@ -192,7 +193,8 @@ const FAVICON: IconSpec = {
     shadow: false,
 };
 
-// The Teleporter pad that marks a tower's pad and, with a gold room endpoint, the gold room
+// The MINOR Teleporter pad: plain for the pads that hop across the map, gold (a gold room endpoint's) for the Antipode
+// pads
 const TELEPORTER_PAD: IconSpec = {
     name: 'teleporter-pad',
     type: 'Teleporter',
@@ -210,9 +212,10 @@ const ICONS: IconSpec[] = [
     { name: 'ice-gate', type: 'Freezer', mesh: 'GAME_OVER_Freezer_B', view: FACE_VIEW },
     { name: 'sign', type: 'Sign', mesh: 'overworld_plaque', view: FACE_VIEW },
     { name: 'teleporter', type: 'Teleporter', mesh: 'GAME_OVER_Reset_B', effect: 'color_discovered', view: TOP_VIEW },
-    { ...TELEPORTER_PAD, name: 'tower-pad', where: notGold },
+    { ...TELEPORTER_PAD, name: 'pad', where: notGold },
     { ...TELEPORTER_PAD, name: 'gold-room', where: isGold },
     { name: 'map-scroll', type: 'View_Giver', mesh: 'GAME_EX_CamControl_Scroll' },
+    { name: 'area-pin', type: 'Area_Pin', mesh: 'GAME_EX_CamControl_Map_Pin_A' },
     { name: 'treasure', type: 'Treasure_Display', mesh: 'GAME_SKIP_Treasure_Plinth_A', withTreasure: true },
     {
         name: 'treasure-taken',

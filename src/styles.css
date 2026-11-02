@@ -41,10 +41,12 @@
     --rim-sign: #e8e2d0;
     --rim-teleporter: #ff7bd5;
     --rim-tower-pad: #ff9f43;
+    --rim-warp-pad: #ffb8e8;
     --rim-gold-room: #b794ff;
     --rim-log: #ff6b7f;
     --rim-scroll: #c8e86a;
     --rim-plinth: #4fe3b5;
+    --rim-pin: #ffe14d;
     --rim-done: #7d8794;
     --rim-ready: #ffb347;
     --reach: #5fd49c;
@@ -548,8 +550,8 @@ select:focus {
     text-decoration: underline;
     text-decoration-color: rgba(236, 227, 205, 0.45);
 }
-/* the sections share the sidebar's height. The goals give up height first and scroll inside, under their sticky heading,
-   so their scrollbar sits at its inner edge */
+/* the goals take the height the other sections leave and scroll inside, under their sticky heading, so their scrollbar
+   sits at its inner edge */
 .side .goals {
     flex: 0 1 auto;
     min-height: 72px;
@@ -558,15 +560,15 @@ select:focus {
     align-content: start;
     gap: 2px;
 }
-/* a scrolling section has no padding above its sticky heading, or rows would show through it */
+/* the sections with a sticky heading have no padding above it, or rows would show through it */
 .side .goals,
 .side .find {
     padding-top: 0;
 }
+/* Find on the map keeps its full height; its gutter lines its rows up with the goals' */
 .side .find {
-    flex: 0 1 auto;
-    min-height: 72px;
-    overflow: hidden auto;
+    flex: none;
+    overflow: hidden;
     scrollbar-gutter: stable;
 }
 .side .sh {
@@ -1574,6 +1576,13 @@ main > .mapbox {
 .side .find .sr:not(.on) .sn {
     color: var(--muted);
 }
+.side .find .si .ic {
+    width: 20px;
+    height: 20px;
+}
+.side .find .fogr .sn:hover {
+    background: none;
+}
 .side .find .sr.done .cnt {
     color: var(--gold);
 }
@@ -1823,6 +1832,9 @@ main > .mapbox {
 .mw .o-towerPads {
     --rim: var(--rim-tower-pad);
 }
+.mw .o-minorPads {
+    --rim: var(--rim-warp-pad);
+}
 .mw .o-gold {
     --rim: var(--rim-gold-room);
 }
@@ -1834,6 +1846,9 @@ main > .mapbox {
 }
 .mw .o-treasures {
     --rim: var(--rim-plinth);
+}
+.mw .o-pins {
+    --rim: var(--rim-pin);
 }
 .mw .ovk.dn {
     --rim: var(--rim-done);

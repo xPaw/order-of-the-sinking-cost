@@ -7,7 +7,7 @@ import type { Fog } from '../fog.ts';
 import { filtersOf, revealedOf, spoilersHidden } from '../shared.ts';
 import type { ProgressFilters } from '../shared.ts';
 import type { DemoStatus, Status } from '../status-file.ts';
-import type { GoldRoom, ProgressLevel, Teleporter, ViewGiver, VoiceLog } from '../types.ts';
+import type { AreaPinRow, GoldRoom, ProgressLevel, Teleporter, ViewGiver, VoiceLog } from '../types.ts';
 import { achievementRules, ENDINGS, hasAchievement } from './achievements.ts';
 import { activePins, areaName, heroAreaAt, levelAreaOf } from './areas.ts';
 import { goalsView } from './goals-view.ts';
@@ -17,7 +17,7 @@ import { computeProgress, progressCached } from './progress.ts';
 import type { ShownProgress } from './progress.ts';
 import type { PlanStep } from './requirements.ts';
 import { totalsOf } from './totals.ts';
-import type { ShownAt, TotalsStats, TreasureTotals } from './totals.ts';
+import type { ShownAt, TotalsMarks, TotalsStats, TreasureTotals } from './totals.ts';
 
 // added to the distance to a level on another layer, so every level on the layer is nearer than any on another
 const OTHER_LAYER_DISTANCE = 1e6;
@@ -47,6 +47,10 @@ export interface ProgressModel {
     signSet: Set<number>;
     logs: number[];
     maps: number[];
+    /** The Area_Pins not under fog or activated. */
+    pins: AreaPinRow[];
+    /** Whether an Area_Pin is activated, by its pid. */
+    pinOn: (pid: number) => boolean;
     heard: (log: VoiceLog) => boolean;
     taken: (giver: ViewGiver) => boolean;
     heroArea: number | null;
@@ -71,9 +75,14 @@ export interface ProgressModel {
     heroDist: (level: number) => number;
     onOverworld: boolean;
     pads: number[];
+    minorPads: number[];
     rooms: GoldRoom[];
     treasures: TreasureTotals;
     stats: TotalsStats;
+    marks: TotalsMarks;
+    readySignLayers: Array<string | undefined>;
+    /** The layers the fog has uncovered; null when nothing is hidden. */
+    known: string[] | null;
     hero: { x: number; y: number; z: number } | null;
     /** The level the save is in; null for none. */
     inLevel: number | null;
@@ -132,7 +141,7 @@ export function progressModel(camp: string): ProgressModel {
 
     // the layers the fog has uncovered; null when nothing is hidden
     const known = hide ? fog.knownLayers() : null;
-    const totals = totalsOf({ status, progress: shownProgress, hide, shownAt, known, towerHidden });
+    const totals = totalsOf({ status, progress: shownProgress, hide, shownAt, known, towerHidden, pinsOn });
 
     // signs: the ones that open gates and the tower status signs; a status sign of a tower under fog is left out
     const allSigns = PROG.signs || [];
@@ -300,6 +309,8 @@ export function progressModel(camp: string): ProgressModel {
         signSet,
         logs: totals.logs,
         maps: totals.maps,
+        pins: totals.pins,
+        pinOn: (pid) => pinsOn.has(pid),
         heard: totals.heard,
         taken: totals.taken,
         heroArea,
@@ -320,9 +331,13 @@ export function progressModel(camp: string): ProgressModel {
         heroDist,
         onOverworld,
         pads: totals.pads,
+        minorPads: totals.minorPads,
         rooms: totals.rooms,
         treasures: totals.treasures,
         stats: totals.stats,
+        marks: totals.marks,
+        readySignLayers: totals.readySignLayers,
+        known,
         hero,
         inLevel,
         F: filtersOf(camp),

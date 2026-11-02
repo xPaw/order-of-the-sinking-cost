@@ -177,6 +177,9 @@ export function opensChips(context: PanelContext, freezer: Freezer): string {
     return pick(context, freezer.req) + signChips;
 }
 
+/** In front of an area's name where the thing is outside every area box and named by the nearest area. */
+export const NEAR = '<span class="muted" title="Outside every area box; grouped with the nearest area">≈ </span>';
+
 /** The small tag that names a layer in front of a row's text. */
 export const layerTagHtml = (layerKey: string): string => `<span class="lt">${escapeHtml(layerName(layerKey))}</span>`;
 

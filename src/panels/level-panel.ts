@@ -16,8 +16,9 @@ import type { LevelUnlocks } from '../model/way-in.ts';
 import type { Freezer, Position, ProgressLevel } from '../types.ts';
 import { wikiTacticsUrl } from '../wikitactics.ts';
 import type { PanelContext } from './context.ts';
-import { markSelected, NEAR } from './list.ts';
+import { markSelected } from './list.ts';
 import {
+    NEAR,
     areaPlaceHtml,
     chainOf,
     gateChip,
@@ -282,13 +283,7 @@ function levelSelection(context: PanelContext, parts: LevelPanelParts): MapSelec
     if (tower) towerPoints.push(tower.p);
 
     return {
-        levels: new Set([
-            levelIndex,
-            ...level.req,
-            ...unlocks.levels,
-            ...gateLevels,
-            ...chain.levels,
-        ]),
+        levels: new Set([levelIndex, ...level.req, ...unlocks.levels, ...gateLevels, ...chain.levels]),
         focus: levelIndex,
         frontier: chain.frontier,
         overlays: new Set([...chain.overlays, ...unlockedGates.map((freezerIndex) => 'g' + freezerIndex)]),

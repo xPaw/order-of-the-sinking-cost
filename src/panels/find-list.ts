@@ -5,21 +5,26 @@ import type { PanelKey } from '../shared.ts';
 import { iconHtml } from '../map/icons.ts';
 import type { IconName } from '../map/icons.ts';
 import type { MapOptions, MapOverlay, MapTower } from '../map/map-view.ts';
-import { findLabel } from '../model/find-kinds.ts';
+import { findLabel, findLayerOf, inFindLayer } from '../model/find-kinds.ts';
 import type { FindKind } from '../model/find-kinds.ts';
+import { areaName } from '../model/areas.ts';
 import { isDoorway } from '../model/freezer-names.ts';
-import { AREA_LAYERS, layerName, mapLayerOf } from '../model/layers.ts';
+import { AREA_LAYERS, mapLayerOf } from '../model/layers.ts';
 import { rankCages } from '../model/rank-cages.ts';
 import { towerName } from '../model/towers.ts';
 import type { PanelContext } from './context.ts';
-import { layerTagHtml } from './plan-chips.ts';
+import { layerTagHtml, NEAR } from './plan-chips.ts';
 
 /** A mark of the kind as the list shows it. */
 export interface FindItem {
     id: string;
     icon: IconName;
-    /** The area it is in, else its layer; for a tower's pad, the tower. */
+    /** The area it is in, else the nearest level's area; for a tower's pad, the tower. */
     place: string;
+    /** Whether `place` is the nearest level's area, the mark being outside every area. */
+    areaNear: boolean;
+    /** The nearest level not under fog, which tells the marks of one place apart; -1 for none. */
+    nearLevel: number;
     state: string;
     done: boolean;
     layer: string;
@@ -29,7 +34,7 @@ export interface FindItem {
     panel: PanelKey | null;
 }
 
-// where a mark is: the area it is in while that area is shown, else its layer; a mark on the fast-travel screen (two
+// where a mark is: the area it is in while that area is shown, else nothing; a mark on the fast-travel screen (two
 // voice logs) is on no map layer
 function placeOf(context: PanelContext, overlay: MapOverlay): string {
     if (overlay.place !== undefined) return overlay.place;
@@ -37,14 +42,33 @@ function placeOf(context: PanelContext, overlay: MapOverlay): string {
     const area = context.model.areaAt(overlay.position);
     if (area !== null) return area;
     if (overlay.layer === undefined) return 'Fast-travel screen';
-    return layerName(overlay.layer);
+    return '';
 }
 
+// a tower's mark is named by its tower, and a mark on the fast-travel screen is on no layer, so no level is near it
 function overlayItem(context: PanelContext, overlay: MapOverlay): FindItem {
+    let nearLevel = -1;
+    if (overlay.panel?.[0] !== 'tower' && overlay.layer !== undefined) {
+        nearLevel = context.model.nearestShownLevel(overlay.x, overlay.y, overlay.layer);
+    }
+
+    // outside every area, a mark is grouped with its nearest level's area, as that level is
+    let place = placeOf(context, overlay);
+    let areaNear = false;
+    if (!place && nearLevel >= 0) {
+        const area = context.areaOf(nearLevel);
+        if (area !== null) {
+            place = areaName(context.areas[area]);
+            areaNear = true;
+        }
+    }
+
     return {
         id: overlay.id,
         icon: overlay.icon,
-        place: placeOf(context, overlay),
+        place,
+        areaNear,
+        nearLevel,
         state: overlay.state,
         done: overlay.done,
         layer: overlay.layer,
@@ -60,8 +84,10 @@ function towerPadItem(context: PanelContext, tower: MapTower): FindItem {
 
     return {
         id: 'w' + tower.towerIndex,
-        icon: 'tower-pad',
+        icon: 'gold-room',
         place: towerName(context.progress.towers[tower.towerIndex].t),
+        areaNear: false,
+        nearLevel: -1,
         state,
         done: tower.padFound,
         layer: mapLayerOf(tower.z),
@@ -85,7 +111,7 @@ function sortItems(context: PanelContext, items: FindItem[]): FindItem[] {
     });
 }
 
-// the towers whose pads the Tower pads list holds, beside the gold rooms' Antipode endpoints, which are overlays
+// the towers whose pads the Antipode pads list holds, beside the gold rooms' Antipode endpoints, which are overlays
 function listedTowers(options: MapOptions, kind: FindKind): MapTower[] {
     if (kind !== 'towerPads') return [];
     return options.towers.filter((tower) => tower.onPad);
@@ -96,10 +122,15 @@ export function findItemsOf(context: PanelContext, kind: FindKind): FindItem[] {
     const options = context.mapOptions;
     if (!options) return [];
 
-    const overlays = options.overlays.filter((overlay) => overlay.findKind === kind);
+    // a goal of one layer lists that layer's marks only
+    const scope = findLayerOf(context.model.goals, context.levels, context.goal);
+    const overlays = options.overlays.filter(
+        (overlay) => overlay.findKind === kind && inFindLayer(scope, overlay.layer),
+    );
+    const towers = listedTowers(options, kind).filter((tower) => inFindLayer(scope, mapLayerOf(tower.z)));
     const items = [
         ...overlays.map((overlay) => overlayItem(context, overlay)),
-        ...listedTowers(options, kind).map((tower) => towerPadItem(context, tower)),
+        ...towers.map((tower) => towerPadItem(context, tower)),
     ];
 
     return sortItems(context, items);
@@ -123,18 +154,19 @@ function rowHtml(context: PanelContext, item: FindItem, tab: boolean, note = '')
     let tabIndex = -1;
     if (tab) tabIndex = 0;
 
-    // the layer is named when it is not the map's, unless the place already is the layer's name
-    const place = item.place;
+    // the layer is named as a tag when it is not the map's
     let layerTag = '';
-    if (context.mapLayer && item.layer && item.layer !== context.mapLayer && place !== layerName(item.layer)) {
-        layerTag = layerTagHtml(item.layer);
-    }
+    if (context.mapLayer && item.layer && item.layer !== context.mapLayer) layerTag = layerTagHtml(item.layer);
 
-    // the marks of one place are told apart by the nearest level; a tower's pad is named by its tower
+    let place = escapeHtml(item.place);
+    if (item.areaNear) place = NEAR + place;
+
+    // the marks of one place are told apart by the nearest level
     let near = '';
-    if (item.panel?.[0] !== 'tower') {
-        const level = context.model.nearestShownLevel(item.x, item.y, item.layer);
-        if (level >= 0) near = ` <span class="muted">· near ${escapeHtml(context.levels[level].n)}</span>`;
+    if (item.nearLevel >= 0) {
+        let separator = ' · ';
+        if (!item.place) separator = '';
+        near = `<span class="muted">${separator}near ${escapeHtml(context.levels[item.nearLevel].n)}</span>`;
     }
 
     let iconClass = '';
@@ -146,7 +178,7 @@ function rowHtml(context: PanelContext, item: FindItem, tab: boolean, note = '')
     if (note) noteText = ` <span class="muted">· ${escapeHtml(note)}</span>`;
 
     const state = `<span class="muted">· ${escapeHtml(item.state.toLowerCase())}</span>`;
-    const name = `<span class="nm">${layerTag}${escapeHtml(place)}${near} ${state}${noteText}</span>`;
+    const name = `<span class="nm">${layerTag}${place}${near} ${state}${noteText}</span>`;
     return `<button class="plain rr fi" ${attributes}>${iconHtml(item.icon, iconClass)}${name}</button>`;
 }
 
@@ -242,7 +274,7 @@ export function drawFindList(context: PanelContext, kind: FindKind): void {
 
     const chipAttributes = `data-find-done aria-pressed="${filters.findDone}"${disabled}`;
     const count = `<span class="n">${done.length}</span>`;
-    $('#pgChips').innerHTML = `<button class="plain chip st${pressedClass}" ${chipAttributes}>Solved ${count}</button>`;
+    $('#pgChips').innerHTML = `<button class="plain chip st${pressedClass}" ${chipAttributes}>Done ${count}</button>`;
 
     let html = '';
     if (todo.length) html += groupHtml(context, 'Still to do', todo, true);

@@ -1,5 +1,5 @@
 // What the map draws for the progress view: the level markers by state or role, the towers, the area labels and the
-// overlays (Freezers, signs, pads, gold rooms, voice logs, map scrolls, treasures)
+// overlays (Freezers, signs, pads, gold rooms, voice logs, map scrolls, Area_Pins, treasures)
 // (VIEWER.md "The page (viewer)", "The spoiler model (viewer)")
 import { PROG } from '../data.ts';
 import { escapeHtml } from '../util.ts';
@@ -18,7 +18,7 @@ import { stateLabel } from '../model/progress.ts';
 import { towerName } from '../model/towers.ts';
 import { signStateOf } from '../model/unlocking.ts';
 import type { LevelState } from '../model/unlocking.ts';
-import type { Area, GoldRoom, TreasureDisplay, ViewGiver, VoiceLog } from '../types.ts';
+import type { Area, AreaPinRow, GoldRoom, TreasureDisplay, ViewGiver, VoiceLog } from '../types.ts';
 import type { PanelContext } from './context.ts';
 import { FOG_TEXT, gateMode, levelPadHtml, levelPadOf, signNeed, signText, towerNameHtml } from './plan-chips.ts';
 
@@ -181,8 +181,8 @@ function levelNameHtml(context: PanelContext, levelIndex: number): string {
     return levelPadHtml(context.progress, levelIndex) + escapeHtml(context.levels[levelIndex].n);
 }
 
-// overlays: Freezers, signs, MAJOR world pads, gold rooms at their hub endpoints, voice logs, map scrolls, treasure
-// plinths; none under fog while it hides things
+// overlays: Freezers, signs, MAJOR world pads, warp pads, gold rooms at their hub endpoints, voice logs, map scrolls, Area_Pins,
+// treasure plinths; none under fog while it hides things
 function gateOverlay(context: PanelContext, freezerIndex: number): MapOverlay {
     const progress = context.progress;
     const freezer = context.freezers[freezerIndex];
@@ -285,28 +285,42 @@ function signOverlay(context: PanelContext, signIndex: number): MapOverlay {
     };
 }
 
-// world pads only; their twins sit in the map rooms
-function padOverlay(context: PanelContext, teleporterIndex: number): MapOverlay {
+// world pads only, their twins sitting in the map rooms: a Teleporter, or a MINOR pad that hops across the map
+function padOverlay(
+    context: PanelContext,
+    teleporterIndex: number,
+    kind: 'tps' | 'minorPads',
+    discovered: boolean,
+): MapOverlay {
     const pad = context.teleporters[teleporterIndex];
-    const discovered = context.model.padDisc(teleporterIndex);
     let status = 'Not discovered';
     if (discovered) status = 'Discovered';
 
     let disabled = ' · disabled';
     if (context.progress.tst[teleporterIndex].en) disabled = '';
+
+    let id = 'p' + teleporterIndex;
+    let icon: IconName = 'teleporter';
+    let title = 'Teleporter';
+    if (kind === 'minorPads') {
+        id = 'q' + teleporterIndex;
+        icon = 'pad';
+        title = 'Warp pad';
+    }
+
     return {
-        id: 'p' + teleporterIndex,
-        kind: 'tps',
-        findKind: 'tps',
+        id,
+        kind,
+        findKind: kind,
         state: status,
         layer: FOG_LAYER_KEYS[pad.l],
         x: pad.p[0],
         y: pad.p[1],
         position: pad.p,
         done: discovered,
-        icon: 'teleporter',
+        icon,
         dimUntilDone: true,
-        tip: `<b>Teleporter</b><br>${status}${disabled}`,
+        tip: `<b>${title}</b><br>${status}${disabled}`,
     };
 }
 
@@ -399,6 +413,35 @@ function mapScrollOverlay(context: PanelContext, giver: ViewGiver): MapOverlay {
     };
 }
 
+// an Area_Pin is named by its area once activated, the game naming an area only then
+function areaPinOverlay(context: PanelContext, [pid, x, y, z]: AreaPinRow): MapOverlay {
+    const activated = context.model.pinOn(pid);
+    let status = 'Not activated';
+    if (activated) status = 'Activated';
+
+    let place: string | undefined;
+    const areaIndex = context.areas.findIndex((area) => area.pin === pid);
+    if (areaIndex >= 0 && context.model.areaShown(areaIndex)) place = areaName(context.areas[areaIndex]);
+
+    let placeLine = '';
+    if (place) placeLine = `${escapeHtml(place)} · `;
+
+    return {
+        id: 'a' + pid,
+        kind: 'pins',
+        findKind: 'pins',
+        place,
+        state: status,
+        layer: mapLayerOf(z),
+        x,
+        y,
+        position: [x, y, z],
+        done: activated,
+        icon: 'area-pin',
+        tip: `<b>Area pin</b><br>${placeLine}${status}`,
+    };
+}
+
 function treasureOverlay(context: PanelContext, plinth: TreasureDisplay, acquired: number): MapOverlay {
     const got = acquired > plinth.i;
     let status = 'Empty';
@@ -419,7 +462,7 @@ function treasureOverlay(context: PanelContext, plinth: TreasureDisplay, acquire
         position: plinth.p,
         done: got,
         icon,
-        tip: `<b>Treasure plinth ${plinth.i + 1}</b><br>${status}`,
+        tip: `<b>Treasure ${plinth.i + 1}</b><br>${status}`,
     };
 }
 
@@ -431,10 +474,13 @@ export function overlaysOf(context: PanelContext): MapOverlay[] {
     return [
         ...model.gates.map((freezerIndex) => gateOverlay(context, freezerIndex)),
         ...model.signs.map((signIndex) => signOverlay(context, signIndex)),
-        ...model.pads.map((teleporterIndex) => padOverlay(context, teleporterIndex)),
+        ...model.pads.map((index) => padOverlay(context, index, 'tps', model.padDisc(index))),
+        // a MINOR pad is discovered once stepped on
+        ...model.minorPads.map((index) => padOverlay(context, index, 'minorPads', context.progress.tst[index].disc)),
         ...model.rooms.map((room) => goldRoomOverlay(context, room)),
         ...model.logs.map((log) => voiceLogOverlay(context, voiceLogs[log])),
         ...model.maps.map((giver) => mapScrollOverlay(context, viewGivers[giver])),
+        ...model.pins.map((pin) => areaPinOverlay(context, pin)),
         ...plinths.map((plinth) => treasureOverlay(context, plinth, acquired)),
     ];
 }

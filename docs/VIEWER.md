@@ -1179,22 +1179,34 @@ selected goal or area is in gold with a thin accent at its left edge. A scrollin
 One goal's list is open at a time; the goals scroll inside the sidebar under their heading, and Find on the map scrolls
 on its own. A long name is cut with an ellipsis and its tooltip gives it whole.
 
-Find on the map has a row per kind of mark: ice cages, ice gates, signs, teleporters, tower pads, voice logs, map
-scrolls and treasure plinths. A row is left out when its total is 0, and it shows what is found of what is not under
-fog, with the per-layer split. A tower pad is the MINOR pad a ground or low tower's `teleporter_id` names: the tower's
-marker stands on it and belongs to its row, and it counts as found once the pad is discovered. A high tower's pad is a
-MAJOR pad elsewhere, so a high tower keeps its marker at the tower and in no row. The Tower pads row also owns the gold
-rooms' Antipode endpoints (the gold room's icon, a gold rim once visited): its switch shows or hides both, and its
-count stays about the tower pads. A row has two buttons:
+Find on the map has a row per kind of mark: ice cages, ice gates, signs, teleporters, Antipode pads, warp pads, voice
+logs, map scrolls, area pins and treasures. A row is left out when its total is 0, and it shows what is found of what
+is not under fog, with the per-layer split. An ending and its stages count only the ending's layer, the one holding
+the level that carries its achievement, and the heading then reads "Overworld finds", "High finds" or "Low finds"; the
+other goals count every layer. The lists follow the same layers.
+
+- An Antipode pad is the MINOR pad a ground or low tower's `teleporter_id` names, drawn with the gold pad icon: the
+  tower's marker stands on it and belongs to its row, and it counts as found once the pad is discovered. A high tower's
+  pad is a MAJOR pad elsewhere, so a high tower keeps its marker at the tower and in no row. The row also owns the gold
+  rooms' Antipode endpoints (a gold rim once visited): its switch shows or hides both, and its count stays about the
+  towers' pads.
+- A warp pad is any other MINOR world pad, most of them a hop up or down nearby, drawn with the plain pad icon. It
+  counts as found once discovered itself, whatever its target.
+- An area pin counts as found once activated and is named by its area only then.
+
+A last row, Map uncovered, is a count only: the cleared screens of the layers' primary fog over all their screens
+(open sea clears too, so a finished game reaches 100%), over the layers the fog has uncovered while spoilers are
+hidden; its tooltip gives each layer's screens. The other rows have two buttons:
 
 - Its icon shows or hides that kind on the map; a hidden kind's row is dimmed, and the choice is remembered in the
   browser.
 - Its name lists the kind's items in the results column, like a goal's levels: the ones still to do first, each with
-  its icon, its area (or layer, or tower), the nearest level not under fog ("near <level>", which tells the marks of one
-  area apart; a tower status sign reads "Tower sign · <tower>") and its state, the done ones behind a Solved chip.
+  its icon, its layer when it is not the map's, its area (outside every area box, the nearest level's area after "≈",
+  as a level's; or its tower), the nearest level not under fog ("near <level>", which tells the marks of one area
+  apart; a tower status sign reads "Tower sign · <tower>") and its state, the done ones behind a Done chip.
   The heading reads "Voice logs · 3 left" and Back returns to the goal's levels (naming the kind again, or picking a
   goal or an area, does too). Only marks not under fog are listed. An item centres the map on its mark and opens its
-  panel where its kind has one (gates, signs, and towers for tower pads and gold rooms); for the other kinds the
+  panel where its kind has one (gates, signs, and towers for Antipode pads and gold rooms); for the other kinds the
   mark is selected on the map (white rim) and the column shows its tooltip.
 
 The Signs row counts the signs that open Freezers (the rank, tower and gold-room signs; not the tower status signs,
@@ -1296,14 +1308,14 @@ across, the icon fills it but for a margin of one unit, and the rim is one unit 
 0.7 pixels at the smallest size, 1 at a middling zoom and 2 to 3 close up. A level's disc is 16 units too, 20 for a big
 marker and 22 for the selected level.
 
-- An overlay mark has a rim in the kind's colour: ice cage, ice gate, sign, teleporter,
-  tower pad, Antipode teleporter, voice log, map scroll and treasure plinth, each with a rim colour of its own. The disc
-  takes the pointer, shows the tooltip and, for gates, signs and gold rooms, opens the panel. A mark that is done or used
-  has a grey rim and a desaturated, dimmed icon: an open ice cage or gate, a sign read, a voice log heard, a map scroll
-  taken, a treasure plinth acquired (the empty-plinth icon) and a gold room visited (with a gold rim). A teleporter or
-  tower pad not discovered is the dimmed one. A sign ready to read has an amber rim. The selection's marks have a white
-  rim and glow.
-- A tower with a pad is drawn as the tower pad's mark and belongs to the Tower pads row; a tower without one is a
+- An overlay mark has a rim in the kind's colour: ice cage, ice gate, sign, teleporter, Antipode pad, warp pad,
+  Antipode teleporter, voice log, map scroll, area pin and treasure, each with a rim colour of its own. The disc takes
+  the pointer, shows the tooltip and, for gates, signs and gold rooms, opens the panel. A mark that is done or used has
+  a grey rim and a desaturated, dimmed icon: an open ice cage or gate, a sign read, a voice log heard, a map scroll
+  taken, an area pin activated, a treasure acquired (the empty-plinth icon) and a gold room visited (with a gold rim).
+  A teleporter, Antipode pad or warp pad not discovered is the dimmed one. A sign ready to read has an amber rim. The
+  selection's marks have a white rim and glow.
+- A tower with a pad is drawn as the Antipode pad's mark and belongs to the Antipode pads row; a tower without one is a
   diamond.
 - A level is its entry pad on a disc with a neutral rim: locked, available or solved (a dim gold pad of its own). The
   available pad glows in the colour of the level's group (green, orange, yellow, blue or purple, the level's
@@ -1344,7 +1356,7 @@ type or enum name ([Localisation and display names](GAMEDATA.md#localisation-and
 | Layers | Overworld, High, Low; in a sentence "from High", "the way up to High", "the way down to Low" | plain words: the game only qualifies places as "High" and "Low" |
 | Gold rooms | "Antipode teleporter" | a ground tower's pad and its endpoint in The Antipode; Steam's descriptions call the pad "the HxM teleporter to the Antipode" |
 | Reading a sign | "Read the sign", "Ready to read" | plain words: the game has no name for the act |
-| The rest | ice gate, teleporter, voice log, map scroll, treasure plinth, sign, dropdown | plain words; "Teleporters" is also the game's |
+| The rest | ice gate, teleporter, voice log, map scroll, area pin, treasure, sign, dropdown, Antipode pad (the pads that lead to and from the Antipode), warp pad | plain words; "Teleporters" is also the game's |
 
 With spoilers hidden, the rules in [The spoiler model (viewer)](#the-spoiler-model-viewer) decide whether a thing is
 named at all.

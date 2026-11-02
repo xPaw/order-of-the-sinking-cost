@@ -2,6 +2,7 @@
 import { PROG } from './data.ts';
 import { historyEntry } from './files.ts';
 import { FOG_LAYER_KEYS } from './model/layers.ts';
+import type { FoundOfTotal } from './model/totals.ts';
 import { decodeBlob } from './save.ts';
 import type { History } from './save.ts';
 import type { Position } from './types.ts';
@@ -26,9 +27,22 @@ export interface Fog {
      * since the map draws a box over its whole footprint.
      */
     cover: (key: string, x: number, y: number) => boolean;
+    /** The cleared screens of one map layer's primary fog, over its screens. */
+    screens: (key: string) => FoundOfTotal;
 }
 
 const fogCache = new WeakMap<object, Fog>();
+
+// the region (screen) of the primary fog a world square is in; positions wrap with the world
+function fogRegionAt(x: number, y: number): number {
+    const grid = PROG.fog.grid;
+    const [cornerX, cornerY] = grid.corner;
+    const [screenWidth, screenHeight] = grid.screen;
+    const [columns, rows] = grid.count;
+    const column = mod(Math.floor((x - cornerX) / screenWidth), columns);
+    const row = mod(Math.floor((y - cornerY) / screenHeight), rows);
+    return column + columns * row;
+}
 
 // the region states of each fog entity in the history, by pid: the history's own, raised by its newest Fog_Of_War
 // diffs
@@ -85,11 +99,6 @@ export function fogOf(camp: string): Fog | null {
     const [screenWidth, screenHeight] = grid.screen;
     const [columns, rows] = grid.count;
     const regionCount = columns * rows;
-    const regionAt = (x: number, y: number) => {
-        const column = mod(Math.floor((x - cornerX) / screenWidth), columns);
-        const row = mod(Math.floor((y - cornerY) / screenHeight), rows);
-        return column + columns * row;
-    };
 
     const primary = PROG.fog.primary.map((fog) => {
         const regions = states.get(fog.pid);
@@ -132,7 +141,7 @@ export function fogOf(camp: string): Fog | null {
         },
         at: (key, x, y, z) => {
             const layer = FOG_LAYER_KEYS.indexOf(key);
-            return layer >= 0 && (fogged(layer, regionAt(x, y)) || inBox(layer, x, y, z));
+            return layer >= 0 && (fogged(layer, fogRegionAt(x, y)) || inBox(layer, x, y, z));
         },
         rects: (key) => {
             const layer = FOG_LAYER_KEYS.indexOf(key);
@@ -161,7 +170,17 @@ export function fogOf(camp: string): Fog | null {
         },
         cover: (key, x, y) => {
             const layer = FOG_LAYER_KEYS.indexOf(key);
-            return layer >= 0 && (fogged(layer, regionAt(x, y)) || underBox(layer, x, y));
+            return layer >= 0 && (fogged(layer, fogRegionAt(x, y)) || underBox(layer, x, y));
+        },
+        screens: (key) => {
+            const layer = FOG_LAYER_KEYS.indexOf(key);
+            if (layer < 0) return [0, 0];
+
+            let cleared = 0;
+            for (let region = 0; region < regionCount; region++) {
+                if (!fogged(layer, region)) cleared++;
+            }
+            return [cleared, regionCount];
         },
     };
 
@@ -176,6 +195,7 @@ export const NO_FOG: Fog = {
     at: () => true,
     open: () => [],
     cover: () => true,
+    screens: () => [0, 0],
     rects: () => {
         const [cornerX, cornerY] = PROG.map?.corner || [0, 0];
         const [width, height] = PROG.map?.size || [0, 0];

@@ -14,9 +14,20 @@ import { wrapCopies } from './torus.ts';
 
 /**
  * The kinds of mark the viewer can switch off: each has a row in the sidebar's Find on the map, and Reachable is the
- * toolbar's. The Tower pads switch also shows the gold rooms' Antipode endpoints.
+ * toolbar's. The Antipode pads switch also shows the gold rooms' Antipode endpoints.
  */
-export type OverlayKind = 'pods' | 'doorways' | 'signs' | 'tps' | 'towerPads' | 'logs' | 'maps' | 'treasures' | 'reach';
+export type OverlayKind =
+    | 'pods'
+    | 'doorways'
+    | 'signs'
+    | 'tps'
+    | 'towerPads'
+    | 'minorPads'
+    | 'logs'
+    | 'maps'
+    | 'pins'
+    | 'treasures'
+    | 'reach';
 
 /** What survives a redraw of one map: its view, the layer shown and the campaign it was for. */
 export interface MapKeep extends PanZoomKeep {
@@ -35,8 +46,10 @@ export const overlayOn: Record<OverlayKind, boolean> = {
     signs: true,
     tps: true,
     towerPads: true,
+    minorPads: true,
     logs: true,
     maps: true,
+    pins: true,
     treasures: true,
     reach: true,
 };

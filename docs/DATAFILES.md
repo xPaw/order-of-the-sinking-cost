@@ -233,10 +233,11 @@ whole set is about 300 KB.
 | `ice-cage`, `ice-gate` | the Freezer models `Freezer_A` and `Freezer_B` | the entity's tints |
 | `sign` | the Sign model `overworld_plaque` | the entity's tints |
 | `teleporter` | the Teleporter model `Reset_B` | the glowing parts take the entity's `color_discovered` |
-| `tower-pad` | the Teleporter model `Reset_C` | the same |
+| `pad` | the Teleporter model `Reset_C` | the same |
 | `gold-room` | `Reset_C` of a gold room's endpoint | `color_discovered` and the entity's own tints (gold) |
 | `voice-log` | the game's texture `UI_Voice_Log_Activate` (a brass horn) | the texture's own |
 | `map-scroll` | the View_Giver model `CamControl_Scroll` | the entity's tints |
+| `area-pin` | the Area_Pin model `CamControl_Map_Pin_A` | the entity's tints |
 | `treasure` | the Treasure_Display's plinth with its treasure's model standing on top | the entity's tints |
 | `treasure-taken` | the Treasure_Display's acquired model (`Chest_Open_A`) | the entity's tints |
 | `level-locked`, `level-solved`, `level-available-<group>` | the plain 8-point Level_Entry models `Entry_Locked_A` and `Entry_Available_A` | the viewer's colours (below) |

@@ -8,11 +8,11 @@ import { stateLabel } from '../model/progress.ts';
 import { towerName } from '../model/towers.ts';
 import type { TowerProgress } from '../model/towers.ts';
 import type { Area } from '../types.ts';
-import { syncSide } from '../sidebar.ts';
+import { refreshSideFind, syncSide } from '../sidebar.ts';
 import { refreshSideGoals } from '../sidebar/goals.ts';
 import type { ListedLevel, PanelContext } from './context.ts';
 import { drawFindList, rankCageGroupHtml } from './find-list.ts';
-import { layerTagHtml, levelPadHtml, wrappable } from './plan-chips.ts';
+import { layerTagHtml, levelPadHtml, NEAR, wrappable } from './plan-chips.ts';
 import { approxTip, whyText } from './why.ts';
 
 type ListGroup = ListedLevel['group'];
@@ -32,8 +32,6 @@ const GROUP_HEADS: Record<ListGroup, string> = {
     locked: 'Locked',
     solved: 'Solved',
 };
-
-export const NEAR = '<span class="muted" title="Outside every area box; grouped with the nearest area">≈ </span>';
 
 // a search row is the level alone; a goal row also tells the level's role and where it leads
 function rowHtml(context: PanelContext, levelIndex: number, tab: boolean): string {
@@ -290,7 +288,12 @@ export function applyFilters(context: PanelContext, redraw = true): void {
     context.computeMatches();
     context.list = context.listedLevels();
 
-    syncSide(context.filters);
+    // the goal decides the layers Find on the map counts
+    if (goalChanged) {
+        refreshSideFind();
+    } else {
+        syncSide(context.filters);
+    }
     drawList(context);
 
     const map = context.map;

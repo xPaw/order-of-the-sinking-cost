@@ -59,7 +59,7 @@ export interface MarkerStyle {
     rank: number;
 }
 
-/** A tower marker; one on its tower pad is drawn as the pad's icon and belongs to the Tower pads switch. */
+/** A tower marker; one on its tower pad is drawn as the pad's icon and belongs to the Antipode pads switch. */
 export interface MapTower {
     towerIndex: number;
     x: number;
@@ -1153,7 +1153,7 @@ export class MapView {
             icons.push(
                 hiddenWhen(iconHidden, {
                     class: iconClasses,
-                    ...iconAttributes(ICON_URLS['tower-pad'], iconRadiusOn(DISC_RADIUS), position),
+                    ...iconAttributes(ICON_URLS['gold-room'], iconRadiusOn(DISC_RADIUS), position),
                 }),
             );
         }

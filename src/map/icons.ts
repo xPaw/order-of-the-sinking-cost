@@ -25,10 +25,11 @@ const ICON_NAMES = [
     'ice-gate',
     'sign',
     'teleporter',
-    'tower-pad',
+    'pad',
     'gold-room',
     'voice-log',
     'map-scroll',
+    'area-pin',
     'treasure',
     'treasure-taken',
     'hero',
@@ -142,9 +143,11 @@ const OVERLAY_ICON_NAMES: Record<Exclude<OverlayKind, 'reach'>, IconName> = {
     doorways: 'ice-gate',
     signs: 'sign',
     tps: 'teleporter',
-    towerPads: 'tower-pad',
+    towerPads: 'gold-room',
+    minorPads: 'pad',
     logs: 'voice-log',
     maps: 'map-scroll',
+    pins: 'area-pin',
     treasures: 'treasure',
 };
 
@@ -155,6 +158,13 @@ export const OVERLAY_ICONS: Record<string, string> = {
     ...Object.fromEntries(overlayIconEntries),
     reach: svgIcon('M-5.5 -3.5h11v7h-11Z', 'var(--reach)', ICON_STROKE),
 };
+
+/** A cloud, for the fog. */
+export const fogIcon = svgIcon(
+    'M-6 4H4.5A2.5 2.5 0 0 0 4.5 -1A3.4 3.4 0 0 0 -2 -2A3.7 3.7 0 0 0 -6 4Z',
+    '#c9d3de',
+    ICON_STROKE,
+);
 
 /** The arrow of a heading or row that expands and collapses. */
 export const CHEVRON = '<i class="chev" aria-hidden="true"></i>';

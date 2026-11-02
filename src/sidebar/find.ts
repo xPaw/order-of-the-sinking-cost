@@ -4,12 +4,16 @@ import { escapeHtml } from '../util.ts';
 import { hooks } from '../shared.ts';
 import type { ProgressFilters } from '../shared.ts';
 import { findSectionOpen } from './sections.ts';
-import { CHEVRON, checkIcon, OVERLAY_ICONS } from '../map/icons.ts';
+import { CHEVRON, checkIcon, fogIcon, OVERLAY_ICONS } from '../map/icons.ts';
 import { overlayOn } from '../map/map-html.ts';
-import { findLabel, FIND_KINDS } from '../model/find-kinds.ts';
+import { findLabel, findLayerOf, FIND_KINDS, inFindLayer } from '../model/find-kinds.ts';
 import type { FindKind } from '../model/find-kinds.ts';
+import { layerName } from '../model/layers.ts';
 import type { ProgressModel } from '../model/progress-model.ts';
+import { countOf, layerSplit } from '../model/totals.ts';
 import type { FoundOfTotal } from '../model/totals.ts';
+import { uncoveredOf } from '../model/uncovered.ts';
+import { percent } from '../format.ts';
 
 /** Whether the results column shows a kind's list: an open panel covers it. */
 export function findListShown(filters: ProgressFilters, kind: string): boolean {
@@ -57,21 +61,59 @@ function findRowHtml(
     return `<div class="${className}">${iconButton}${nameButton}</div>`;
 }
 
+// the share of the map uncovered, with the cleared screens per layer in its tooltip; a count, not a kind of mark
+function uncoveredRowHtml(model: ProgressModel, scope: string | null): string {
+    const { screens, byLayer } = uncoveredOf(model.fog, model.known, scope);
+    const [cleared, total] = screens;
+    if (total <= 0) return '';
+
+    const done = cleared >= total;
+    let className = 'sr on fogr';
+    let check = '';
+    if (done) {
+        className += ' done';
+        check = checkIcon;
+    }
+
+    const title = escapeHtml(`Screens cleared of fog · ${byLayer}`);
+    const count = `<span class="cnt">${check}${percent(cleared, total)}</span>`;
+    const name = `<span class="sn" title="${title}"><span class="n">Map uncovered</span>${count}</span>`;
+    return `<div class="${className}"><span class="si">${fogIcon}</span>${name}</div>`;
+}
+
+// a kind's found / total and per-layer split: every layer's, or, for a goal of one layer, that layer's
+function scopedCount(model: ProgressModel, kind: FindKind, scope: string | null): [FoundOfTotal, string] {
+    if (scope === null) return [model.stats[kind], model.stats.by[kind]];
+
+    const marks = model.marks[kind].filter(([layer]) => inFindLayer(scope, layer));
+    return [countOf(marks), layerSplit(marks, model.known)];
+}
+
 export function sideFindHtml(model: ProgressModel): string {
-    const stats = model.stats;
+    const scope = findLayerOf(model.goals, model.levels, model.goalFor(model.F.goal));
     const rows: string[] = [];
 
     for (const [kind, label] of FIND_KINDS) {
-        if (stats[kind][1] <= 0) continue;
+        const [count, byLayer] = scopedCount(model, kind, scope);
+        if (count[1] <= 0) continue;
 
         let note = '';
-        if (kind === 'signs' && stats.signsReady > 0) note = ` · ${stats.signsReady} to read`;
-        rows.push(findRowHtml(kind, label, stats[kind], stats.by[kind], findListShown(model.F, kind), note));
+        if (kind === 'signs') {
+            const ready = model.readySignLayers.filter((layer) => inFindLayer(scope, layer)).length;
+            if (ready > 0) note = ` · ${ready} to read`;
+        }
+        rows.push(findRowHtml(kind, label, count, byLayer, findListShown(model.F, kind), note));
     }
+
+    rows.push(uncoveredRowHtml(model, scope));
 
     if (!rows.length) return '';
 
-    const headContent = `<span class="sh">Find on the map</span>${CHEVRON}`;
+    // a goal of one layer names the heading after that layer
+    let title = 'Find on the map';
+    if (scope !== null) title = `${layerName(scope)} finds`;
+
+    const headContent = `<span class="sh">${escapeHtml(title)}</span>${CHEVRON}`;
     const open = findSectionOpen();
     const head = `<button class="plain fold" data-fold="find" aria-expanded="${open}">${headContent}</button>`;
     if (!open) return head;

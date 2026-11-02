@@ -333,7 +333,8 @@ export function renderSide(model?: ProgressModel | null): void {
     syncSide(filters);
 }
 
-function refreshSideFind(): void {
+/** Draws Find on the map again, with the controls showing the filters. */
+export function refreshSideFind(): void {
     const element = $('#sideFind');
     if (!element || !hooks.side) return;
 
