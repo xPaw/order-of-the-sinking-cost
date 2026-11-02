@@ -22,7 +22,7 @@ test('static roles', () => {
     const levelRoles = [...ROLE!.need.l];
     expect(levelRoles.length).toBe(PROG.levels.length);
     expect(levelRoles.filter(Boolean).length).toBe(769);
-    expect(levelRoles.filter((role) => role === 1).length).toBe(166);
+    expect(levelRoles.filter((role) => role === 1).length).toBe(175);
     expect(levelRoles.filter((role) => !role).length).toBe(151);
     expect(ROLE!.need.g.length).toBe(PROG.freezers.length);
     expect(ROLE!.bg.l.length).toBe(PROG.levels.length);

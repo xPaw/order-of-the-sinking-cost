@@ -4,7 +4,7 @@ import { atVersion } from '../../src/blob.ts';
 import { Reader } from '../../src/reader.ts';
 import type { Schema, SchemaField } from '../../src/types.ts';
 import { Archive } from './archive.ts';
-import type { Fields } from './fields.ts';
+import { refOf, type Fields } from './fields.ts';
 import * as paths from './paths.ts';
 
 // A decoded field value: a number (a bigint when beyond the safe integers), a string, a flag or enum name, or a list
@@ -57,6 +57,8 @@ const ID_FIELD_NAMES = new Set([
     'primary_view_reenablement_marker',
 ]);
 const INTEGER_TYPES = new Set(['u8', 's8', 'u16', 's16', 'u32', 's32', 'u64', 's64']);
+// The Group.demo_existence values whose Groups exist in the full game
+const FULL_GAME_EXISTENCE = new Set(['NONE', 'EXISTS_IF_FULL_GAME']);
 const UTF8 = new TextDecoder();
 
 export function pidString(pid: number): string {
@@ -157,7 +159,40 @@ export class Package extends Archive {
             records.push({ pid, type, blob });
         }
         if (reader.left) throw new Error(`${reader.left} trailing bytes in ${level}`);
-        return { header: { version, base, types }, records };
+        const header = { version, base, types };
+        return { header, records: this.withoutDemoOnly(header, records) };
+    }
+
+    // The records that exist in the full game: a Group whose demo_existence names a demo phase is left out with its
+    // members, and so are the Groups inside it and their members
+    withoutDemoOnly(header: EntitiesHeader, records: EntityRecord[]): EntityRecord[] {
+        const parentOf = new Map<number, number>();
+        const demoOnly = new Set<number>();
+        for (const { pid, type, blob } of records) {
+            const [name, typeVersion] = header.types[type];
+            if (name !== 'Group') continue;
+            const fields = this.decode(blob, name, typeVersion, header.base);
+            parentOf.set(pid, refOf(fields['base.group_id']));
+            const demoExistence = fields.demo_existence;
+            if (typeof demoExistence === 'string' && !FULL_GAME_EXISTENCE.has(demoExistence)) demoOnly.add(pid);
+        }
+        if (demoOnly.size === 0) return records;
+
+        const demoOnlyGroups = [...parentOf.keys()].filter((pid) => {
+            const seen = new Set<number>();
+            for (let ancestor = pid; ancestor && !seen.has(ancestor); ancestor = parentOf.get(ancestor) ?? 0) {
+                if (demoOnly.has(ancestor)) return true;
+                seen.add(ancestor);
+            }
+            return false;
+        });
+        for (const pid of demoOnlyGroups) demoOnly.add(pid);
+        return records.filter(({ pid, type, blob }) => {
+            if (demoOnly.has(pid)) return false;
+            const [name, typeVersion] = header.types[type];
+            const fields = this.decode(blob, name, typeVersion, header.base);
+            return !demoOnly.has(refOf(fields['base.group_id']));
+        });
     }
 
     // The base fields and the type's own fields present at the given versions
