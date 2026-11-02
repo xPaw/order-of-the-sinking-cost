@@ -570,7 +570,16 @@ describe('levels whose requirements need a level', () => {
 });
 
 describe('areas named by activated pins', () => {
-    const area: Area = { local_area_name: '', display: '', image: '', p: [0, 0, 0], pin: 0, boxes: [], layer: '', order: 0 };
+    const area: Area = {
+        local_area_name: '',
+        display: '',
+        image: '',
+        p: [0, 0, 0],
+        pin: 0,
+        boxes: [],
+        layer: '',
+        order: 0,
+    };
     test('the lowest float_parameter among the activated pins, else the level-data area', () => {
         PROG.areas = [100, 200, 300].map((pin): Area => ({ ...area, pin }));
         const level = progressLevel({

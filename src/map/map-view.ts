@@ -1290,8 +1290,7 @@ export class MapView {
 
     // switches the layer (not to one the fog has not uncovered); onLayer lets the lists follow
     private showLayer(layer: string): void {
-        this.currentLayer = layer;
-        this.keep.layer = layer;
+        this.applyLayer(layer);
         this.draw();
         this.options.onLayer?.(layer);
     }
@@ -1480,32 +1479,40 @@ export class MapView {
     // a click on the layer toggle switches once the layer's full image is decoded, so that the blocky thumbnail is never
     // shown at close zoom; the toggle looks busy meanwhile
     private switchLayerWhenDecoded(layer: string): void {
+        this.dropPendingLayer();
         if (layer === this.currentLayer || !this.canShow(layer)) return;
 
-        const toggle = find(this.box, '[data-role=layers]', HTMLElement);
         if (this.terrain.isDecoded(layer)) {
-            this.pendingLayer = '';
-            toggle.classList.remove('busy');
             this.setLayer(layer);
             return;
         }
 
         this.pendingLayer = layer;
-        toggle.classList.add('busy');
+        find(this.box, '[data-role=layers]', HTMLElement).classList.add('busy');
         void this.terrain.decoded(layer).then(() => {
             if (this.pendingLayer !== layer) return;
 
-            this.pendingLayer = '';
-            toggle.classList.remove('busy');
+            this.dropPendingLayer();
             this.setLayer(layer);
         });
+    }
+
+    private dropPendingLayer(): void {
+        this.pendingLayer = '';
+        find(this.box, '[data-role=layers]', HTMLElement).classList.remove('busy');
+    }
+
+    // every layer change goes through here: a layer chosen any other way replaces a switch still waiting for its image
+    private applyLayer(layer: string): void {
+        this.dropPendingLayer();
+        this.currentLayer = layer;
+        this.keep.layer = layer;
     }
 
     setLayer(layer: string): void {
         if (layer === this.currentLayer || !this.canShow(layer)) return;
 
-        this.currentLayer = layer;
-        this.keep.layer = layer;
+        this.applyLayer(layer);
         this.draw();
         this.viewport.resize();
         this.options.onLayer?.(layer);
@@ -1563,8 +1570,7 @@ export class MapView {
         // a level on a layer the fog has not uncovered keeps the current layer
         const before = this.currentLayer;
         if (selection?.z != null && !how.still && this.canShow(mapLayerOf(selection.z))) {
-            this.currentLayer = mapLayerOf(selection.z);
-            this.keep.layer = this.currentLayer;
+            this.applyLayer(mapLayerOf(selection.z));
         }
 
         this.draw();

@@ -261,13 +261,7 @@ class Canvas {
 }
 
 // Where the drawn triangles fall on the screen: the centre and the scale that fits them into `inner` pixels
-function frameOf(
-    positions: Float32Array,
-    lists: TriangleList[],
-    lod: Lod,
-    axes: CameraAxes,
-    inner: number,
-): Framing {
+function frameOf(positions: Float32Array, lists: TriangleList[], lod: Lod, axes: CameraAxes, inner: number): Framing {
     let minX = Infinity;
     let maxX = -Infinity;
     let minY = Infinity;

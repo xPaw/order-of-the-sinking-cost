@@ -270,7 +270,8 @@ function onPageClick(context: PanelContext, event: Event): void {
     }
 }
 
-// the search box applies its text once typing pauses
+// the search box applies its text once typing pauses, to the page drawn by then: a redraw meanwhile replaces the
+// context the box was wired with
 let searchTimer = 0;
 
 function wireSearch(context: PanelContext): void {
@@ -282,7 +283,7 @@ function wireSearch(context: PanelContext): void {
         clearTimeout(searchTimer);
         searchTimer = setTimeout(() => {
             context.filters.q = query;
-            applyFilters(context);
+            if (hooks.apply) hooks.apply();
         }, 120);
     });
 }

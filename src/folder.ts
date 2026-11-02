@@ -455,6 +455,9 @@ setInterval(() => {
 async function offerLastFolder(): Promise<void> {
     if (!window.showDirectoryPicker) return;
 
+    // a folder, snapshot or saves opened while the stored folder is looked up win over it
+    const generation = folderGeneration;
+    const superseded = (): boolean => generation !== folderGeneration || realFiles().length > 0;
     let stored: unknown;
 
     try {
@@ -463,9 +466,12 @@ async function offerLastFolder(): Promise<void> {
         return;
     }
 
-    if (!(stored instanceof FileSystemDirectoryHandle) || realFiles().length) return;
+    if (!(stored instanceof FileSystemDirectoryHandle) || superseded()) return;
 
-    if ((await stored.queryPermission({ mode: 'read' })) === 'granted') {
+    const permission = await stored.queryPermission({ mode: 'read' });
+    if (superseded()) return;
+
+    if (permission === 'granted') {
         void useHandle(stored);
         return;
     }

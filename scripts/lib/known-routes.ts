@@ -337,6 +337,18 @@ const KNOWN_ROUTES: KnownRouteSource[] = [
         note: 'through the Freezer rover_impulse_v2 opens into the submarine pocket, then through the Freezer submarine opens',
     },
     {
+        id: 'orange_predicament_sky_drop',
+        to: { level: 'orange_predicament' },
+        needs: [[{ freezer: 111163715 }]],
+        note: 'through the Freezer air_skating_v6 opens onto the sky platform, then a drop off its west edge lands beside the level',
+    },
+    {
+        id: 'skip_orange_maze_v3_sky_drop',
+        to: { level: 'skip_orange_maze_v3' },
+        needs: [[{ freezer: 111163715 }]],
+        note: 'through the Freezer air_skating_v6 opens onto the sky platform, then a drop off it lands beside the level',
+    },
+    {
         id: 'skip_or_sink_r_submarine',
         to: { level: 'skip_or_sink_r' },
         needs: [[{ freezer: 90203328 }], [{ freezer: 90203340 }]],

@@ -666,7 +666,6 @@ function pressingObjects(
     flavor: number,
     miss: PressMiss,
 ): Set<number> | null {
-    if (floodState.latched.has(flavor)) return null;
     const switchCells = walkGrid.unpressed.get(flavor) ?? [];
     if (!switchCells.every((cell) => switchReached(walkGrid, floodState, cell))) return null;
     return objectsOntoAll(walkGrid, floodState, switchCells, miss);
@@ -867,6 +866,7 @@ export function press(walkGrid: WalkGrid, floodState: FloodState): boolean {
 
     for (let flavorIndex = 0; flavorIndex < flavors.length; flavorIndex++) {
         const { flavor, open, shut } = flavors[flavorIndex];
+        if (floodState.latched.has(flavor)) continue;
 
         // while the hero holds the Rod, the Switches a launch may land an object on need not be reached
         let switchesLeft = floodState.switchesLeft[flavorIndex];
