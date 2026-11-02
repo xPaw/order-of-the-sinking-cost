@@ -1,12 +1,11 @@
-// A level's panel on the map: its state and role, area, the Freezer it is in, the path to unlock it, the gates in front
-// of it and why it is not reachable, its tower, what it requires and unlocks (VIEWER.md "The page (viewer)")
+// A level's panel on the map: its area, state and role, the Freezer it is in, the path to unlock it, the gates in front
+// of it and why it is not reachable, what it requires and unlocks, its tower (VIEWER.md "The page (viewer)")
 import { escapeHtml } from '../util.ts';
-import { areaEmblemHtml, towerEmblemHtml } from '../map/icons.ts';
+import { towerEmblemHtml } from '../map/icons.ts';
 import type { Role } from '../map/icons.ts';
 import type { MapLink, MapSelection } from '../map/map-view.ts';
 import type { SelectHow } from '../map/map-view.ts';
 import { achievementName } from '../model/achievements.ts';
-import { areaName } from '../model/areas.ts';
 import { capitalized, freezerNoun, freezersNoun } from '../model/freezer-names.ts';
 import { roleFor } from '../model/goal-roles.ts';
 import { unlockPlan } from '../model/plans.ts';
@@ -19,6 +18,7 @@ import { wikiTacticsUrl } from '../wikitactics.ts';
 import type { PanelContext } from './context.ts';
 import { markSelected, NEAR } from './list.ts';
 import {
+    areaPlaceHtml,
     chainOf,
     gateChip,
     gateMode,
@@ -33,6 +33,7 @@ import {
     roleChipHtml,
     stepsOf,
     uniqueLinks,
+    wrappable,
 } from './plan-chips.ts';
 import type { Chain } from './plan-chips.ts';
 import { approxTip, wayIn, whyParts, whyText } from './why.ts';
@@ -77,25 +78,16 @@ function stateChipsHtml(context: PanelContext, levelIndex: number): string {
     if (level.a) achievement = `<span class="chip">${escapeHtml(achievementName(level.a))}</span>`;
 
     const stateText = stateLabel(context.progress, levelState);
-    const stateChip = `<span class="chip"${tip}>${levelPadHtml(context.progress, levelIndex)}${stateText}</span>`;
+    let stateClass = 'chip';
+    if (levelState === 'solved') stateClass += ' done';
+    const stateChip = `<span class="${stateClass}"${tip}>${stateText}</span>`;
     return `<div>${stateChip}${roleChipHtml(context, role)}${achievement}</div>`;
-}
-
-function whereHtml(context: PanelContext, levelIndex: number): string {
-    const level = context.levels[levelIndex];
-    const areaIndex = context.areaOf(levelIndex);
-    if (areaIndex == null) return '';
-
-    let near = '';
-    if (level.areaNear) near = NEAR;
-    const area = context.areas[areaIndex];
-    return `<div class="muted">${near}${areaEmblemHtml(area)}${escapeHtml(areaName(area))}</div>`;
 }
 
 function freezerHtml(context: PanelContext, ice: number): string {
     const freezer = context.freezers[ice];
     const noun = freezerNoun(ice);
-    const html = `<div class="h">In an ${noun}</div><div>${gateChip(context, ice)}</div>`;
+    const html = `<div class="h">In an ${noun}</div><div>${gateChip(context, ice, true)}</div>`;
     if (context.progress.gateOpen[ice]) return html + `<div class="muted">${capitalized(noun)} open</div>`;
 
     const mode = gateMode(freezer);
@@ -172,11 +164,13 @@ function towerHtml(context: PanelContext, levelIndex: number, towerIndex: number
     if (tower.active) count = 'activated';
 
     let dropdownNote = '';
-    if (level.d) dropdownNote = ' · dropdown';
+    if (level.d) dropdownNote = ' <span class="c">· dropdown</span>';
 
     const name = towerEmblemHtml(tower) + escapeHtml(towerName(tower.t));
-    const towerButton = `<button class="plain lnk" data-ptower="${towerIndex}">${name}</button>`;
-    return `<div class="h">${towerButton}${dropdownNote} · ${count}</div>`;
+    const progressNote = `<span class="muted"> · ${count}</span>`;
+    const attributes = `data-ptower="${towerIndex}" tabindex="0" role="button"`;
+    const towerChip = `<span class="chip" ${attributes}>${name}${progressNote}</span>`;
+    return `<div class="h">Tower${dropdownNote}</div><div>${towerChip}</div>`;
 }
 
 // the other towers this level brings closer to done
@@ -322,9 +316,11 @@ export function showLevelPanel(context: PanelContext, levelIndex: number, how?: 
 
     const level = context.levels[levelIndex];
     const blocked = progress.state[levelIndex] === 'blocked';
-    let html = panelHead(context, escapeHtml(level.n));
+    let near = '';
+    if (level.areaNear) near = NEAR;
+    const place = areaPlaceHtml(context, context.areaOf(levelIndex), near);
+    let html = panelHead(context, levelPadHtml(progress, levelIndex), wrappable(level.n), place);
     html += stateChipsHtml(context, levelIndex);
-    html += whereHtml(context, levelIndex);
 
     const ice = context.iceOf[levelIndex];
     if (ice !== undefined) html += freezerHtml(context, ice);
@@ -342,12 +338,13 @@ export function showLevelPanel(context: PanelContext, levelIndex: number, how?: 
     html += behindGatesHtml(context, behind, gateIds);
     if (blocked) html += whyHtml(context, levelIndex, behind, ice);
 
-    const tower = towerSection(context, levelIndex);
-    html += tower.html;
     html += requiresHtml(context, level);
 
     const unlockedGates = gatesUnlockedBy(context, levelIndex);
     html += unlocksHtml(context, progress.unlocks[levelIndex], unlockedGates);
+
+    const tower = towerSection(context, levelIndex);
+    html += tower.html;
     html += wikiTacticsHtml(level);
 
     const parts: LevelPanelParts = {

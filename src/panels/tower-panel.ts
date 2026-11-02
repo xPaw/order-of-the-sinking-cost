@@ -1,6 +1,7 @@
 // A tower's panel on the map: activated or how many to go, the path to activate it, its unsolved, solved and dropdown
 // levels (VIEWER.md "The page (viewer)")
 import { escapeHtml } from '../util.ts';
+import { progressBarHtml } from '../format.ts';
 import type { MapLink, SelectHow } from '../map/map-view.ts';
 import { unlockPlan } from '../model/plans.ts';
 import { towerEmblemHtml } from '../map/icons.ts';
@@ -8,21 +9,47 @@ import { towerLevelCount, towerName } from '../model/towers.ts';
 import type { TowerProgress } from '../model/towers.ts';
 import type { PanelContext } from './context.ts';
 import { markSelected } from './list.ts';
-import { chainOf, layerNote, panelHead, pathHtml, pick, pointsOf, stepsOf, uniqueLinks } from './plan-chips.ts';
+import { chainOf, layerNote, levelChip, panelHead, pathHtml, pointsOf, stepsOf, uniqueLinks } from './plan-chips.ts';
 
-// the count of a tower's levels; while some are under fog only the ones not under fog are counted, and the count
-// says there are more
-function towerStateHtml(tower: TowerProgress, shownLevels: number, unsolvedShown: number): string {
-    const fogged = shownLevels < tower.normal.length;
-    let toGo = String(Math.max(0, tower.req - tower.solvedNormal));
-    if (fogged) toGo = `${unsolvedShown}+`;
+// a bar and count of a tower's levels solved; while some are under fog only the ones not under fog are counted, and
+// the count says there are more. Activated and Gold follow as chips.
+function towerStateHtml(tower: TowerProgress, shownLevels: number): string {
+    let total = tower.req;
+    if (shownLevels < tower.normal.length) total = shownLevels;
 
-    let state = `<span class="chip">${towerLevelCount(tower, shownLevels)} · ${toGo} to go</span>`;
-    if (tower.active) state = '<span class="chip good">Activated</span>';
+    const bar = progressBarHtml(tower.solvedNormal, total);
+    const count = `<span class="tc">${towerLevelCount(tower, shownLevels)}</span>`;
+    let html = `<div class="tprog">${bar}${count}</div>`;
 
-    let gold = '';
-    if (tower.gold) gold = '<span class="chip warn">Gold</span>';
-    return `<div>${state}${gold}</div>`;
+    let chips = '';
+    if (tower.active) chips += '<span class="chip good">Activated</span>';
+    if (tower.gold) chips += '<span class="chip warn">Gold</span>';
+    if (chips) html += `<div>${chips}</div>`;
+    return html;
+}
+
+/**
+ * A column of a tower's levels as the game draws it: the solved ones fill it from the bottom, the unsolved ones sit
+ * above them. A line marks the `needed`-th row from the bottom, where the tower activates; none for 0 or when fewer
+ * rows are shown.
+ */
+function columnHtml(context: PanelContext, levels: number[], needed: number): string {
+    const progress = context.progress;
+    const unsolved = levels.filter((level) => progress.state[level] !== 'solved');
+    const solved = levels.filter((level) => progress.state[level] === 'solved');
+    const rows = [...unsolved, ...solved];
+
+    let lineAt = -1;
+    if (needed > 0 && needed <= rows.length) lineAt = rows.length - needed;
+
+    let html = '';
+    rows.forEach((level, index) => {
+        if (index === lineAt) html += '<div class="tline" title="The tower activates with the levels below"></div>';
+
+        html += levelChip(progress, level, 'data-pick');
+    });
+
+    return `<div class="tcol">${html}</div>`;
 }
 
 export function showTowerPanel(context: PanelContext, towerIndex: number, how?: SelectHow): void {
@@ -33,39 +60,22 @@ export function showTowerPanel(context: PanelContext, towerIndex: number, how?: 
     const tower = progress.towers[towerIndex];
     const shownNormal = tower.normal.filter((level) => !progress.hidden[level]);
     const todo = shownNormal.filter((level) => progress.state[level] !== 'solved');
-    const done = shownNormal.filter((level) => progress.state[level] === 'solved');
     const dropdowns = tower.drop.filter((level) => !progress.hidden[level]);
     const unsolvedDropdowns = dropdowns.filter((level) => progress.state[level] !== 'solved');
-    let html = panelHead(context, towerEmblemHtml(tower) + escapeHtml(towerName(tower.t)));
-    html += towerStateHtml(tower, shownNormal.length, todo.length);
+    let html = panelHead(context, towerEmblemHtml(tower), escapeHtml(towerName(tower.t)));
+    html += towerStateHtml(tower, shownNormal.length);
 
     let plan = null;
     if (!tower.active) plan = unlockPlan(progress, ['tower', towerIndex]);
 
     const steps = plan && stepsOf(context, plan);
     const chain = chainOf(context, plan, steps);
-    const path = pathHtml(context, plan, false, steps);
-    html += path + layerNote(context, chain, tower.p[2]);
+    html += pathHtml(context, plan, false, steps) + layerNote(context, chain, tower.p[2]);
     context.chainPoints = chain.points;
 
-    // the levels the path names are not listed again
-    const onPath = new Set<number>();
-    if (path && plan && steps) {
-        plan.nodes.forEach((node, key) => {
-            if (node.t === 'l' && steps.num.has(key)) onPath.add(node.id);
-        });
-    }
-
-    const offPath = todo.filter((level) => !onPath.has(level));
-    let unsolvedTitle = 'Unsolved';
-    if (offPath.length < todo.length) unsolvedTitle = 'Also unsolved';
-    if (offPath.length) html += `<div class="h">${unsolvedTitle}</div><div>${pick(context, offPath)}</div>`;
-    if (done.length) html += `<div class="h">Solved</div><div>${pick(context, done)}</div>`;
-    if (dropdowns.length) {
-        const solvedDropdowns = dropdowns.length - unsolvedDropdowns.length;
-        html += `<div class="h">Dropdowns (optional) ${solvedDropdowns} / ${dropdowns.length}</div>`;
-        html += `<div>${pick(context, dropdowns)}</div>`;
-    }
+    // the levels as the tower shows them, then the dropdowns' column
+    html += '<div class="h">Levels</div>' + columnHtml(context, shownNormal, tower.req);
+    if (dropdowns.length) html += '<div class="h">Dropdowns</div>' + columnHtml(context, dropdowns, 0);
 
     // lines from the tower to its unsolved levels: solid for required ones, dashed for dropdowns
     const links = uniqueLinks([

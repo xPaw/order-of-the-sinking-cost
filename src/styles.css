@@ -911,7 +911,6 @@ h2 {
 .chip .ico {
     margin-right: var(--s1);
 }
-.chip.good::before,
 .chip.warn::before {
     content: '';
     display: inline-block;
@@ -919,13 +918,24 @@ h2 {
     height: 8px;
     margin-right: var(--s1);
     border-radius: 50%;
-    background: var(--chip-dot);
+    background: var(--warn);
 }
-.chip.good {
-    --chip-dot: var(--good);
+/* a level open to play stands out a little; a solved one fades back */
+.chip.open {
+    border-color: color-mix(in srgb, var(--gold) 55%, var(--line));
 }
-.chip.warn {
-    --chip-dot: var(--warn);
+.chip.done {
+    color: var(--muted);
+    font-style: italic;
+}
+/* what is done (a solved level, an open gate, a read sign, an activated tower) ends with a check */
+.chip.done::after,
+.chip.good::after {
+    content: '✓';
+    margin-left: var(--s1);
+    color: var(--good);
+    font-style: normal;
+    font-weight: 600;
 }
 .chip[data-goto],
 .chip[data-pick],
@@ -1188,18 +1198,49 @@ main > .mapbox {
     border: 1px solid var(--line);
     border-radius: var(--r1);
 }
+/* the unlock path: a numbered badge per step, joined by a line down to the next one */
+.detail .steps {
+    display: grid;
+    gap: var(--s2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
 .detail .pth {
-    margin: var(--s1) 0;
+    position: relative;
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr);
+    column-gap: var(--s2);
+    align-items: start;
+}
+.detail .pth:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    top: 28px;
+    bottom: calc(-1 * var(--s2) + 2px);
+    left: 9px;
+    width: 2px;
+    border-radius: 1px;
+    background: var(--line);
 }
 .detail .stp {
-    display: inline-block;
-    min-width: 1.4em;
-    margin-right: var(--s1);
-    border-radius: 999px;
+    width: 20px;
+    height: 20px;
+    margin-top: 4px;
+    border-radius: 50%;
     background: var(--gold);
     color: var(--ink);
+    font: 600 12px/20px var(--ui);
+    font-variant-numeric: tabular-nums;
     text-align: center;
-    font-weight: 700;
+}
+/* a caption as tall as a chip, so the badge lines up with either */
+.detail .pcap {
+    color: var(--muted);
+    line-height: 28px;
+}
+.detail .palt {
+    margin-top: var(--s2);
 }
 .rlist .foot {
     padding: var(--s2) var(--s2) var(--s1);
@@ -1851,34 +1892,118 @@ main > .mapbox {
 .detail .dtop button:hover {
     color: var(--hi);
 }
+/* section headings in the sidebar's serif small caps, a size down; a heading's count or note is muted */
 .detail .h,
 .detail .hs {
-    margin: var(--s3) 0 var(--s1);
+    margin: var(--s4) 0 var(--s2);
+    color: var(--title);
+    font: 600 15px/1.3 var(--serif);
+    font-variant-caps: small-caps;
+    letter-spacing: 0.06em;
+}
+.detail .hs {
+    margin-top: var(--s2);
     color: var(--muted);
-    font: 600 13px var(--ui);
-    font-variant-caps: all-small-caps;
-    letter-spacing: 0.08em;
+}
+.detail .h .c {
+    color: var(--muted);
+}
+/* a tower's levels solved: the bar fills the row, the count beside it */
+.detail .tprog {
+    display: flex;
+    align-items: center;
+    gap: var(--s3);
+    margin-bottom: var(--s2);
+}
+.detail .tprog .bar {
+    flex: 1;
+    height: 8px;
+    border-radius: 4px;
+}
+.detail .tprog .tc {
+    color: var(--hi);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+/* a tower's levels as the game's column: a stack of rows, unsolved over solved, and a line where the tower activates */
+.detail .tcol {
+    display: grid;
+    gap: var(--s1);
+    margin-bottom: var(--s2);
+}
+.detail .tcol .chip {
+    display: block;
+    margin: 0;
+}
+.detail .tline {
+    position: relative;
+    height: 2px;
+    margin: var(--s1) 10px;
+    background: var(--gold);
+}
+.detail .tline::before,
+.detail .tline::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    border: 5px solid transparent;
+}
+.detail .tline::before {
+    left: -10px;
+    border-left-color: var(--gold);
+}
+.detail .tline::after {
+    right: -10px;
+    border-right-color: var(--gold);
 }
 .detail .extlink {
-    margin-top: var(--s3);
+    margin-top: var(--s4);
+    padding-top: var(--s3);
+    border-top: 1px solid var(--line);
 }
+.detail .extlink a::after {
+    content: ' ↗';
+}
+/* every chip is one height whatever its icon: a 20 px line, with the icons drawn at that size */
 .detail .chip {
+    padding: 3px var(--s2);
+    line-height: 20px;
     white-space: normal;
     overflow-wrap: anywhere;
     max-width: 100%;
 }
+.detail .chip .ico,
+.detail .hd .pl .ico.emb {
+    width: 20px;
+    height: 20px;
+    vertical-align: top;
+}
+/* the panel's top: a large icon beside the title and, under the title, the place */
 .detail .hd {
     display: flex;
-    gap: var(--s2);
+    gap: var(--s3);
     align-items: center;
-    margin-bottom: var(--s1);
+    margin-bottom: var(--s4);
 }
-.detail .hd b {
+.detail .hd > .ico {
+    width: 36px;
+    height: 36px;
+    margin: 0;
+}
+.detail .ht {
     flex: 1;
     min-width: 0;
+}
+.detail .hd b {
+    display: block;
     overflow-wrap: anywhere;
     color: var(--title);
     font: 600 18px/1.25 var(--serif);
+}
+.detail .hd .pl {
+    color: var(--muted);
+    line-height: 20px;
 }
 .detail .hd b:focus {
     outline: none;

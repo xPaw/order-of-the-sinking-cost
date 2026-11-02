@@ -59,6 +59,8 @@ export interface ProgressModel {
     goalByKey: (key: string) => GoalView | null;
     goalFor: (key: string) => GoalView | null;
     gateArea: (freezer: number) => string | null;
+    /** The index of the area a position is in while that area is shown; null for none. */
+    areaIndexAt: (position: number[]) => number | null;
     /** A place-like name for a Freezer: its area while shown, else "near" the closest level not under fog; empty for none. */
     gatePlace: (freezer: number) => string;
     /** The closest level not under fog to a point on a layer key; -1 for none. */
@@ -170,8 +172,10 @@ export function progressModel(camp: string): ProgressModel {
 
     // a Freezer, sign or pad is named by the area it stands in while that area is shown, else by its position
     const gatePins = hide ? pinsOn : new Set(areas.map((area) => area.pin));
+    const areaIndexAt = (position: number[]) => heroAreaAt(position, gatePins);
+
     const areaAt = (position: number[]) => {
-        const area = heroAreaAt(position, gatePins);
+        const area = areaIndexAt(position);
         if (area == null) return null;
         return areaName(areas[area]);
     };
@@ -311,6 +315,7 @@ export function progressModel(camp: string): ProgressModel {
         gatePlace,
         nearestShownLevel,
         areaAt,
+        areaIndexAt,
         stepShown,
         heroDist,
         onOverworld,

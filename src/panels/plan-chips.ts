@@ -3,14 +3,14 @@
 // "The spoiler model (viewer)")
 import { PROG } from '../data.ts';
 import { countBy, escapeHtml } from '../util.ts';
-import { iconHtml, roleDot, ROLES, towerEmblemHtml } from '../map/icons.ts';
+import { areaEmblemHtml, iconHtml, roleDot, ROLES, towerEmblemHtml } from '../map/icons.ts';
 import type { Role } from '../map/icons.ts';
 import { levelIconName } from '../map/level-icons.ts';
 import type { LevelIconName } from '../map/level-icons.ts';
 import type { LinkEnd, MapLink, MapStep } from '../map/map-view.ts';
 import { achievementName, rankAchievement } from '../model/achievements.ts';
 import { areaName } from '../model/areas.ts';
-import { capitalized, freezerNoun } from '../model/freezer-names.ts';
+import { capitalized, freezerNoun, isDoorway } from '../model/freezer-names.ts';
 import { layerName, mapLayerOf, wayTo } from '../model/layers.ts';
 import type { UnlockPlan } from '../model/plans.ts';
 import { RANKS, stateLabel } from '../model/progress.ts';
@@ -91,7 +91,10 @@ export function levelChip(
     const levelState = progress.state[levelIndex];
     const title = escapeHtml(stateLabel(progress, levelState));
     const name = wrappable(PROG.levels[levelIndex].n);
-    return `<span class="chip" ${target} title="${title}">${levelPadHtml(progress, levelIndex)}${name}</span>`;
+    let className = 'chip';
+    if (levelState === 'solved') className += ' done';
+    if (levelState === 'unlocked' || levelState === 'visited' || levelState === 'partial') className += ' open';
+    return `<span class="${className}" ${target} title="${title}">${levelPadHtml(progress, levelIndex)}${name}</span>`;
 }
 
 export function towerNameHtml(context: PanelContext, towerIndex: number): string {
@@ -184,7 +187,31 @@ export function gatePlaceSuffix(context: PanelContext, freezerIndex: number): st
     return ` · ${escapeHtml(placeName)}`;
 }
 
-export function gateChip(context: PanelContext, freezerIndex: number): string {
+/** A Freezer's icon: the ice gate for a doorway, else the ice cage. */
+export function freezerIconHtml(freezerIndex: number): string {
+    if (isDoorway(freezerIndex)) return iconHtml('ice-gate');
+    return iconHtml('ice-cage');
+}
+
+/**
+ * What tells a Freezer's chip apart from others in its area: the level it holds, else the closest level, while not under
+ * fog; else its place.
+ */
+function gateChipPlace(context: PanelContext, freezerIndex: number): string {
+    const heldLevel = context.iceLevel.get(freezerIndex);
+    if (heldLevel !== undefined && !context.progress.hidden[heldLevel]) {
+        return ` · ${wrappable(context.levels[heldLevel].n)}`;
+    }
+
+    const position = context.freezers[freezerIndex].p;
+    const nearest = context.model.nearestShownLevel(position[0], position[1], mapLayerOf(position[2]));
+    if (nearest >= 0) return ` · near ${wrappable(context.levels[nearest].n)}`;
+
+    return gatePlaceSuffix(context, freezerIndex);
+}
+
+/** A Freezer's chip, named by the level it holds or is near; `byPlace` names it by its place (the level's own panel). */
+export function gateChip(context: PanelContext, freezerIndex: number, byPlace = false): string {
     const open = context.progress.gateOpen[freezerIndex];
     const label = capitalized(freezerNoun(freezerIndex));
     let tone = '';
@@ -194,9 +221,12 @@ export function gateChip(context: PanelContext, freezerIndex: number): string {
         openNote = ' (open)';
     }
 
-    const place = gatePlaceSuffix(context, freezerIndex);
+    const icon = freezerIconHtml(freezerIndex);
+    let place = gatePlaceSuffix(context, freezerIndex);
+    if (!byPlace) place = gateChipPlace(context, freezerIndex);
+
     const attributes = `data-pgate="${freezerIndex}" tabindex="0" role="button"`;
-    return `<span class="chip${tone}" ${attributes}>${label}${openNote}${place}</span>`;
+    return `<span class="chip${tone}" ${attributes}>${icon}${label}${openNote}${place}</span>`;
 }
 
 // a gold room (plan step 'p') shows where the totals show it: once visited, or with spoilers shown
@@ -243,16 +273,26 @@ function nodeChip(context: PanelContext, node: PlanStep): string {
 
 /**
  * A panel's header: the Back button that returns to the list, a link to the previous panel while the panel history has
- * one, and the title.
+ * one, then the icon and title, and under the title the place it is in, if any.
  */
-export function panelHead(context: PanelContext, title: string): string {
+export function panelHead(context: PanelContext, icon: string, title: string, place = ''): string {
     let previous = '';
     if (context.back.length) {
         previous = '<button class="plain" data-back title="Previous panel">↶ Previous</button>';
     }
 
     const back = '<button class="plain" data-close title="Back to the list (Esc)">‹ Back</button>';
-    return `<div class="dtop">${back}${previous}</div><div class="hd"><b tabindex="-1">${title}</b></div>`;
+    let placeLine = '';
+    if (place) placeLine = `<div class="pl">${place}</div>`;
+    const heading = `<div class="hd">${icon}<div class="ht"><b tabindex="-1">${title}</b>${placeLine}</div></div>`;
+    return `<div class="dtop">${back}${previous}</div>${heading}`;
+}
+
+/** An area's emblem and name, the place line of a panel; empty for none. */
+export function areaPlaceHtml(context: PanelContext, areaIndex: number | null, near = ''): string {
+    if (areaIndex == null) return '';
+    const area = context.areas[areaIndex];
+    return `${near}${areaEmblemHtml(area)}${escapeHtml(areaName(area))}`;
 }
 
 /** The positions of the levels not under fog. */
@@ -339,11 +379,14 @@ export function pathHtml(
 
     if (!rows.length || (!always && rows.length < 2)) return '';
 
-    const line = (label: string, nodes: PlanStep[], stepNumber: number): string => {
+    // a step's number, then its chips under an optional caption
+    const line = (nodes: PlanStep[], stepNumber: number, label = ''): string => {
         if (!nodes.length) return '';
 
+        let caption = '';
+        if (label) caption = `<div class="pcap">${label}</div>`;
         const chips = nodes.map((node) => nodeChip(context, node)).join('');
-        return `<div class="pth"><span class="muted"><b class="stp">${stepNumber}</b>${label}</span> ${chips}</div>`;
+        return `<li class="pth"><b class="stp">${stepNumber}</b><div>${caption}${chips}</div></li>`;
     };
 
     // a level or gate that opens with any one of several options shows the cheapest only
@@ -351,7 +394,7 @@ export function pathHtml(
         .filter(([key, node]) => numbers.has(key) && node.alt !== undefined && node.alt > 1)
         .map(([, node]) => {
             const note = `<span class="muted">1 of ${node.alt} options for</span>`;
-            return `<div class="pth">${note} ${nodeChip(context, node)}</div>`;
+            return `<div class="palt">${note} ${nodeChip(context, node)}</div>`;
         })
         .join('');
 
@@ -360,17 +403,15 @@ export function pathHtml(
     const notReachable = first.filter((node) => node.t === 'l' && !node.front);
     const needs = first.filter((node) => node.t !== 'l');
 
-    let plural = '';
-    if (numbers.size > 1) plural = 's';
-    let html = `<div class="h">Path · ${numbers.size} step${plural}</div>`;
-    html += line('Solve first', solveFirst, 1);
-    html += line('Not reachable yet', notReachable, 1);
-    html += line('Needs', needs, 1);
+    let html = '<div class="h">Path</div><ol class="steps">';
+    html += line(solveFirst, 1);
+    html += line(notReachable, 1, 'Not reachable yet');
+    html += line(needs, 1);
     html += rows
         .slice(1)
-        .map((row, index) => line('then →', row, index + 2))
+        .map((row, index) => line(row, index + 2))
         .join('');
-    html += alternatives;
+    html += '</ol>' + alternatives;
     return html;
 }
 

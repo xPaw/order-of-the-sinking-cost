@@ -3,13 +3,13 @@
 import { escapeHtml } from '../util.ts';
 import type { MapLink, SelectHow } from '../map/map-view.ts';
 import { unlockPlan } from '../model/plans.ts';
-import { towerEmblemHtml } from '../map/icons.ts';
+import { iconHtml, towerEmblemHtml } from '../map/icons.ts';
 import { towerName } from '../model/towers.ts';
 import { signStateOf } from '../model/unlocking.ts';
 import type { Sign } from '../types.ts';
 import type { PanelContext } from './context.ts';
 import { markSelected } from './list.ts';
-import { chainOf, gateChip, layerNote, panelHead, pathHtml, signNeed, stepsOf } from './plan-chips.ts';
+import { areaPlaceHtml, chainOf, gateChip, layerNote, panelHead, pathHtml, signNeed, stepsOf } from './plan-chips.ts';
 
 function opensHtml(context: PanelContext, sign: Sign, gateIds: number[]): string {
     if (!gateIds.length) return '';
@@ -34,7 +34,8 @@ export function showSignPanel(context: PanelContext, signIndex: number, how?: Se
         towerIndex = sign.tower;
     }
 
-    let html = panelHead(context, 'Sign');
+    const place = areaPlaceHtml(context, context.model.areaIndexAt(sign.p));
+    let html = panelHead(context, iconHtml('sign'), 'Sign', place);
     let status = 'Not yet';
     let statusTone = '';
     if (signState === 'read') {

@@ -9,7 +9,9 @@ import { SIGN_INDEX } from '../model/requirements.ts';
 import type { PanelContext } from './context.ts';
 import { markSelected } from './list.ts';
 import {
+    areaPlaceHtml,
     chainOf,
+    freezerIconHtml,
     gateMode,
     layerNote,
     opensChips,
@@ -42,7 +44,10 @@ export function showGatePanel(context: PanelContext, freezerIndex: number, how?:
     const mode = gateMode(freezer);
     const signs = freezer.signs || [];
     const label = capitalized(freezerNoun(freezerIndex));
-    let html = panelHead(context, label);
+    // the area with its emblem, else the place's words ("near" a level)
+    let place = areaPlaceHtml(context, context.model.areaIndexAt(freezer.p));
+    if (!place) place = escapeHtml(context.model.gatePlace(freezerIndex));
+    let html = panelHead(context, freezerIconHtml(freezerIndex), label, place);
 
     let status = 'Closed';
     let statusTone = '';
@@ -54,8 +59,6 @@ export function showGatePanel(context: PanelContext, freezerIndex: number, how?:
     const role = roleFor(context.goal, 'g', freezerIndex);
     const statusChip = `<span class="chip${statusTone}">${status}</span>`;
     html += `<div>${statusChip}${roleChipHtml(context, role)}</div>`;
-    const place = context.model.gatePlace(freezerIndex);
-    if (place) html += `<div class="muted">${escapeHtml(place)}</div>`;
 
     let withMode = '';
     if (mode) withMode = ' ' + mode;
@@ -64,7 +67,6 @@ export function showGatePanel(context: PanelContext, freezerIndex: number, how?:
     let leadsAll: number[] = [];
     if (!isOpen) leadsAll = progress.reach?.leads.get(freezerIndex) || [];
     const leads = leadsAll.filter((level) => !progress.hidden[level]);
-    html += leadsToHtml(context, leadsAll, leads);
 
     let plan = null;
     if (!isOpen) plan = unlockPlan(progress, ['gate', freezerIndex]);
@@ -73,6 +75,7 @@ export function showGatePanel(context: PanelContext, freezerIndex: number, how?:
     const chain = chainOf(context, plan, steps);
     html += pathHtml(context, plan, false, steps) + layerNote(context, chain, freezer.p[2]);
     context.chainPoints = chain.points;
+    html += leadsToHtml(context, leadsAll, leads);
 
     const signsShown: number[] = [];
 
