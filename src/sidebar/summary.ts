@@ -64,6 +64,18 @@ export function statsHtml(model: ProgressModel): string {
 }
 
 /** Always one line, so the sidebar keeps its geometry whatever the save is doing. */
+/** The level whose pad the hero stands on on the overworld; -1 for none or one under fog. */
+function heroPadLevel(model: ProgressModel): number {
+    const hero = model.hero;
+    if (!hero) return -1;
+
+    return model.levels.findIndex((level, levelIndex) => {
+        if (model.progress.hidden[levelIndex]) return false;
+        const [x, y, z] = level.p;
+        return x === Math.round(hero.x) && y === Math.round(hero.y) && z === Math.round(hero.z);
+    });
+}
+
 export function inLevelHtml(status?: Status | DemoStatus | null, model?: ProgressModel | null): string {
     if (model?.inLevel != null) {
         const name = escapeHtml(model.levels[model.inLevel].n);
@@ -72,15 +84,18 @@ export function inLevelHtml(status?: Status | DemoStatus | null, model?: Progres
     }
 
     if (model?.onOverworld) {
-        let area = 'Overworld';
+        let place = 'Overworld';
         let emblem = '';
         if (model.heroArea != null) {
             const heroArea = PROG.areas[model.heroArea];
-            area = escapeHtml(areaName(heroArea));
+            place = escapeHtml(areaName(heroArea));
             emblem = areaEmblemHtml(heroArea);
         }
 
-        const line = `${heroIcon}${emblem}<span class="n">${area}</span>`;
+        const padLevel = heroPadLevel(model);
+        if (padLevel >= 0) place = escapeHtml(model.levels[padLevel].n);
+
+        const line = `${heroIcon}${emblem}<span class="n">${place}</span>`;
         if (!model.hero) return `<div class="inlv">${line}</div>`;
 
         const attributes = 'id="heroLine" title="Centre the map on the hero"';
