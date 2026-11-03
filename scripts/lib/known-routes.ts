@@ -331,6 +331,12 @@ const KNOWN_ROUTES: KnownRouteSource[] = [
         note: 'through the Freezer rover_impulse_v2 opens into the submarine pocket, then through the Freezer submarine opens',
     },
     {
+        id: 'front_side_bus2_rock_bridge',
+        to: { level: 'front_side_bus2' },
+        needs: [[{ freezer: 62941423 }], [{ freezer: 62941421 }]],
+        note: 'the Rocks in the Freezers rowboat and boat_priest_v3 open, with a third, fill the fenced water west of boat_priest_v3, and the hero crosses them',
+    },
+    {
         id: 'orange_predicament_submarine',
         to: { level: 'orange_predicament' },
         needs: [[{ freezer: 90203328 }], [{ freezer: 90203340 }]],
