@@ -90,12 +90,12 @@ describe('pad ways into a pocket', () => {
         setPads(5);
         const { viaPads, level } = reach([ON, OFF, ON]);
         expect(level).toEqual([false, false]);
-        // pad C, in the pocket of Q, lands in the pocket of L too; Q's pocket holds L, so Q is no extra way
-        expect(viaPads.get(L)).toEqual({ gates: [0], levels: [], towers: [] });
+        // pad C, in the pocket of Q, lands in the pocket of L; Q's pocket takes no pad, so Q is a way in
+        expect(viaPads.get(L)).toEqual({ gates: [0], levels: [Q], towers: [] });
     });
 
     test('a level the hero cannot walk on to from the landing gets no ways from it', () => {
-        // Q's pocket holds the landing cell (the walk takes pad C forward) but nothing leads from it back to Q
+        // pad C lands the hero in L's pocket, and nothing leads from there back to Q
         setPads(5);
         expect(reach([ON, OFF, ON]).viaPads.has(Q)).toBe(false);
     });

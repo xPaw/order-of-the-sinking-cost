@@ -69,6 +69,7 @@ export type Seed = number | LayeredCell;
  * How a flood walks. reveal = false leaves out the pads that reaching a pad reveals (one-way edges, for pockets of
  * cells); travel = false leaves out pads and elevators (a walk on foot); pocket = true walks a pocket of cells both
  * ways along its one-way edges: every rock bridge's water cell holds the hero, and skip lanes are walked backwards;
+ * it takes no pad, which sends the hero only out of the pocket;
  * frozenHolds = false walks no step onto a closed Freezer's top (for pockets of cells: a closed Freezer bounds the
  * pocket, not a floor the hero walks across); topDrops = true, with frozenHolds = false, lets a fall land on a top;
  * stopAt = a cell ends the flood as soon as it is reached, so the cells returned are only those reached up to then;
@@ -891,7 +892,8 @@ function walkFrom(
         }
     }
 
-    padStep(walkGrid, floodState, cell, layer);
+    // a pad sends the hero one way, so it leads out of a pocket, not in; addLandingWays joins its landing to the pad
+    if (!floodState.pocket) padStep(walkGrid, floodState, cell, layer);
 }
 
 /**

@@ -298,7 +298,8 @@ function frozenInOf(closedFreezers: readonly boolean[]): Array<number | undefine
 
 /**
  * The levels not entered and not reached, with the cells they stand in. A level frozen in a closed Freezer starts its
- * walk in the Freezer's own cell, where the hero stands once it opens.
+ * walk in the Freezer's own cell, where the hero stands once it opens, and so does a level in a shut Gate's cell. A
+ * walk from the Gate's top would take the hero onto what stands level with it, such as the wall tops beside it.
  */
 function restOf(
     walk: Walker,
@@ -314,8 +315,10 @@ function restOf(
     }
 
     const restCells = rest.map((levelIndex) => {
-        if (frozenIn[levelIndex] === undefined) return walk.land(levelCells[levelIndex]);
-        return levelCells[levelIndex];
+        const levelCell = levelCells[levelIndex];
+        if (frozenIn[levelIndex] !== undefined) return levelCell;
+        if (levelCell >= 0 && walk.gateShut(levelCell)) return levelCell;
+        return walk.land(levelCell);
     });
 
     const restAt = new Map<number, number[]>();

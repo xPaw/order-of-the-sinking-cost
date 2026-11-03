@@ -50,7 +50,7 @@ import { placeCharmStones, placeKicks, skipLanes } from './skipping-stones.ts';
 import type { Kick, SkipLane } from './skipping-stones.ts';
 import { skyEntrances } from './sky.ts';
 import type { SkyEntrances } from './sky.ts';
-import { insideWall, land } from './support.ts';
+import { gateShutNow, insideWall, land } from './support.ts';
 import { minorLanding, padCell, placePads } from './teleporters.ts';
 import type { TeleporterState } from './teleporters.ts';
 import { fenced, placeEntities, placeFences, placeWallSets } from './walls.ts';
@@ -245,6 +245,7 @@ export interface Walker {
     mechAt: (cells: Set<number> | number[]) => number;
     heroSeed: (position: Position) => LayeredCell;
     insideWall: (cell: number) => boolean;
+    gateShut: (cell: number) => boolean;
     fire: Set<number>;
     beam: Set<number>;
     thru: Set<number>;
@@ -528,6 +529,7 @@ function walkerOf(walkGrid: WalkGrid): Walker {
         mechAt: (cells) => mechAt(walkGrid, cells),
         heroSeed: (position) => heroSeed(walkGrid, position),
         insideWall: (cell) => insideWall(walkGrid, cell),
+        gateShut: (cell) => gateShutNow(walkGrid, walkGrid.noFlood, cell),
         fire: walkGrid.attacked,
         beam: walkGrid.throughBeam,
         thru: walkGrid.throughWalls,
