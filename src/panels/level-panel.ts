@@ -88,7 +88,7 @@ function stateChipsHtml(context: PanelContext, levelIndex: number): string {
 function freezerHtml(context: PanelContext, ice: number): string {
     const freezer = context.freezers[ice];
     const noun = freezerNoun(ice);
-    const html = `<div class="h">In an ${noun}</div><div>${gateChip(context, ice, true)}</div>`;
+    const html = `<div class="h">In a ${noun}</div><div>${gateChip(context, ice, true)}</div>`;
     if (context.progress.gateOpen[ice]) return html + `<div class="muted">${capitalized(noun)} open</div>`;
 
     const mode = gateMode(freezer);

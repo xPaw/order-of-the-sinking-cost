@@ -5,7 +5,7 @@ import { whyText } from '../src/panels/why.ts';
 import type { WhyContext } from '../src/panels/why.ts';
 import type { Freezer } from '../src/types.ts';
 
-// one ice cage that level 0 unlocks
+// one cage that level 0 unlocks
 const FREEZERS = vi.hoisted((): Freezer[] => [{ pid: 1, p: [0, 0, 0], l: 0, req: [0] }]);
 
 vi.mock('../src/data.ts', async () => {
@@ -53,7 +53,7 @@ test('a pocket with no way in at all has "no known route"', () => {
 });
 test('a pocket whose only gate is one the level unlocks says so', () => {
     const text = whyText(context({ fromSky: false, skyShown: true, bumped: [0] }), 0);
-    expect(text).toBe('only behind an ice cage it unlocks');
+    expect(text).toBe('only behind a cage it unlocks');
 });
 test('a gate the level unlocks gives way to the sky entry', () => {
     expect(whyText(context({ fromSky: true, skyShown: true, bumped: [0] }), 0)).toBe('from High');

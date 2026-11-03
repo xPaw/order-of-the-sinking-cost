@@ -82,7 +82,7 @@ export function levelMarkers(context: PanelContext): MapMarker[] {
                 if (freezerIndex !== undefined) {
                     let openness = 'Closed';
                     if (progress.gateOpen[freezerIndex]) openness = 'Open';
-                    gate = `<br>In an ${freezerNoun(freezerIndex)} · ${openness}`;
+                    gate = `<br>In a ${freezerNoun(freezerIndex)} · ${openness}`;
                 }
 
                 const name = escapeHtml(level.n);

@@ -1,7 +1,7 @@
-// The ice cages that rank Signs open, for the results list of the ending being worked toward (VIEWER.md "Goals (viewer)")
+// The cages that rank Signs open, for the results list of the ending being worked toward (VIEWER.md "Goals (viewer)")
 import { PROG } from '../data.ts';
 
-/** A closed ice cage whose rank Sign's rank is reached. */
+/** A closed cage whose rank Sign's rank is reached. */
 export interface RankCage {
     /** Index into `freezers`. */
     gate: number;

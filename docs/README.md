@@ -30,8 +30,8 @@ meant to be enough to rebuild the viewer's map and progress logic with nothing e
 
 - Names are the game's own: type, field and enum names from its Jai type information (exported to
   `data/schema.json`), plus its strings and its level and resource names. A common name is added where it helps:
-  Beamcaster (`Promesst_Light`). A `Freezer` keeps its game name, and the viewer shows it as an ice cage (model A,
-  `GAME_OVER_Freezer_A`) or an ice gate (model B, `GAME_OVER_Freezer_B`). The [Glossary](#glossary) lists them.
+  Beamcaster (`Promesst_Light`). A `Freezer` keeps its game name, and the viewer shows it as a cage (model A,
+  `GAME_OVER_Freezer_A`) or a gate (model B, `GAME_OVER_Freezer_B`). The [Glossary](#glossary) lists them.
 - Statements are about the overworld unless stated.
 - Positions are overworld squares unless a section says otherwise. [Positions and cells](WORLD.md#positions-and-cells)
   explains the coordinate systems.
@@ -59,7 +59,7 @@ meant to be enough to rebuild the viewer's map and progress logic with nothing e
 |---|---|
 | hero, Guy | `Guy`; the active one is named by Pid in each undo record |
 | level, star on the map | `Level_Entry` (`level_name` = the level file) |
-| Freezer, ice cage, ice gate | `Freezer` (open = `unfrozen`); the viewer shows it as an ice cage (model A, `GAME_OVER_Freezer_A`) or an ice gate (model B, `GAME_OVER_Freezer_B`) |
+| Freezer, cage, gate | `Freezer` (open = `unfrozen`); the viewer shows it as a cage (model A, `GAME_OVER_Freezer_A`) or a gate (model B, `GAME_OVER_Freezer_B`) |
 | gate, barrier | `Gate` (open = `open`), driven by `Switch`es of the same `flavor`, or by Monsters (`is_monster_gate`) |
 | button | `Switch` |
 | rock, boulder, crystal, stone | `Rock`; crystal = a TRANSMUTE product (`transmuted_from_entity_type`); stone = `properties` SKIPPABLE |

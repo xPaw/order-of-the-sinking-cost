@@ -219,13 +219,13 @@ const KNOWN_ROUTES: KnownRouteSource[] = [
         id: 'negative_space_hub_walk',
         to: { level: 'negative_space' },
         needs: [[{ level: 'push_down_chain' }], [{ level: 'gem_trap2' }], [{ level: 'get_through_alt' }]],
-        note: 'on foot from the hub elevator through the ice cages of gem_trap2 and get_through_alt',
+        note: 'on foot from the hub elevator through the cages of gem_trap2 and get_through_alt',
     },
     {
         id: 'river_rotate_beams_gr_hub_walk',
         to: { level: 'river_rotate_beams_gr' },
         needs: [[{ level: 'push_down_chain' }], [{ level: 'get_through_alt' }], [{ level: 'breaking_bread' }]],
-        note: 'on foot from the hub elevator through the ice cages of get_through_alt and breaking_bread',
+        note: 'on foot from the hub elevator through the cages of get_through_alt and breaking_bread',
     },
     {
         id: 'portable_stairs_mirror_lift',

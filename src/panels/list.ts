@@ -219,7 +219,7 @@ function drawGoalList(context: PanelContext): void {
         rows = rowsHtml(context, blocks, tab);
     }
 
-    // the ice cages the rank opens follow the goal's levels in the list of what is to do
+    // the cages the rank opens follow the goal's levels in the list of what is to do
     let cages = '';
     if (!context.searching() && !context.narrowed() && !context.filters.solved) {
         cages = rankCageGroupHtml(context, !rows);

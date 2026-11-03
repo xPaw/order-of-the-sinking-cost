@@ -240,7 +240,7 @@ describe('what a level leads to', () => {
         const leads = new Map(model.goalLevels(ending).map((entry) => [PROG.levels[entry.i].n, entry]));
         expect(leads.get('t0a')!.leadsTo).toBe('Antipode HxM · 1 to go');
         expect(leads.get('key')!.leadsTo).toBe('unlocks t0b');
-        expect(leads.get('left')!.leadsTo).toBe('opens ice cage Heroes and Light · one of 2 routes');
+        expect(leads.get('left')!.leadsTo).toBe('opens cage Heroes and Light · one of 2 routes');
         expect(leads.get('end1')!.leadsTo).toBe('Endgame');
         // playable first, then not reachable, then locked
         const groups = model.goalLevels(ending).map((entry) => entry.group);

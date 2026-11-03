@@ -58,7 +58,7 @@ function gateText(context: WhyContext, levelIndex: number, gates: number[]): str
     if (!gates.length) return '';
 
     const ice = context.iceOf[levelIndex];
-    if (ice !== undefined && gates.includes(ice)) return `in an ${freezerNoun(ice)}${gateAreaSuffix(context, ice)}`;
+    if (ice !== undefined && gates.includes(ice)) return `in a ${freezerNoun(ice)}${gateAreaSuffix(context, ice)}`;
     // the gates the table asks for are all needed, whether or not the walk finds a way in besides
     const needed = context.progress.wayInAll?.get(levelIndex) ?? [];
     if (gates.length > 1 && gates.every((freezerIndex) => needed.includes(freezerIndex))) {
@@ -79,7 +79,7 @@ function ownGatesText(context: WhyContext, levelIndex: number): string {
     if (!shown.every(needsLevel)) return '';
 
     if (shown.length > 1) return `only behind ${freezersNoun(shown)} it unlocks`;
-    return `only behind an ${freezerNoun(shown[0])} it unlocks${gateAreaSuffix(context, shown[0])}`;
+    return `only behind a ${freezerNoun(shown[0])} it unlocks${gateAreaSuffix(context, shown[0])}`;
 }
 
 function mechanicsText(context: WhyContext, mechanics: string[]): string {

@@ -205,13 +205,13 @@ function cageKindOf(gate: number): FindKind {
     return 'pods';
 }
 
-/** The listed ice cage with an id ("g" and its index), whichever kind of cage it is; undefined for none. */
+/** The listed cage with an id ("g" and its index), whichever kind of cage it is; undefined for none. */
 export function cageItemOf(context: PanelContext, id: string): FindItem | undefined {
     return findItemOf(context, 'pods', id) ?? findItemOf(context, 'doorways', id);
 }
 
 /**
- * The group of the closed ice cages that the rank Signs opened by the rank reached list, for the ending being worked
+ * The group of the closed cages that the rank Signs opened by the rank reached list, for the ending being worked
  * toward: the cages that hold a Promesst_Light or a Mirror first, then the others, each by place. A cage whose Sign is
  * not read yet says so with the Sign's place. Empty where there is none.
  */
@@ -250,7 +250,7 @@ export function rankCageGroupHtml(context: PanelContext, first: boolean): string
     const items = [...sortItems(context, liftPieces), ...sortItems(context, others)];
     if (!items.length) return '';
 
-    const head = `<div class="rg">Ice cages your rank opens <span class="c muted">· ${items.length}</span></div>`;
+    const head = `<div class="rg">Cages your rank opens <span class="c muted">· ${items.length}</span></div>`;
     const rows = items.map((item, index) => rowHtml(context, item, first && index === 0, notes.get(item.id)));
     return head + rows.join('');
 }

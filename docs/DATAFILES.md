@@ -250,7 +250,7 @@ The texture icons are mip 0 of the texture scaled down to 128 px with an area fi
 into the square keeping their aspect, so they have no outline or shadow.
 
 - The view is orthographic: the camera sits south of the object and 25° east of south, 42° above the ground, so a
-  model's front faces south, as on the map. The Level_Entry and Teleporter pads are seen straight from above, north up. The sign and the ice gate
+  model's front faces south, as on the map. The Level_Entry and Teleporter pads are seen straight from above, north up. The sign and the gate
   face +x, so they are seen from the east, 24° above, face-on.
 - Where a model is placed in the overworld, the icon uses one placed entity's own fields: the first entity of that type
   with that model (and, for the Teleporters, the first gold-room endpoint or the first other one).

@@ -628,7 +628,7 @@ in a closed Freezer (its Level_Entry on the Freezer's square). A frozen level is
 - Doorways (`chains`): a closed Freezer a pocket bumps into that opens onto nothing but more closed Freezers leads in only with one of those open too. A Freezer is a doorway for a pocket when it is not on the edge of the reached cells, no pocket holding a level outside this one bumps into it, and the walk from its cell with it open, the pocket's cells counted as reached, holds no level and bumps into closed Freezers the pocket does not. Each of those Freezers gives one way through: the doorway and that Freezer, both needed. The walk from all of a pocket's candidates at once comes first; only when it bumps into a new Freezer is each candidate walked alone. A level whose pockets bump into a Freezer as a doorway in every one of them takes the ways through of all of them; one that any of its pockets bumps into plainly leads in alone.
 - `from`: for a level a closed gate needs, the levels behind that gate a walk from the level reaches.
 - `mech`: per pocket, the mechanics the walk leaves out (world.mechs: 0 dragon, 1 beam, 2 mirror, 3 skipping stone), marked in the 3 × 3 × 3 cells around each existing one (a Mirror or MIRRORABLE Rock at its latest cell, a smashed or destroyed one not at all; a stone at its latest cell unless it sank: FLIPPING_TARGET or under the surface; beams: lit cells; dragons: fire cells). A pocket has one when a marked cell is in it or next to one of its cells.
-- Why (per blocked level): its gates (those that lead in, without the ones `inner()` rules out), the gates leading only to a revealing pad (`pad`), the levels by such a pad (`via`), the inactive Towers whose pad leads in (`viaTowers`), and the mechanics. A level with no gate and no mechanic has "no known route", even when it carries an access mark (below). The page reads "from High" instead when the level has no access mark and a pocket that holds it is entered from the sky, or a walk on from a landing off a sky ledge reaches it (`fromSky`, below), once fog shows the sky; under fog it reads as for a hidden layer ([The spoiler model (viewer)](#the-spoiler-model-viewer)). With no way in from the sky either, a level whose pocket bumps only into closed gates that it unlocks itself, all shown, reads "only behind an ice cage it unlocks" (or "ice cages", "ice gates"): `inner()` rules those out as ways in.
+- Why (per blocked level): its gates (those that lead in, without the ones `inner()` rules out), the gates leading only to a revealing pad (`pad`), the levels by such a pad (`via`), the inactive Towers whose pad leads in (`viaTowers`), and the mechanics. A level with no gate and no mechanic has "no known route", even when it carries an access mark (below). The page reads "from High" instead when the level has no access mark and a pocket that holds it is entered from the sky, or a walk on from a landing off a sky ledge reaches it (`fromSky`, below), once fog shows the sky; under fog it reads as for a hidden layer ([The spoiler model (viewer)](#the-spoiler-model-viewer)). With no way in from the sky either, a level whose pocket bumps only into closed gates that it unlocks itself, all shown, reads "only behind a cage it unlocks" (or "cages", "gates"): `inner()` rules those out as ways in.
 - `inner(gate, level)`: a closed gate is no way in when what it still needs is the level itself, levels from which the walk reaches the level without it, or levels whose own requirements need the level. For an OR gate with more than one option: every remaining option is such a level, and it has no Sign.
 - Levels whose requirements need level L (`levelsNeedingLevel`): walking back along `unlocked_by`, every unsolved level still waiting on its requirements (not enabled in the level data, and for an OR level no option solved) that requires L or such a level. An AND level needs L through any one requirement; an OR level with more than one option only once every option is L or such a level. A gate that waits on them waits on L: a requirement cycle, no way in.
 - Way in (`P.wayIn`): per blocked level, its why-gates; when no gate leads in, the closed gates it sits behind in the static roles ([Level roles (viewer)](#level-roles-viewer)), minus the `inner` ones. When that leaves none, a gate that `inner` ruled out only because it waits on a level the walk reaches the level from stays a way in if that level has a way in of its own (a why-gate that is no gate the level sits behind): the walk leads on from that level to this one. Gates that wait on the level itself, on levels that need it, or on levels with no way in of their own stay ruled out. A doorway keeps the ways through it whose Freezer beyond it `inner` does not rule out (`P.wayInChains`), and is no way in once it has none. In the endgame areas the level data's table stands in for these or fills in where there are none ([Endgame way-in gates](#endgame-way-in-gates)). Last, the gates behind themselves are dropped ([Next steps](#next-steps)).
@@ -1013,7 +1013,7 @@ Label (`goalOf`, what a level leads to under Completionist): "Toward Endgame" (t
 tower brought closest to done: "Toward Endgame · Antipode HxM · 3 to go". An ending is named only while its achievement
 may show ([The spoiler model (viewer)](#the-spoiler-model-viewer)); else the label is the tower, then the achievement
 of the level or of a level after it that is not earned, then the first Required level or Freezer after it
-("Required `name` +2", "Required ice cage · `area` +2" or "Required ice gate · `area` +2"), then "Required level"
+("Required `name` +2", "Required cage · `area` +2" or "Required gate · `area` +2"), then "Required level"
 when the level itself is Required, else nothing. Required here is the static role Required, not Required as one of
 several. The label names no tower, level or gate under fog.
 
@@ -1109,7 +1109,7 @@ gathers its unfinished children's; Completionist takes every level. Each level c
 - its role for the goal;
 - `onPlan`: it lies on the cheapest plan of one of the goal's targets (every level, for Completionist);
 - `leadsTo`: the nearest thing not under fog on its chain toward the goal (the `from` links of the goal roles): a
-  tower ("Antipode HxM · 3 to go"), a Freezer ("opens ice cage" or "opens ice gate", and its area, else "at x, y"), a
+  tower ("Antipode HxM · 3 to go"), a Freezer ("opens cage" or "opens gate", and its area, else "at x, y"), a
   level ("unlocks `name`" when that level lists the one before it on the chain in `unlocked_by`, else "opens the way
   to `name`") or a rank marker; else the goal's label. At the nearest OR on its chain where it is one of several, " · one of N routes"
   follows, N counting the routes not under fog, or " · one of several routes" when fewer than 2 show. Under
@@ -1145,10 +1145,10 @@ A list for a goal without roles uses the static roles ([Level roles (viewer)](#l
 
 ## The page (viewer)
 
-The page names a Freezer by its model: model A (`GAME_OVER_Freezer_A`, the pod) is an ice cage, model B
-(`GAME_OVER_Freezer_B`, the doorway, `doorway` in `progress.json`) an ice gate. Panel titles, chips, map tooltips and
-the why and leads-to lines use the Freezer's own word. A list of Freezers says "ice cages" or "ice gates" when they are
-all one model, and "ice cages and gates" when they mix ("behind one of 3 ice cages and gates").
+The page names a Freezer by its model: model A (`GAME_OVER_Freezer_A`, the pod) is a cage, model B
+(`GAME_OVER_Freezer_B`, the doorway, `doorway` in `progress.json`) a gate. Panel titles, chips, map tooltips and
+the why and leads-to lines use the Freezer's own word. A list of Freezers says "cages" or "gates" when they are
+all one model, and "cages and gates" when they mix ("behind one of 3 cages and gates").
 
 The page has three columns: the sidebar (300 px), the map and the results list. It needs a window 1024 px wide; a
 narrower one scrolls sideways. Panels (the sidebar, the list and the map) share the game's sign border: a gold ring
@@ -1179,7 +1179,7 @@ selected goal or area is in gold with a thin accent at its left edge. A scrollin
 One goal's list is open at a time; the goals scroll inside the sidebar under their heading, and Find on the map scrolls
 on its own. A long name is cut with an ellipsis and its tooltip gives it whole.
 
-Find on the map has a row per kind of mark: ice cages, ice gates, signs, teleporters, Antipode pads, warp pads, voice
+Find on the map has a row per kind of mark: cages, gates, signs, teleporters, Antipode pads, warp pads, voice
 logs, map scrolls, area pins and treasures. A row is left out when its total is 0, and it shows what is found of what
 is not under fog, with the per-layer split. An ending and its stages count only the ending's layer, the one holding
 the level that carries its achievement, and the heading then reads "Overworld finds", "High finds" or "Low finds"; the
@@ -1276,10 +1276,10 @@ layer; a row names its layer only when it is not the one the map shows.
   (`goalLevelsFogged`), or, in a search, any level; never under Solved.
 - Groups (To do), each with its count: Play now, Not reachable yet, Locked; Solved lists the solved. Within a group the
   levels Required as one of several and off the goal's cheapest plans go last.
-- Ice cages your rank opens (To do, below the level groups, for the ending being worked toward only): the closed ice
+- Cages your rank opens (To do, below the level groups, for the ending being worked toward only): the closed
   cages of the rank Signs whose rank the save has reached, none that fog hides or whose Sign it hides. The cages with a
-  Promesst_Light or a Mirror in them come first, then the others, each by layer and place. A row is a row of the Ice
-  cages list, and clicking it shows the cage on the map; one whose Sign is not read yet adds "read its Sign" and the
+  Promesst_Light or a Mirror in them come first, then the others, each by layer and place. A row is a row of the
+  Cages list, and clicking it shows the cage on the map; one whose Sign is not read yet adds "read its Sign" and the
   Sign's place when it differs from the cage's. A cage leaves the group when it opens. The group is not counted in "N left" or in the sidebar's steps,
   does not change the active goal, and is left out with a search, a chip or the Solved toggle on.
 - A row: the level's pad icon (see [The map's marks](#the-maps-marks)), role dot, name, then what it leads to and its
@@ -1308,10 +1308,10 @@ across, the icon fills it but for a margin of one unit, and the rim is one unit 
 0.7 pixels at the smallest size, 1 at a middling zoom and 2 to 3 close up. A level's disc is 16 units too, 20 for a big
 marker and 22 for the selected level.
 
-- An overlay mark has a rim in the kind's colour: ice cage, ice gate, sign, teleporter, Antipode pad, warp pad,
+- An overlay mark has a rim in the kind's colour: cage, gate, sign, teleporter, Antipode pad, warp pad,
   Antipode teleporter, voice log, map scroll, area pin and treasure, each with a rim colour of its own. The disc takes
   the pointer, shows the tooltip and, for gates, signs and gold rooms, opens the panel. A mark that is done or used has
-  a grey rim and a desaturated, dimmed icon: an open ice cage or gate, a sign read, a voice log heard, a map scroll
+  a grey rim and a desaturated, dimmed icon: an open cage or gate, a sign read, a voice log heard, a map scroll
   taken, an area pin activated, a treasure acquired (the empty-plinth icon) and a gold room visited (with a gold rim).
   A teleporter, Antipode pad or warp pad not discovered is the dimmed one. A sign ready to read has an amber rim. The
   selection's marks have a white rim and glow.
@@ -1325,7 +1325,7 @@ marker and 22 for the selected level.
   the pad's lower edge: Required (triangle), One of several (square) or Optional (circle). The selected level has a
   ring, the levels of its chain a gold or white one, and the others dim while there is a selection. The level the save
   is in has a pulsing ring.
-- A level on the entrance of a closed Freezer has the ice cage or ice gate drawn over its pad, and the Freezer's own
+- A level on the entrance of a closed Freezer has the cage or gate drawn over its pad, and the Freezer's own
   mark is left out while that level is drawn. An open Freezer shows nothing there.
 - The hero is the hero icon; the hero line of the sidebar uses it too, and the sidebar's rows and the list's rows use
   these icons, drawn larger.
@@ -1356,7 +1356,7 @@ type or enum name ([Localisation and display names](GAMEDATA.md#localisation-and
 | Layers | Overworld, High, Low; in a sentence "from High", "the way up to High", "the way down to Low" | plain words: the game only qualifies places as "High" and "Low" |
 | Gold rooms | "Antipode teleporter" | a ground tower's pad and its endpoint in The Antipode; Steam's descriptions call the pad "the HxM teleporter to the Antipode" |
 | Reading a sign | "Read the sign", "Ready to read" | plain words: the game has no name for the act |
-| The rest | ice gate, teleporter, voice log, map scroll, area pin, treasure, sign, dropdown, Antipode pad (the pads that lead to and from the Antipode), warp pad | plain words; "Teleporters" is also the game's |
+| The rest | gate, teleporter, voice log, map scroll, area pin, treasure, sign, dropdown, Antipode pad (the pads that lead to and from the Antipode), warp pad | plain words; "Teleporters" is also the game's |
 
 With spoilers hidden, the rules in [The spoiler model (viewer)](#the-spoiler-model-viewer) decide whether a thing is
 named at all.

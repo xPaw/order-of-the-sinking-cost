@@ -15,7 +15,7 @@
 //
 // - Each icon is one mesh (or a few) of the entity type it marks, drawn with the tints of one placed entity of that
 //   type, in an orthographic three-quarter view (camera south of the object, turned 25 degrees east, 42 degrees up; the
-//   Level_Entry and Teleporter pads straight from above, the sign and the ice gate face-on) with smooth shading from
+//   Level_Entry and Teleporter pads straight from above, the sign and the gate face-on) with smooth shading from
 //   the vertex normals, a key light from the top left, a fill light and a rim light, a dark outline and a drop shadow.
 // - The Teleporters' glowing parts take the entity's color_discovered. The level pads use the viewer's own stone and
 //   glow colours (STONE_COLORS, GLOW_GROUPS), stronger than the game's, so the states tell apart at a glance.

@@ -238,7 +238,7 @@ function onPageClick(context: PanelContext, event: Event): void {
         context.map?.select(null);
         showLevelRow(context, data.goto, true);
     } else if (data.findItem != null) {
-        // the goal's list holds ice cages among its levels
+        // the goal's list holds cages among its levels
         const kind = filters.find;
         let item: FindItem | undefined;
         if (kind === '') {

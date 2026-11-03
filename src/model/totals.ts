@@ -187,7 +187,7 @@ export function totalsOf({
             : Math.min(gotCount, PROG.treasures || 0),
     };
 
-    // the Freezers by model, each its own row: the pods (ice cages) and the doorways (ice gates)
+    // the Freezers by model, each its own row: the pods (cages) and the doorways (gates)
     const pods = gates.filter((freezerIndex) => !isDoorway(freezerIndex));
     const doorways = gates.filter((freezerIndex) => isDoorway(freezerIndex));
 

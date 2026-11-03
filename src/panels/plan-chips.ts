@@ -190,7 +190,7 @@ export function gatePlaceSuffix(context: PanelContext, freezerIndex: number): st
     return ` · ${escapeHtml(placeName)}`;
 }
 
-/** A Freezer's icon: the ice gate for a doorway, else the ice cage. */
+/** A Freezer's icon: the gate for a doorway, else the cage. */
 export function freezerIconHtml(freezerIndex: number): string {
     if (isDoorway(freezerIndex)) return iconHtml('ice-gate');
     return iconHtml('ice-cage');

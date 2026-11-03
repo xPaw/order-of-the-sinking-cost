@@ -1,4 +1,4 @@
-// The ice cages that rank Signs open: the closed ones whose rank is reached, the ones holding a Promesst_Light or a Mirror
+// The cages that rank Signs open: the closed ones whose rank is reached, the ones holding a Promesst_Light or a Mirror
 // first
 import { beforeAll, describe, expect, test } from 'vitest';
 import { PROG, worldReady } from '../src/data.ts';
@@ -23,7 +23,7 @@ function gatesOfRank(rank: number): number[] {
     return PROG.signs.filter((sign) => sign.rank === rank).flatMap((sign) => sign.gates);
 }
 
-describe('the ice cages a rank opens', () => {
+describe('the cages a rank opens', () => {
     test('rank 2 lists none of the rank 3 cages', () => {
         const rankThree = gatesOfRank(3);
         expect(rankThree.length).toBeGreaterThan(0);
