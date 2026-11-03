@@ -337,6 +337,18 @@ const KNOWN_ROUTES: KnownRouteSource[] = [
         note: 'the Rocks in the Freezers rowboat and boat_priest_v3 open, with a third, fill the fenced water west of boat_priest_v3, and the hero crosses them',
     },
     {
+        id: 'missile_command_rock_bridge',
+        to: { level: 'missile_command' },
+        needs: [[{ freezer: 90194122 }], [{ freezer: 111267358 }]],
+        note: 'the Rocks in the Freezers bard_movable_island2 opens, with the room\'s own, fill the water east of the floor block west of missile_command, and the hero crosses them',
+    },
+    {
+        id: 'limited_offsets_surprise_v2_dragons',
+        to: { level: 'limited_offsets_surprise_v2' },
+        needs: [[{ freezer: 115555628 }], [{ freezer: 115555631 }]],
+        note: 'the laser and the Rock in the Freezers limited_offsets opens open the red Gate between the two Dragons, which kill each other and open the monster Gate around the level',
+    },
+    {
         id: 'orange_predicament_submarine',
         to: { level: 'orange_predicament' },
         needs: [[{ freezer: 90203328 }], [{ freezer: 90203340 }]],
