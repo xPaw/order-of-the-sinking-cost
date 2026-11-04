@@ -9,20 +9,32 @@ import { blocked, insideWall, land } from './support.ts';
 import type { WalkGrid } from './walker.ts';
 
 // walk layers: any skill (0), PROTECTION, TELEPORT, TRANSMUTE (a hero who left a TRANSMUTE Wardrobe by its door: he
-// pushes nothing and turns what he bumps into a crystal)
-export const ANY_SKILL = 0;
+// pushes nothing and turns what he bumps into a crystal), no push skill (a hero who left the door of a Wardrobe that
+// gives no push skill, such as PULL), and MULTIPUSH (a hero who pushes like layer 0 and keeps his push through the
+// door of a Wardrobe that gives no push skill)
 export const PROTECTED = 1;
 export const WIZARD = 2;
 export const TRANSMUTING = 3;
+export const NO_PUSH = 4;
+export const MULTI_PUSH = 5;
 
 // the number of walk layers
-export const LAYER_COUNT = 4;
+export const LAYER_COUNT = 6;
 
 // a Wardrobe's skill: PROTECTION, or another one
 const PROTECTION_SKILL = 1;
 
-// Skill_Flags MULTIPUSH and SINGLE_PUSH
+// Skill_Flags MULTIPUSH, and MULTIPUSH with SINGLE_PUSH
+const MULTIPUSH_FLAG = 1;
 const PUSH_FLAGS = 3;
+
+// the bits of the walk layers whose hero pushes, in a cell's visited layers
+export const PUSH_LAYER_BITS = 1 | (1 << MULTI_PUSH);
+
+/** Whether a hero in walk layer `layer` pushes. */
+export function pushes(layer: number): boolean {
+    return layer === 0 || layer === MULTI_PUSH;
+}
 
 /** A seed of a flood: a cell (walk layer 0) or a cell and its walk layer. */
 export type LayeredCell = [cell: number, layer: number];
@@ -55,6 +67,8 @@ export interface WardrobeCell {
     teleport: boolean;
     charm: boolean;
     transmute: boolean;
+    push: boolean;
+    multipush: boolean;
     rod: boolean;
 }
 
@@ -63,6 +77,8 @@ export function levelWardrobes(shape: GridShape, world: World): WardrobeCell[] {
     const teleportPids = new Set(world.teleport || []);
     const charmPids = new Set(world.charm || []);
     const transmutePids = new Set(world.transmute || []);
+    const pushPids = new Set(world.push || []);
+    const multipushPids = new Set(world.multipush || []);
     const rodPids = new Set(world.rod || []);
     const wardrobes: WardrobeCell[] = [];
 
@@ -73,8 +89,10 @@ export function levelWardrobes(shape: GridShape, world: World): WardrobeCell[] {
         const teleport = teleportPids.has(pid);
         const charm = charmPids.has(pid);
         const transmute = transmutePids.has(pid);
+        const push = pushPids.has(pid);
+        const multipush = multipushPids.has(pid);
         const rod = rodPids.has(pid);
-        wardrobes.push({ pid, cell, side, skill, existence, teleport, charm, transmute, rod });
+        wardrobes.push({ pid, cell, side, skill, existence, teleport, charm, transmute, push, multipush, rod });
     }
 
     return wardrobes;
@@ -171,6 +189,15 @@ export function placeTransmuteDoors(walkGrid: WalkGrid): void {
     }
 }
 
+/** Collects the cells of the existing Wardrobes that give SINGLE_PUSH, and of those that give MULTIPUSH. */
+export function placePushDoors(walkGrid: WalkGrid): void {
+    for (const { cell, push, multipush } of walkGrid.geometry.wardrobes) {
+        if (!walkGrid.wardrobes.has(cell)) continue;
+        if (push) walkGrid.pushDoors.add(cell);
+        if (multipush) walkGrid.multipushDoors.add(cell);
+    }
+}
+
 /** The current hero's walk layer, from the latest skill_flags (else the level data's PROTECTION). */
 export function heroLayerOf(walkGrid: WalkGrid): number {
     const guy = walkGrid.world.guy;
@@ -185,8 +212,12 @@ export function heroLayerOf(walkGrid: WalkGrid): number {
     if (skillBits & TELEPORT_FLAG) return WIZARD;
 
     const transmutes = (skillBits & TRANSMUTE_FLAG) !== 0;
-    const pushes = (skillBits & PUSH_FLAGS) !== 0;
-    if (transmutes && !pushes) return TRANSMUTING;
+    const pushSkill = (skillBits & PUSH_FLAGS) !== 0;
+    if (transmutes && !pushSkill) return TRANSMUTING;
+    if (skillBits & MULTIPUSH_FLAG) return MULTI_PUSH;
+
+    const charms = (skillBits & CHARM_FLAG) !== 0;
+    if (!pushSkill && !charms) return NO_PUSH;
 
     return 0;
 }
@@ -254,8 +285,9 @@ export function heroSeed(walkGrid: WalkGrid, position: Position): LayeredCell {
 
 /**
  * The walk layer after a step from `cell` on side `side` into `next`: a hero leaving a Wardrobe by its door takes its
- * skill (PROTECTION, TELEPORT, or another one on top of its own); one entering a Wardrobe by its door gets the default
- * skill back.
+ * skill (PROTECTION, TELEPORT, or another one on top of its own) in place of SINGLE_PUSH, so he keeps a push only from
+ * MULTIPUSH or the door's own push skill; one entering a Wardrobe by its door gets the default skill (SINGLE_PUSH)
+ * back.
  */
 export function layerAfterStep(walkGrid: WalkGrid, cell: number, side: number, next: number, layer: number): number {
     const marks = walkGrid.marks;
@@ -265,7 +297,18 @@ export function layerAfterStep(walkGrid: WalkGrid, cell: number, side: number, n
     if (skillOut === PROTECTION_SKILL) return PROTECTED;
     if (skillOut > PROTECTION_SKILL) {
         if (walkGrid.teleportDoors.has(cell)) return WIZARD;
-        if (layer === 0 && walkGrid.transmuteDoors.has(cell)) return TRANSMUTING;
+
+        const plainHero = layer === 0 || layer === NO_PUSH;
+        if (plainHero && walkGrid.transmuteDoors.has(cell)) return TRANSMUTING;
+        if (walkGrid.multipushDoors.has(cell)) {
+            if (plainHero) return MULTI_PUSH;
+            return layer;
+        }
+        if (walkGrid.pushDoors.has(cell)) {
+            if (layer === NO_PUSH) return 0;
+            return layer;
+        }
+        if (layer === 0 && !walkGrid.charmDoors.has(cell)) return NO_PUSH;
         return layer;
     }
 

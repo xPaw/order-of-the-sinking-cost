@@ -65,6 +65,8 @@
 //   teleport: [pid]   the Wardrobes whose skill_flags hold TELEPORT
 //   charm: [pid]   the Wardrobes whose skill_flags hold CHARM
 //   transmute: [pid]   the Wardrobes whose skill_flags hold TRANSMUTE
+//   push: [pid]   the Wardrobes whose skill_flags hold SINGLE_PUSH
+//   multipush: [pid]   the Wardrobes whose skill_flags hold MULTIPUSH
 //   rod: [pid]   the Wardrobes whose inventory_flags hold WAND (the Rod)
 //   trees: [[pid, i, j, z(, exists)]]   Trees: they stop dragon fire and beams while they exist (TRANSMUTE turns one into
 //          a crystal Rock: a CREATION record destroys it)
@@ -1016,6 +1018,8 @@ function buildWorld(pkg: Package) {
         teleport: wardrobesWithFlag(world, 'skill_flags', 'TELEPORT'),
         charm: wardrobesWithFlag(world, 'skill_flags', 'CHARM'),
         transmute: wardrobesWithFlag(world, 'skill_flags', 'TRANSMUTE'),
+        push: wardrobesWithFlag(world, 'skill_flags', 'SINGLE_PUSH'),
+        multipush: wardrobesWithFlag(world, 'skill_flags', 'MULTIPUSH'),
         rod: wardrobesWithFlag(world, 'inventory_flags', 'WAND'),
         trees: world.ofType('Tree').map((tree) => world.cellRow(tree)),
         lights: world

@@ -149,6 +149,8 @@ Rows without the column always exist. The save overrides it: member `entity_flag
 | `world.teleport` | [pid]: the Wardrobes whose `skill_flags` hold TELEPORT |
 | `world.charm` | [pid]: the Wardrobes whose `skill_flags` hold CHARM. The walk's stones launched with CHARM ([Moves](VIEWER.md#moves)) |
 | `world.transmute` | [pid]: the Wardrobes whose `skill_flags` hold TRANSMUTE |
+| `world.push` | [pid]: the Wardrobes whose `skill_flags` hold SINGLE_PUSH |
+| `world.multipush` | [pid]: the Wardrobes whose `skill_flags` hold MULTIPUSH |
 | `world.trees` | [[pid, i, j, z(, exists)]] Trees. They stop dragon fire and beams while they exist; TRANSMUTE turns one into a crystal Rock (a CREATION record destroys the Tree) |
 | `world.lilies` | [[pid, i, j, z(, exists)]] Lily pads at their level-data position; standable in their own cell over water. Those absent at load are all in the map rooms |
 | `world.rover_facings` | [[pid, quarter turns]] per Rover: its level-data `theta_target`; even runs the Rover east-west, odd north-south ([Rovers](MOVEMENT.md#rovers)). The save's `theta_target` replaces it |

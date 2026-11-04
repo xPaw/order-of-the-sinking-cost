@@ -10,7 +10,7 @@ import type { Rival } from './mirror-isles.ts';
 import { settle, visitReached } from './queue.ts';
 import { pushLandings, rockStands, sinkOf } from './rock-turns.ts';
 import { sunkTracks } from './rovers.ts';
-import { LAYER_COUNT } from './skills.ts';
+import { LAYER_COUNT, pushes } from './skills.ts';
 import { hopBlocked } from './support.ts';
 import type { WalkGrid } from './walker.ts';
 
@@ -58,8 +58,8 @@ interface MirrorPositions {
 
 /**
  * The cells a Mirror in `mirrorCell` is pushed to, as a Rock is in bridgeOf: nearest first over at most PRESS_CELLS
- * cells, by a hero who stands in a cell the flood reached in layer 0. A push that sinks the Mirror in water ends it
- * there, but for a push onto the track of a sunk Rover: the Mirror rides the Rover, so every cell of the track is a
+ * cells, by a hero who stands in a cell the flood reached in a pushing layer. A push that sinks the Mirror in water ends
+ * it there, but for a push onto the track of a sunk Rover: the Mirror rides the Rover, so every cell of the track is a
  * place it stands in (the Rover may be under any of them). A Mirror that stands on a track already rides it. The push
  * cells turned down go to `miss`.
  */
@@ -213,7 +213,7 @@ export function hopTurned(walkGrid: WalkGrid, floodState: FloodState): boolean {
     const { mirrorSeen, mirrorsDue, mirrorMisses } = floodState;
 
     visitReached(floodState, floodState.mirrorCursor, (cell, layer) => {
-        if (layer !== 0) return;
+        if (!pushes(layer)) return;
 
         for (const mirrorIndex of triggers.mirrorTurnsAt.get(cell) || []) {
             if (mirrorSeen[mirrorIndex]) continue;

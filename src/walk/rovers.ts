@@ -9,6 +9,7 @@ import { exists } from './groups.ts';
 import { levelWater } from './ocean.ts';
 import { requeue, visitReached } from './queue.ts';
 import { sinkOf } from './rock-turns.ts';
+import { pushes } from './skills.ts';
 import { blocked, standable } from './support.ts';
 import type { WalkGrid } from './walker.ts';
 import { fenced, latestCell } from './walls.ts';
@@ -163,7 +164,7 @@ export function ferry(walkGrid: WalkGrid, floodState: FloodState): boolean {
     const { roversDue, roverSeen, roverSpent, roverMisses, rideMarked } = floodState;
 
     visitReached(floodState, floodState.roverCursor, (cell, layer) => {
-        if (layer !== 0) return;
+        if (!pushes(layer)) return;
 
         for (const roverIndex of triggers.roversAt.get(cell) || []) {
             if (roverSeen[roverIndex]) continue;

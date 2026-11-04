@@ -48,6 +48,7 @@ import {
     layerAfterStep,
     leavesByCharmDoor,
     leavesByRodDoor,
+    pushes,
     startsWithCharm,
     startsWithRod,
     swapCell,
@@ -378,8 +379,8 @@ export function noFloodState(): FloodState {
 /**
  * Indexes the triggers by cell, so a flood that drains its queue checks only what the cells reached since its last
  * look touched. Bridges: by push cell. Flavors (in latch order, the order the flood presses them in): by Switch cell
- * not pressed, with the number of such cells. Lanes: by launch push cell and the cells next to the stone (layer 0),
- * line cells (TELEPORT layer) and ride cells (any layer, for a pocket flood).
+ * not pressed, with the number of such cells. Lanes: by launch push cell and the cells next to the stone (pushing
+ * layers), line cells (TELEPORT layer) and ride cells (any layer, for a pocket flood).
  */
 export function triggerIndex(walkGrid: WalkGrid): Triggers {
     const bridges = [...walkGrid.bridgesOf];
@@ -680,7 +681,7 @@ function moveTarget(
  * Whether a step from `cell` into `target`, which holds what the hero pushes, moves it one cell on: not when that
  * cell is blocked (one push: no chains, MULTIPUSH or PULL), nor a THROUGH beam's wall cell unless what is pushed
  * stands in the beam and carries it: a Monster, a MIRRORABLE Rock or a mirrorable movable. A Wardrobe skill replaces
- * SINGLE_PUSH, so a hero with PROTECTION or TELEPORT pushes nothing.
+ * SINGLE_PUSH, so a hero with PROTECTION, TELEPORT, TRANSMUTE or another skill without a push pushes nothing.
  */
 function canPush(
     walkGrid: WalkGrid,
@@ -690,7 +691,7 @@ function canPush(
     target: number,
     layer: number,
 ): boolean {
-    if (layer !== 0) return false;
+    if (!pushes(layer)) return false;
 
     const pushedTo = cellOnSide(walkGrid, target, side);
     if (pushedTo === cell || blocked(walkGrid, floodState, pushedTo)) return false;
@@ -751,9 +752,10 @@ function stepPowers(walkGrid: WalkGrid, cell: number, withOptional: boolean): St
 }
 
 /**
- * The hero (walk layer `layer`) at `cell` moves one way on each side, by the powers there: an ENDPOINT move along
- * its beam, a DOUBLE move (fences: on the start and destination cells), a squeeze past Fences. Where a flood's pushes
- * laid down optional powers, he also moves with them. A closed Freezer the move bumps into goes to `front`.
+ * The hero (walk layer `layer`) at `cell` moves one way on each side, by the powers there: a TELEPORT swap in walk
+ * layer 2 where his line finds a target, else an ENDPOINT move along its beam, a DOUBLE move (fences: on the start and
+ * destination cells), a squeeze past Fences. Where a flood's pushes laid down optional powers, he also moves with them.
+ * A closed Freezer the move bumps into goes to `front`.
  */
 function stepSides(
     walkGrid: WalkGrid,
@@ -768,7 +770,7 @@ function stepSides(
     }
 }
 
-/** The hero at `cell` moves one way on each side with the powers `powers`. */
+/** The hero at `cell` swaps or moves one way on each side with the powers `powers`. */
 function stepWith(
     walkGrid: WalkGrid,
     floodState: FloodState,
@@ -781,9 +783,18 @@ function stepWith(
     const z = Math.floor(cell / walkGrid.layerCells) - Z_BIAS;
     const { powered, altered, squeezed, endpointBeams, steps } = powers;
 
+    const wizard = layer === WIZARD;
+
     for (const side of SIDES) {
         const endpointBeam = endpointBeams?.find((beam) => beam.side % 2 === side % 2);
-        if (powered) openGateAhead(walkGrid, floodState, cell, side, altered);
+
+        // a hero with TELEPORT swaps with the first target along the side and does not step there; a press that swaps
+        // bumps no Gate open
+        if (wizard && swapOnSide(walkGrid, floodState, cell, side, z, powers)) continue;
+
+        // the next press after an OPEN bump looks for a swap through the opened Gate first
+        const opened = powered && openGateAhead(walkGrid, floodState, cell, side, altered);
+        if (wizard && opened && swapOnSide(walkGrid, floodState, cell, side, z, powers)) continue;
 
         const target = moveTarget(walkGrid, cell, side, endpointBeam, altered, steps);
 
@@ -800,7 +811,7 @@ function stepWith(
 
         // a beam's wall cell is entered only from the beam
         if (cellFlags[target] & THRU && !(cellFlags[cell] & BEAM)) continue;
-        if (layer === 0 && leavesByCharmDoor(walkGrid, cell, side)) floodState.charming = true;
+        if (pushes(layer) && leavesByCharmDoor(walkGrid, cell, side)) floodState.charming = true;
         if (!floodState.pocket && leavesByRodDoor(walkGrid, cell, side)) floodState.rodHeld = true;
         settle(walkGrid, floodState, target, z, layerAfterStep(walkGrid, cell, side, target, layer));
     }
@@ -818,18 +829,27 @@ function swapStride(side: number, powers: StepPowers): number {
     return endpointDistance(endpointBeam, endpointBeam.side === side, powers.altered);
 }
 
-/** The hero in walk layer 2 at `cell` swaps with the first target of his TELEPORT line on each side, by `powers`. */
-function swapSides(walkGrid: WalkGrid, floodState: FloodState, cell: number, z: number, powers: StepPowers): void {
-    for (const side of SIDES) {
-        const stride = swapStride(side, powers);
-        if (stride <= 0) continue;
+/**
+ * The hero in walk layer 2 at `cell` swaps with the first target of his TELEPORT line on side `side`, by `powers`;
+ * whether the line found one.
+ */
+function swapOnSide(
+    walkGrid: WalkGrid,
+    floodState: FloodState,
+    cell: number,
+    side: number,
+    z: number,
+    powers: StepPowers,
+): boolean {
+    const stride = swapStride(side, powers);
+    if (stride <= 0) return false;
 
-        const swapped = swapCell(walkGrid, floodState, cell, side, stride);
-        if (swapped < 0) continue;
+    const swapped = swapCell(walkGrid, floodState, cell, side, stride);
+    if (swapped < 0) return false;
 
-        settle(walkGrid, floodState, swapped, z, WIZARD);
-        if (!floodState.pocket) noteSwap(walkGrid, floodState, cell, swapped);
-    }
+    settle(walkGrid, floodState, swapped, z, WIZARD);
+    if (!floodState.pocket) noteSwap(walkGrid, floodState, cell, swapped);
+    return true;
 }
 
 /** Walks on from `cell` in walk layer `layer`: steps, TELEPORT swaps, magic-mirror hops, and with `travel` the rides. */
@@ -844,14 +864,6 @@ function walkFrom(
     const z = Math.floor(cell / walkGrid.layerCells) - Z_BIAS;
 
     stepSides(walkGrid, floodState, cell, layer, front);
-
-    // a hero with TELEPORT swaps with the first target along each side
-    if (layer === WIZARD) {
-        swapSides(walkGrid, floodState, cell, z, stepPowers(walkGrid, cell, false));
-        if (walkGrid.marks[cell] & OPTION_MARK) {
-            swapSides(walkGrid, floodState, cell, z, stepPowers(walkGrid, cell, true));
-        }
-    }
 
     if (!(walkGrid.marks[cell] & TRAVEL_MARK)) return;
 
@@ -905,10 +917,11 @@ function walkFrom(
 }
 
 /**
- * The cells a walk reaches from `seeds`, in the order they were reached in each layer. Four walk layers: 0 any
+ * The cells a walk reaches from `seeds`, in the order they were reached in each layer. Six walk layers: 0 any
  * skill, 1 PROTECTION, 2 TELEPORT (a hero who left a TELEPORT Wardrobe by its door, who pushes nothing and swaps), 3
- * TRANSMUTE (who pushes nothing and turns what he bumps into a crystal). The flood never enters `outside` and adds each closed Freezer it bumps into to `front`. Floods run one at a time: they
- * share the walker's visited cells.
+ * TRANSMUTE (who pushes nothing and turns what he bumps into a crystal), 4 no push skill (who pushes nothing), 5
+ * MULTIPUSH (who pushes and keeps his push through a door with no push skill). The flood never enters `outside` and
+ * adds each closed Freezer it bumps into to `front`. Floods run one at a time: they share the walker's visited cells.
  */
 export function flood(
     walkGrid: WalkGrid,

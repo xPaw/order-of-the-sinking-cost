@@ -11,7 +11,7 @@ import { deep, levelWater, waterAt } from './ocean.ts';
 import { push, requeue, visitReached } from './queue.ts';
 import { landingOf, pushableIn } from './rock-turns.ts';
 import type { Landing } from './rock-turns.ts';
-import { doorIn, doorOut, WIZARD } from './skills.ts';
+import { doorIn, doorOut, pushes, WIZARD } from './skills.ts';
 import { blocked, heldFromBelow, holdsStone, standable } from './support.ts';
 import type { WalkGrid } from './walker.ts';
 import { fenced, latestCell } from './walls.ts';
@@ -437,7 +437,7 @@ export function placeKicks(walkGrid: WalkGrid): Kick[] {
 }
 
 /**
- * Takes the kicks whose launch push cell the flood has reached in layer 0, where the hero pushes: the cells of the
+ * Takes the kicks whose launch push cell the flood has reached in a layer where the hero pushes: the cells of the
  * kicked Lily's drift hold the hero from then on. Returns whether any kick was taken.
  */
 export function takeKicks(walkGrid: WalkGrid, floodState: FloodState): boolean {
@@ -446,7 +446,7 @@ export function takeKicks(walkGrid: WalkGrid, floodState: FloodState): boolean {
     let taken = false;
 
     visitReached(floodState, floodState.kickCursor, (cell, layer) => {
-        if (layer !== 0) return;
+        if (!pushes(layer)) return;
 
         for (const kickIndex of triggers.kicksAt.get(cell) || []) {
             const kick = triggers.kicks[kickIndex];
@@ -567,9 +567,9 @@ export function stoneLandingOf(
     return null;
 }
 
-// The TELEPORT swap onto a skipping stone, in the order the skills allow: the stone is pushed and launched (layer 0,
-// SINGLE_PUSH; a cell next to it reached), then a hero with TELEPORT (layer 2) stands on a line cell and swaps onto
-// the landing cell. A pocket flood looks for the ways into its pocket, so it walks a lane backwards only: from the
+// The TELEPORT swap onto a skipping stone, in the order the skills allow: the stone is pushed and launched (a pushing
+// layer; a cell next to it reached), then a hero with TELEPORT (layer 2) stands on a line cell and swaps onto the
+// landing cell. A pocket flood looks for the ways into its pocket, so it walks a lane backwards only: from the
 // landing cell to the launch push cell and to the line cells past a gap. Per lane, a flood keeps which of its parts
 // the walk has reached (LANE_* bits; a pocket flood needs a ride cell only), and the lanes with every part reached
 // that have not swapped yet.
@@ -595,7 +595,7 @@ function countLanes(walkGrid: WalkGrid, floodState: FloodState, cell: number, la
         return;
     }
 
-    if (layer === 0) {
+    if (pushes(layer)) {
         reachLanePart(floodState, triggers.lanePushAt.get(cell), LANE_PUSH);
         reachLanePart(floodState, triggers.laneNearAt.get(cell), LANE_NEAR);
     }

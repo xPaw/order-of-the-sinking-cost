@@ -10,7 +10,7 @@ import { levelWater, waterStopsFall } from './ocean.ts';
 import { requeue, visitReached } from './queue.ts';
 import { reachedEntries } from './room-answers.ts';
 import { skippingStones, stoneLandingOf } from './skipping-stones.ts';
-import { LAYER_COUNT } from './skills.ts';
+import { LAYER_COUNT, PUSH_LAYER_BITS, pushes } from './skills.ts';
 import { holdsStone, standable } from './support.ts';
 import { swappedTo, visitSwaps } from './swaps.ts';
 import type { WalkGrid } from './walker.ts';
@@ -114,8 +114,8 @@ export function landingOf(walkGrid: WalkGrid, floodState: FloodState, from: numb
 
 /**
  * Calls visit(landing) for each push of the object in `from` that the hero can make from a cell the flood reached in
- * layer 0, as a Rock lands in landingOf. None when the object cannot stand in `from` or `from` is attacked (the hero
- * steps into it and dies); a skipping stone (`skips`) lands as stoneLandingOf has it. The push cells turned down because
+ * a pushing layer, as a Rock lands in landingOf. None when the object cannot stand in `from` or `from` is attacked (the
+ * hero steps into it and dies); a skipping stone (`skips`) lands as stoneLandingOf has it. The push cells turned down because
  * the flood has not reached them go to `miss`.
  */
 export function pushLandings(
@@ -141,7 +141,7 @@ export function pushLandings(
             : landingOf(walkGrid, floodState, from, side);
         if (!landing) continue;
 
-        if ((visited[pushCell] & 1) === 0) {
+        if ((visited[pushCell] & PUSH_LAYER_BITS) === 0) {
             miss.pushCells.push(pushCell);
             continue;
         }
@@ -181,7 +181,7 @@ export function joinsNewGround(
 
     for (const armCell of walkGrid.hopSources.get(waterCell) ?? []) {
         miss.pushCells.push(armCell);
-        if ((visited[armCell] & 1) !== 0) joinsReached = true;
+        if ((visited[armCell] & PUSH_LAYER_BITS) !== 0) joinsReached = true;
     }
 
     return joinsReached && joinsNew;
@@ -357,7 +357,7 @@ export function sinkTurned(walkGrid: WalkGrid, floodState: FloodState): boolean 
     let added = false;
 
     visitReached(floodState, floodState.rockCursor, (cell, layer) => {
-        if (layer !== 0) return;
+        if (!pushes(layer)) return;
 
         for (const rockIndex of triggers.rocksAt.get(cell) || []) {
             if (rockSeen[rockIndex]) continue;

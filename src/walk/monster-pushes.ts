@@ -78,7 +78,7 @@ export function goblinBeside(
 
 /**
  * Searches the cells the Monster `monsterIndex` is pushed to, nearest first over at most PRESS_CELLS cells, by a hero who
- * stands in a cell the flood reached in layer 0, as a Rock is in bridgeOf. It dies where it sinks in water, stands in
+ * stands in a cell the flood reached in a pushing layer, as a Rock is in bridgeOf. It dies where it sinks in water, stands in
  * the fire of another dragon or stands beside a living goblin. A dragon pushed to a cell breathes from there: the first Monster its fire meets (one the
  * save left in a gate's room) is gone as well, whether or not the dragon is. The push cells turned down go to `miss`.
  * Returns whether the Monster dies.

@@ -176,6 +176,27 @@ describe('teleporter discovery chain', () => {
             ]);
         });
     });
+    describe('a MAJOR pad trip', () => {
+        // a ground row split by walls at 4, 8 and 11: discovered MAJOR pads A at 1 and B at 6, and a Rock at 7 that no
+        // push moves; a hero with TELEPORT at B swaps with it
+        const pads = () => [
+            pad({ pid: 41, p: [1, 0, 0], l: 0, major: 1 }),
+            pad({ pid: 42, p: [6, 0, 0], l: 0, major: 1 }),
+        ];
+        const WALLS: Record<number, number[]> = { 4: [0], 8: [0], 11: [0] };
+        const FOUND: TeleporterState = { en: true, disc: true };
+        const run = (layer: number) => {
+            world(12, WALLS, { rocks: [[43, 7, 0, 0]] }, pads());
+            const walkGrid = walker(latest(), [FOUND, FOUND], []);
+            return xs(walkGrid, walkGrid.flood([[walkGrid.cellOf(0, 0, 0), layer]]), 0);
+        };
+        test('keeps the hero with TELEPORT, who swaps with the Rock', () => {
+            expect(run(2)).toEqual([0, 1, 2, 3, 5, 6, 7]);
+        });
+        test('keeps a pushing hero, whose push the wall behind the Rock stops', () => {
+            expect(run(0)).toEqual([0, 1, 2, 3, 5, 6]);
+        });
+    });
     describe('a MINOR pad trip', () => {
         // a ground row split by walls at 4 and 7: MINOR pad A at 1 (enabled) targets pad B at 5, which the save leaves
         // disabled; B targets pad C at 9

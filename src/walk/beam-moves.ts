@@ -39,7 +39,7 @@ import type { PressMiss } from './gates.ts';
 import { exists } from './groups.ts';
 import { requeue, visitReached } from './queue.ts';
 import { reachedEntries } from './room-answers.ts';
-import { LAYER_COUNT } from './skills.ts';
+import { LAYER_COUNT, PUSH_LAYER_BITS, pushes } from './skills.ts';
 import { blocked, holdsStone, standable } from './support.ts';
 import { swappedTo, visitSwaps } from './swaps.ts';
 import type { WalkGrid } from './walker.ts';
@@ -419,7 +419,7 @@ function outsidePushCells(walkGrid: WalkGrid, floodState: FloodState): Set<numbe
 
 /** Whether the hero pushes from `cell`: the flood reached it without a Wardrobe skill, or it is an outsidePushCell. */
 function heroPushesFrom(walkGrid: WalkGrid, floodState: FloodState, cell: number): boolean {
-    if ((walkGrid.visited[cell] & 1) !== 0) return true;
+    if ((walkGrid.visited[cell] & PUSH_LAYER_BITS) !== 0) return true;
     return outsidePushCells(walkGrid, floodState)?.has(cell) === true;
 }
 
@@ -544,7 +544,7 @@ function gemPushable(walkGrid: WalkGrid, floodState: FloodState, beamFlood: Beam
 /**
  * The cell of a free Gem of the turn's room that the walk can bring onto its slot by any pushes and Rod launches (the
  * walk back from the slot, within the slot's screen room) or that a hero with TELEPORT swaps onto it, else -1. The hero
- * pushes from the cells the flood reached in layer 0.
+ * pushes from the cells the flood reached in a layer that pushes.
  */
 function gemToSlot(
     walkGrid: WalkGrid,
@@ -850,7 +850,7 @@ function reachesBeamMoves(walkGrid: WalkGrid, floodState: FloodState): boolean {
     let reaches = false;
 
     visitReached(floodState, floodState.beamCursor, (cell, layer) => {
-        if (layer === 0 && pushCells.has(cell)) reaches = true;
+        if (pushes(layer) && pushCells.has(cell)) reaches = true;
     });
 
     const swapObjects = walkGrid.beamMoves.swapObjects;

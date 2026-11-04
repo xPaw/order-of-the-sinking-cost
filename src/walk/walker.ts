@@ -40,6 +40,7 @@ import {
     heroLayerOf,
     heroSeed,
     placeCharmDoors,
+    placePushDoors,
     placeRodDoors,
     placeTeleportDoors,
     placeTransmuteDoors,
@@ -199,6 +200,8 @@ export interface WalkGrid extends GridShape {
     charmPlaces: Set<number>;
     charmIslets: Set<number>;
     transmuteDoors: Set<number>;
+    pushDoors: Set<number>;
+    multipushDoors: Set<number>;
     // the cells of the Wardrobes that give the Rod, and whether the current hero holds it
     rodDoors: Set<number>;
     rodHero: boolean;
@@ -375,6 +378,8 @@ function newWalkGrid(
         charmPlaces: new Set(),
         charmIslets: new Set(),
         transmuteDoors: new Set(),
+        pushDoors: new Set(),
+        multipushDoors: new Set(),
         rodDoors: new Set(),
         rodHero: false,
         notPressers: new Set(),
@@ -492,6 +497,7 @@ export function buildWalkGrid(
     walkGrid.charmHero = heroHoldsCharm(walkGrid);
     placeCharmStones(walkGrid);
     placeTransmuteDoors(walkGrid);
+    placePushDoors(walkGrid);
     placeRodDoors(walkGrid);
     walkGrid.rodHero = heroHoldsRod(walkGrid);
     placeNotPressers(walkGrid);

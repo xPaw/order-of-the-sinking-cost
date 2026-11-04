@@ -463,6 +463,10 @@ export interface World {
     charm?: number[];
     /** The pids of the TRANSMUTE Wardrobes. */
     transmute?: number[];
+    /** The pids of the Wardrobes that give SINGLE_PUSH. */
+    push?: number[];
+    /** The pids of the Wardrobes that give MULTIPUSH. */
+    multipush?: number[];
     /** The pids of the Wardrobes that give the Rod (inventory_flags WAND). */
     rod?: number[];
     trees: CellRow[];

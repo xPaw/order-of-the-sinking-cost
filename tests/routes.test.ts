@@ -8,9 +8,11 @@ import type { LatestValues, OceanChange } from '../src/save.ts';
 import type { Area, ProgressLevel } from '../src/types.ts';
 import { endpointTarget } from '../src/walk/beams.ts';
 import type { EndpointBeam } from '../src/walk/beams.ts';
+import { cellOf } from '../src/walk/cells.ts';
 import type { FloodOptions } from '../src/walk/flood.ts';
 import { levelGeometry } from '../src/walk/geometry.ts';
-import { walker } from '../src/walk/walker.ts';
+import { layerAfterStep, MULTI_PUSH } from '../src/walk/skills.ts';
+import { buildWalkGrid, walker } from '../src/walk/walker.ts';
 import type { Walker } from '../src/walk/walker.ts';
 import { f32, freezerAt, NONE, progressLevel } from './fixtures.ts';
 import type { Columns, Rows } from './fixtures.ts';
@@ -118,6 +120,11 @@ describe('rock bridges in pocket floods', () => {
         const walkGrid = setup();
         expect(columns(walkGrid, fill(walkGrid, 0, 0, 1), 1)).toContain(7);
         expect(columns(walkGrid, fill(walkGrid, 7, 0, 1), 1)).toEqual([6, 7, 8]);
+    });
+    test('a hero with MULTIPUSH crosses from the push side', () => {
+        const walkGrid = setup();
+        const reached = walkGrid.flood([[walkGrid.cellOf(0, 0, 1), MULTI_PUSH]]);
+        expect(columns(walkGrid, reached, 1)).toContain(7);
     });
     test('a pocket flood counts the bridge water cell as floor from either side', () => {
         const walkGrid = setup();
@@ -1262,6 +1269,80 @@ describe('a TRANSMUTE hero', () => {
     });
 });
 
+describe('a hero who left a Wardrobe with no push skill', () => {
+    const [WARDROBE, ROCK] = [40, 9];
+
+    // a row at z 0 on the implicit ground floor, walled at 5 so it does not wrap: a Wardrobe at 0 with its door on the
+    // east edge and a Rock at 3, which a pushing hero pushes east from 2 into 4; `push` lists the Wardrobe when it gives
+    // a push skill
+    const setup = (push: number[]) => {
+        world({
+            width: 6,
+            walls: { 5: [0] },
+            extra: { rocks: [[ROCK, 3, 0, 0]], wardrobes: [[WARDROBE, 0, 0, 0, 0, 2]], push },
+        });
+        return walker(NONE, [], []);
+    };
+
+    test('cannot push the Rock after taking PULL at the door', () => {
+        const walkGrid = setup([]);
+        expect(columns(walkGrid, fill(walkGrid, 0, 0, 0))).toEqual([0, 1, 2]);
+    });
+    test('pushes the Rock after taking SINGLE_PUSH at the door', () => {
+        const walkGrid = setup([WARDROBE]);
+        expect(columns(walkGrid, fill(walkGrid, 0, 0, 0))).toEqual([0, 1, 2, 3, 4]);
+    });
+    test('pushes the Rock with the default skill', () => {
+        const walkGrid = setup([]);
+        expect(columns(walkGrid, fill(walkGrid, 1, 0, 0))).toEqual([0, 1, 2, 3, 4]);
+    });
+    test('pushes the Rock with MULTIPUSH after taking PULL at the door', () => {
+        const walkGrid = setup([]);
+        expect(columns(walkGrid, walkGrid.flood([[walkGrid.cellOf(0, 0, 0), MULTI_PUSH]]))).toEqual([0, 1, 2, 3, 4]);
+    });
+});
+
+describe('a hero who took MULTIPUSH at a Wardrobe door', () => {
+    const [MULTIPUSH_WARDROBE, PULL_WARDROBE, ROCK] = [41, 42, 9];
+
+    // a row at z 0 on the implicit ground floor, walled at 6 so it does not wrap: a Wardrobe at 0 and a PULL Wardrobe
+    // at 2, both with their doors on the east edge, and a Rock at 4, which a pushing hero pushes east from 3 into 5.
+    // `multipush` lists the Wardrobe at 0 when it gives MULTIPUSH, `push` when it gives SINGLE_PUSH.
+    const setup = (push: number[], multipush: number[]) => {
+        world({
+            width: 7,
+            walls: { 6: [0] },
+            extra: {
+                rocks: [[ROCK, 4, 0, 0]],
+                wardrobes: [
+                    [MULTIPUSH_WARDROBE, 0, 0, 0, 0, 2],
+                    [PULL_WARDROBE, 2, 0, 0, 0, 2],
+                ],
+                push,
+                multipush,
+            },
+        });
+        return walker(NONE, [], []);
+    };
+
+    test('keeps pushing after the PULL door', () => {
+        const walkGrid = setup([], [MULTIPUSH_WARDROBE]);
+        expect(columns(walkGrid, fill(walkGrid, 0, 0, 0))).toEqual([0, 1, 2, 3, 4, 5]);
+    });
+    test('pushes nothing after the PULL door when the first door gives SINGLE_PUSH', () => {
+        const walkGrid = setup([MULTIPUSH_WARDROBE], []);
+        expect(columns(walkGrid, fill(walkGrid, 0, 0, 0))).toEqual([0, 1, 2, 3]);
+    });
+    test('loses MULTIPUSH entering a Wardrobe by its door', () => {
+        setup([], [MULTIPUSH_WARDROBE]);
+        const walkGrid = buildWalkGrid(NONE, [], []);
+        const doorCell = cellOf(walkGrid, 2, 0, 0);
+        const outside = cellOf(walkGrid, 3, 0, 0);
+        expect(layerAfterStep(walkGrid, doorCell, 0, outside, MULTI_PUSH)).toBe(MULTI_PUSH);
+        expect(layerAfterStep(walkGrid, outside, 2, doorCell, MULTI_PUSH)).toBe(0);
+    });
+});
+
 describe('Rocks sunk side by side in a gap', () => {
     const [WIDTH, HEIGHT, WATER_ROW] = [11, 5, 2];
     const [FIRST, SECOND, THIRD] = [31, 32, 33];
@@ -1367,6 +1448,83 @@ describe('the target of a TELEPORT swap', () => {
         }
         return solid;
     };
+
+    describe('a line that finds a target', () => {
+        // A row of 6 at z 0 on the implicit ground floor, walled at 5 so it does not wrap: the hero starts at 0, the
+        // water cell 2 (surface 0) lies between 1 and the island 3..4. `rocks`: the Rock at 3, or none.
+        const setup = (rocks: number[][]) => {
+            world({
+                width: 6,
+                walls: { 5: [0] },
+                water: { 2: [0] },
+                extra: { oceans: [[1, 0, 0, 0, 0, 6, 1]], rocks },
+            });
+            return build();
+        };
+
+        test('swaps the hero onto the island, and he takes no step that way', () => {
+            const walkGrid = setup([[9, 3, 0, 0]]);
+            expect(columns(walkGrid, wizardFlood(walkGrid, 0, 0))).toEqual([0, 3, 4]);
+        });
+        test('lets him step when it finds none', () => {
+            const walkGrid = setup([]);
+            expect(columns(walkGrid, wizardFlood(walkGrid, 0, 0))).toEqual([0, 1]);
+        });
+    });
+
+    describe('a press in an OPEN beam', () => {
+        // A row of 8 at z 0 on the implicit ground floor, walled at 7: OPEN and DOUBLE lights at 0 face east up to an
+        // Egg at 3, a shut Gate stands at 2 and the Rock at 3. The hero starts at 1, where his line tests every second
+        // cell and finds the Rock past the Gate.
+        const setup = () => {
+            world({
+                width: 8,
+                walls: { 7: [0] },
+                extra: {
+                    lights: [
+                        [1, 0, 0, 0, 0, 0, 0, 0, OPEN],
+                        [2, 0, 0, 0, 0, 0, 0, 0, DOUBLE],
+                    ],
+                    beam_stops: [[3, 0, 0]],
+                    gem_slots: POWERED_ROOM,
+                    gates: [[20, 2, 0, 0, 0, 0, 0, 0]],
+                    rocks: [[9, 3, 0, 0]],
+                },
+            });
+            return build();
+        };
+
+        test('that swaps bumps no Gate open', () => {
+            const walkGrid = setup();
+            expect(columns(walkGrid, wizardFlood(walkGrid, 1, 0))).toEqual([1, 3, 4, 5, 6]);
+        });
+    });
+
+    describe('the press after an OPEN bump', () => {
+        // A row of 8 at z 0 on the implicit ground floor, walled at 7: an OPEN light at 0 faces east up to an Egg at 4,
+        // a shut Gate stands at 2, the water cell 3 (surface 0) and the Rock at 4. The hero starts at 1.
+        const setup = () => {
+            world({
+                width: 8,
+                walls: { 7: [0] },
+                water: { 3: [0] },
+                extra: {
+                    oceans: [[1, 0, 0, 0, 0, 8, 1]],
+                    lights: [[1, 0, 0, 0, 0, 0, 0, 0, OPEN]],
+                    beam_stops: [[4, 0, 0]],
+                    gem_slots: POWERED_ROOM,
+                    gates: [[20, 2, 0, 0, 0, 0, 0, 0]],
+                    rocks: [[9, 4, 0, 0]],
+                },
+            });
+            return build();
+        };
+
+        test('swaps through the opened Gate and takes no step into it', () => {
+            const walkGrid = setup();
+            expect(columns(walkGrid, wizardFlood(walkGrid, 1, 0))).toEqual([0, 1, 4, 5, 6]);
+        });
+    });
 
     describe('landing on a Switch', () => {
         // A row of 8 at z 0 on the implicit ground floor: the hero starts at 0, the Switch of flavor 7 is at 1 and the

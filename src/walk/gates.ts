@@ -20,7 +20,7 @@ import { exists, place, put } from './groups.ts';
 import { deep, waterStopsFall } from './ocean.ts';
 import { push, requeue, settle, visitReached } from './queue.ts';
 import { reachedEntries } from './room-answers.ts';
-import { LAYER_COUNT, PROTECTED } from './skills.ts';
+import { LAYER_COUNT, PROTECTED, PUSH_LAYER_BITS } from './skills.ts';
 import { landingsOf, skipsOver } from './skipping-stones.ts';
 import { blocked, gateShutNow, holdsStone, standable } from './support.ts';
 import type { WalkGrid } from './walker.ts';
@@ -73,9 +73,9 @@ const CHARM_RANGE = 2;
 
 /**
  * A flavor whose press failed: what the search saw (pressInputs), the push cells it turned down because the walk had
- * not reached them in layer 0, the cells a Rod launch needed the hero in that the walk had not reached in any layer
- * (`launchCells`), and the solid cells that stopped a skip (`wallStops`). The same search finds nothing new until one
- * of those changes.
+ * not reached them in a pushing layer, the cells a Rod launch needed the hero in that the walk had not reached in any
+ * layer (`launchCells`), and the solid cells that stopped a skip (`wallStops`). The same search finds nothing new until
+ * one of those changes.
  */
 export interface PressMiss {
     inputs: number;
@@ -442,22 +442,27 @@ function movesOnto(
     }
 }
 
-/** A hero in an OPEN beam with no ALTER beam bumps the shut Gate next to it open, and it stays open. */
+/**
+ * A hero in an OPEN beam with no ALTER beam bumps the shut Gate next to it open, and it stays open; whether the flood
+ * had not opened it before.
+ */
 export function openGateAhead(
     walkGrid: WalkGrid,
     floodState: FloodState,
     cell: number,
     side: number,
     altered: boolean,
-): void {
-    if (altered || !walkGrid.openBeamCells.has(cell)) return;
+): boolean {
+    if (altered || !walkGrid.openBeamCells.has(cell)) return false;
 
     const grid = walkGrid.grid;
     const ahead = cellOnSide(walkGrid, cell, side);
-    if (!(grid[ahead] & GATE) || grid[ahead] & SOLID || walkGrid.frozen.has(ahead)) return;
-    if (!walkGrid.squeezeCells.has(cell) && fenced(walkGrid, cell, side, ahead)) return;
+    if (!(grid[ahead] & GATE) || grid[ahead] & SOLID || walkGrid.frozen.has(ahead)) return false;
+    if (!walkGrid.squeezeCells.has(cell) && fenced(walkGrid, cell, side, ahead)) return false;
+    if (floodState.opened.has(ahead)) return false;
 
     floodState.opened.add(ahead);
+    return true;
 }
 
 /**
@@ -632,7 +637,7 @@ function objectOnto(
     const outside = floodState.outside;
 
     return bringObjectOnto(walkGrid, floodState, switchCell, miss, {
-        heroPushes: (pushCell) => (visited[pushCell] & 1) !== 0 || outside?.has(pushCell) === true,
+        heroPushes: (pushCell) => (visited[pushCell] & PUSH_LAYER_BITS) !== 0 || outside?.has(pushCell) === true,
         accepts: (from, skips, charmed) => {
             const presses = !taken.has(from) && !floodState.pressing.has(from) && !notPressers.has(from);
             const skipped = !skips || stoneCells.has(from);
@@ -831,7 +836,7 @@ export function pressInputs(floodState: FloodState): number {
  */
 export function missChanged(walkGrid: WalkGrid, floodState: FloodState, miss: PressMiss, extraInputs = 0): boolean {
     if (miss.inputs !== pressInputs(floodState) + extraInputs) return true;
-    if (miss.pushCells.some((cell) => (walkGrid.visited[cell] & 1) !== 0)) return true;
+    if (miss.pushCells.some((cell) => (walkGrid.visited[cell] & PUSH_LAYER_BITS) !== 0)) return true;
     if (miss.launchCells?.some((cell) => walkGrid.visited[cell] !== 0)) return true;
     return miss.wallStops.some((cell) => (walkGrid.cellFlags[cell] & THRU) !== 0);
 }

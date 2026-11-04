@@ -3,6 +3,7 @@
 import { cellOnSide, keyOf } from './cells.ts';
 import { exists } from './groups.ts';
 import type { LevelGeometry } from './geometry.ts';
+import { PUSH_LAYER_BITS } from './skills.ts';
 import type { WalkGrid } from './walker.ts';
 import { latestCell } from './walls.ts';
 import { latestF32 } from '../save.ts';
@@ -470,7 +471,7 @@ export function roomIndexOf(walkGrid: WalkGrid): RoomIndex {
 }
 
 /**
- * The entries of `entries` the walk can use: every start cell reached by the hero in walk layer 0 (or standing in a
+ * The entries of `entries` the walk can use: every start cell reached by the hero in a pushing layer (or standing in a
  * cell `outside` the flood). The start cells not reached go to `watch`, so a search that asks again when one of them
  * is reached finds the entry.
  */
@@ -487,7 +488,7 @@ export function reachedEntries(
         let allReached = true;
 
         for (const rep of entry.reps) {
-            if ((visited[rep] & 1) !== 0 || outside?.has(rep) === true) continue;
+            if ((visited[rep] & PUSH_LAYER_BITS) !== 0 || outside?.has(rep) === true) continue;
             allReached = false;
             watch.push(rep);
         }

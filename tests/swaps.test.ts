@@ -124,7 +124,8 @@ describe('falls', () => {
 
 describe('TELEPORT swaps', () => {
     // a row of 11 at z 0: the hero's side 0..2, water 3..6 and 10 (surface 0), an island 7..9 with a Rock at 7; by
-    // default a wall at 10 ends the line west of the hero
+    // default a wall at 10 ends the line west of the hero. A hero in walk layer 2 whose line finds a target swaps and
+    // takes no step that way.
     const setup = (extra: Rows = {}, walls: Columns = { 10: [0] }, latest = NONE) => {
         const water: Columns = {};
         for (const i of [3, 4, 5, 6, 10]) water[i] = [0];
@@ -140,7 +141,7 @@ describe('TELEPORT swaps', () => {
     test('the line crosses water and the hero swaps onto the first target', () => {
         const walkGrid = setup();
         expect(columns(walkGrid, walkGrid.flood([walkGrid.cellOf(1, 0, 0)]))).toEqual([0, 1, 2]);
-        expect(columns(walkGrid, wizard(walkGrid, 1))).toEqual([0, 1, 2, 7, 8, 9]);
+        expect(columns(walkGrid, wizard(walkGrid, 1))).toEqual([0, 1, 7, 8, 9]);
     });
     test('a wall, a Mirror met on an open side or a Wardrobe door edge ends the line', () => {
         const wall = setup({}, { 5: [0], 10: [0] });
@@ -165,10 +166,10 @@ describe('TELEPORT swaps', () => {
         expect(columns(open, wizard(open, 1))).toEqual([0, 1, 2]);
         // at θ 180 it is open on its east and north sides: the hero meets its back, swaps onto it and swaps on
         const back = mirrorAt([2, MIRROR_FLAT]);
-        expect(columns(back, wizard(back, 1))).toEqual([0, 1, 2, 7, 8, 9]);
+        expect(columns(back, wizard(back, 1))).toEqual([0, 1, 7, 8, 9]);
         // at θ 90 it is open on its south and east sides: the west side is closed too
         const closed = mirrorAt([1, MIRROR_FLAT]);
-        expect(columns(closed, wizard(closed, 1))).toEqual([0, 1, 2, 7, 8, 9]);
+        expect(columns(closed, wizard(closed, 1))).toEqual([0, 1, 7, 8, 9]);
         // without a facing every side counts as open
         const unknown = mirrorAt(null);
         expect(columns(unknown, wizard(unknown, 1))).toEqual([0, 1, 2]);
@@ -176,14 +177,14 @@ describe('TELEPORT swaps', () => {
     test('a vertical Mirror is open on one horizontal side', () => {
         // open east at θ 0: the hero west of it meets a closed side; at θ 180 it is open west
         const closed = mirrorAt([0, MIRROR_VERTICAL]);
-        expect(columns(closed, wizard(closed, 1))).toEqual([0, 1, 2, 7, 8, 9]);
+        expect(columns(closed, wizard(closed, 1))).toEqual([0, 1, 7, 8, 9]);
         const open = mirrorAt([2, MIRROR_VERTICAL]);
         expect(columns(open, wizard(open, 1))).toEqual([0, 1, 2]);
         // a downward one is open west at θ 0 and east at θ 180
         const downOpen = mirrorAt([0, MIRROR_VERTICAL_DOWN]);
         expect(columns(downOpen, wizard(downOpen, 1))).toEqual([0, 1, 2]);
         const downClosed = mirrorAt([2, MIRROR_VERTICAL_DOWN]);
-        expect(columns(downClosed, wizard(downClosed, 1))).toEqual([0, 1, 2, 7, 8, 9]);
+        expect(columns(downClosed, wizard(downClosed, 1))).toEqual([0, 1, 7, 8, 9]);
     });
     test('the Mirror turned by the save is met on its latest facing', () => {
         const turned: LatestValues = {
@@ -194,12 +195,13 @@ describe('TELEPORT swaps', () => {
             },
         };
         const walkGrid = mirrorAt([0, MIRROR_FLAT], turned);
-        expect(columns(walkGrid, wizard(walkGrid, 1))).toEqual([0, 1, 2, 7, 8, 9]);
+        expect(columns(walkGrid, wizard(walkGrid, 1))).toEqual([0, 1, 7, 8, 9]);
     });
     test('the line wraps around the world', () => {
-        // walls at 3 and 4 end the line east; west of 0 it wraps to 10 and runs on to the Rock at 7
+        // walls at 3 and 4 end the line east; west of 0 it wraps to 10 and runs on to the Rock at 7, so the hero swaps
+        // and takes no step west
         const walkGrid = setup({}, { 3: [0], 4: [0] });
-        expect(columns(walkGrid, wizard(walkGrid, 1))).toEqual([0, 1, 2, 7, 8, 9]);
+        expect(columns(walkGrid, wizard(walkGrid, 1))).toEqual([1, 2, 7, 8, 9]);
     });
     // a `width` x `height` grid at z 0, wall but the cells `open`, with a light (pid 50, powered) of colour `color`, a
     // Rock and an Egg at the points given

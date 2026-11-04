@@ -10,7 +10,7 @@ import type { FloodState } from './flood.ts';
 import { exists } from './groups.ts';
 import { deep, layerOf } from './ocean.ts';
 import { push } from './queue.ts';
-import { ANY_SKILL, LAYER_COUNT, PROTECTED } from './skills.ts';
+import { LAYER_COUNT, PROTECTED } from './skills.ts';
 import { blockedFrom, land, standable } from './support.ts';
 import type { WalkGrid } from './walker.ts';
 
@@ -190,28 +190,26 @@ export function minorLanding(walkGrid: WalkGrid, floodState: FloodState, padInde
 /**
  * A hero (walk layer `layer`) on pad `padIndex`: an enabled pad reaches the pads its discovery reveals, and sends the
  * hero on: a discovered MAJOR pad to every enabled, discovered MAJOR pad, a MINOR pad to its target pad or point. A
- * MINOR pad's trip enables its target pad, which was disabled until then. A MINOR pad keeps the hero's walk layer;
- * fast travel (a MAJOR pad or a reveal) lands him with no skill.
+ * MINOR pad's trip enables its target pad, which was disabled until then. A pad's trip keeps the hero's walk layer.
  */
 function usePad(walkGrid: WalkGrid, floodState: FloodState, padIndex: number, layer: number): void {
     const { teleporters, teleporterStates, teleporterIndexOf } = walkGrid;
     if (!padEnabled(walkGrid, floodState, padIndex)) return;
 
-    // a revealed pad is reached by fast travel, which takes the hero's skill
     if (floodState.reveal) {
         for (const revealed of walkGrid.revealedPads[padIndex]) {
-            push(walkGrid, floodState, padCell(walkGrid, floodState, revealed), ANY_SKILL);
+            push(walkGrid, floodState, padCell(walkGrid, floodState, revealed), layer);
         }
     }
 
     const pad = teleporters[padIndex];
 
     if (pad.major) {
-        if (teleporterStates[padIndex].disc && !floodState.majorDone[ANY_SKILL]) {
-            floodState.majorDone[ANY_SKILL] = true;
+        if (teleporterStates[padIndex].disc && !floodState.majorDone[layer]) {
+            floodState.majorDone[layer] = true;
 
             for (const majorPad of walkGrid.majorPads) {
-                push(walkGrid, floodState, padCell(walkGrid, floodState, majorPad), ANY_SKILL);
+                push(walkGrid, floodState, padCell(walkGrid, floodState, majorPad), layer);
             }
         }
 
