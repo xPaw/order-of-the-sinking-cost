@@ -201,6 +201,79 @@ describe('TELEPORT swaps', () => {
         const walkGrid = setup({}, { 3: [0], 4: [0] });
         expect(columns(walkGrid, wizard(walkGrid, 1))).toEqual([0, 1, 2, 7, 8, 9]);
     });
+    // a `width` x `height` grid at z 0, wall but the cells `open`, with a light (pid 50, powered) of colour `color`, a
+    // Rock and an Egg at the points given
+    interface LitGrid {
+        width: number;
+        height: number;
+        open: string[];
+        light: [i: number, j: number, side: number];
+        color: number;
+        rock: [i: number, j: number];
+        egg: [i: number, j: number];
+        trees?: number[][];
+    }
+    const litWizard = (
+        { width, height, open, light, color, rock, egg, trees = [] }: LitGrid,
+        hero: [i: number, j: number],
+    ) => {
+        const walls: Columns = {};
+        for (let column = 0; column < width * height; column++) {
+            const point = `${column % width},${Math.floor(column / width)}`;
+            if (!open.includes(point)) walls[column] = [0];
+        }
+        const [lightI, lightJ, side] = light;
+        world({
+            width,
+            height,
+            walls,
+            extra: {
+                lights: [[50, lightI, lightJ, 0, side, 0, 0, 1, color]],
+                rocks: [[9, ...rock, 0]],
+                beam_stops: [[...egg, 0]],
+                gem_slots: [[90, 0, 0, 0, 1]],
+                trees,
+            },
+        });
+        const walkGrid = walker(NONE, [], []);
+        return cells(walkGrid, walkGrid.flood([[walkGrid.cellOf(...hero, 0), 2]]));
+    };
+    const THROUGH_COLOR = 1;
+    test('a hero outside a THROUGH beam ends his line at its wall cell', () => {
+        // row 1: the hero at 0, the wall cell at 2, the Rock at 4; the light at (2, 0) casts its beam north through
+        // the wall cell to an Egg at (2, 2)
+        const grid: LitGrid = {
+            width: 7,
+            height: 3,
+            open: ['0,1', '1,1', '3,1', '4,1', '2,0', '2,2'],
+            light: [2, 0, 1],
+            color: THROUGH_COLOR,
+            rock: [4, 1],
+            egg: [2, 2],
+        };
+        expect(litWizard(grid, [0, 1])).toEqual(['0,1', '1,1']);
+    });
+    test('a hero in a THROUGH beam swaps through any wall, not through a Tree', () => {
+        // the hero at (1, 1) in the beam of the light at (0, 1) facing east, which an Egg at (4, 1) ends; the Rock at
+        // (1, 3) behind the walls of rows 0 and 2, or behind Trees at (1, 2) and (1, 0)
+        const grid: LitGrid = {
+            width: 5,
+            height: 4,
+            open: ['0,1', '1,1', '2,1', '3,1', '4,1', '1,3'],
+            light: [0, 1, 0],
+            color: THROUGH_COLOR,
+            rock: [1, 3],
+            egg: [4, 1],
+        };
+        expect(litWizard(grid, [1, 1])).toContain('1,3');
+        expect(litWizard({ ...grid, color: 0 }, [1, 1])).not.toContain('1,3');
+        const trees = [
+            [40, 1, 2, 0],
+            [41, 1, 0, 0],
+        ];
+        const behindTree = { ...grid, open: [...grid.open, '1,2', '1,0'], trees };
+        expect(litWizard(behindTree, [1, 1])).not.toContain('1,3');
+    });
     test('the skill comes from a TELEPORT Wardrobe left by its door', () => {
         // a Wardrobe at 0 with its door on the east edge: the hero enters it by the door and leaves it again
         const walkGrid = setup({ wardrobes: [[40, 0, 0, 0, 0, 2]], teleport: [40] });

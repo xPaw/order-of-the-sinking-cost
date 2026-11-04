@@ -11,8 +11,10 @@ import {
     cellOnSide,
     cellsOnSide,
     BEAM,
+    BEAMSTOP,
     BRIDGE_MARK,
     GATE,
+    MONSTER,
     OPTION_MARK,
     POWER_MARK,
     PUSH,
@@ -54,7 +56,7 @@ import {
 import type { LayeredCell } from './skills.ts';
 import { skipAndSwap, takeKicks } from './skipping-stones.ts';
 import type { Kick } from './skipping-stones.ts';
-import { blocked } from './support.ts';
+import { blocked, blockedFrom, hopBlocked } from './support.ts';
 import { noteSwap, swapIndex } from './swaps.ts';
 import { padCell, padStep } from './teleporters.ts';
 import { crystalTurnsOf, NO_TRANSMUTE_TARGETS, transmute, transmuteTargetsOf, undoTransmutes } from './transmute.ts';
@@ -676,8 +678,9 @@ function moveTarget(
 
 /**
  * Whether a step from `cell` into `target`, which holds what the hero pushes, moves it one cell on: not when that
- * cell is blocked (one push: no chains, MULTIPUSH or PULL). A Wardrobe skill replaces SINGLE_PUSH, so a hero with
- * PROTECTION or TELEPORT pushes nothing.
+ * cell is blocked (one push: no chains, MULTIPUSH or PULL), nor a THROUGH beam's wall cell unless what is pushed
+ * stands in the beam and carries it: a Monster, a MIRRORABLE Rock or a mirrorable movable. A Wardrobe skill replaces
+ * SINGLE_PUSH, so a hero with PROTECTION or TELEPORT pushes nothing.
  */
 function canPush(
     walkGrid: WalkGrid,
@@ -693,7 +696,10 @@ function canPush(
     if (pushedTo === cell || blocked(walkGrid, floodState, pushedTo)) return false;
     if (walkGrid.grid[pushedTo] & PUSH || fenced(walkGrid, target, side, pushedTo)) return false;
 
-    return true;
+    const pushed = walkGrid.grid[target];
+    const carriesBeam = (pushed & MONSTER) !== 0 || (pushed & BEAMSTOP) === 0;
+    if (!carriesBeam) return !(walkGrid.cellFlags[pushedTo] & THRU);
+    return !blockedFrom(walkGrid, floodState, target, pushedTo);
 }
 
 /**
@@ -853,7 +859,7 @@ function walkFrom(
     const landings = walkGrid.mirrorHops.get(cell);
     if (landings) {
         for (const landing of landings) {
-            if (!blocked(walkGrid, floodState, landing)) settle(walkGrid, floodState, landing, z, layer);
+            if (!hopBlocked(walkGrid, floodState, landing)) settle(walkGrid, floodState, landing, z, layer);
         }
     }
 
@@ -861,7 +867,9 @@ function walkFrom(
     const pairs = walkGrid.pairHops.get(cell);
     if (pairs) {
         for (const [firstLanding, secondLanding] of pairs) {
-            if (blocked(walkGrid, floodState, firstLanding) || blocked(walkGrid, floodState, secondLanding)) continue;
+            if (hopBlocked(walkGrid, floodState, firstLanding) || hopBlocked(walkGrid, floodState, secondLanding)) {
+                continue;
+            }
 
             settle(walkGrid, floodState, firstLanding, z, layer);
             settle(walkGrid, floodState, secondLanding, z, layer);
@@ -879,7 +887,7 @@ function walkFrom(
     const turnedLandings = floodState.hopsAt.get(cell);
     if (turnedLandings) {
         for (const landing of turnedLandings) {
-            if (!blocked(walkGrid, floodState, landing)) settle(walkGrid, floodState, landing, z, layer);
+            if (!hopBlocked(walkGrid, floodState, landing)) settle(walkGrid, floodState, landing, z, layer);
         }
     }
 

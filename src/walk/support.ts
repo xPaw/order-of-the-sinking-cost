@@ -1,6 +1,7 @@
 // What blocks the hero and what holds the hero up while a flood runs (MOVEMENT.md "Support", "Falling", VIEWER.md
 // "Support and open cells")
 import {
+    BEAM,
     BRIDGE_MARK,
     DRIFT_MARK,
     FIRE,
@@ -47,6 +48,20 @@ export function blocked(walkGrid: WalkGrid, floodState: FloodState, cell: number
     if (walkGrid.marks[cell] & FROZEN_MARK) return true;
     if (walkGrid.grid[cell] & SOLID) return !(walkGrid.cellFlags[cell] & THRU);
     return gateShutNow(walkGrid, floodState, cell);
+}
+
+/**
+ * What a mover in `from` cannot enter: what blocks the hero, and a THROUGH beam's wall cell unless the mover stands in
+ * the beam.
+ */
+export function blockedFrom(walkGrid: WalkGrid, floodState: FloodState, from: number, cell: number): boolean {
+    if (blocked(walkGrid, floodState, cell)) return true;
+    return (walkGrid.cellFlags[cell] & THRU) !== 0 && !(walkGrid.cellFlags[from] & BEAM);
+}
+
+/** What a magic-mirror hop cannot land in: what blocks the hero, and any solid voxel, in a THROUGH beam too. */
+export function hopBlocked(walkGrid: WalkGrid, floodState: FloodState, cell: number): boolean {
+    return (walkGrid.grid[cell] & SOLID) !== 0 || blocked(walkGrid, floodState, cell);
 }
 
 /** Whether a Gate's cell is open while a flood runs because the flood opened it. */

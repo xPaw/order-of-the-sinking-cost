@@ -516,6 +516,34 @@ describe('beam powers', () => {
     });
 });
 
+describe('THROUGH beams', () => {
+    // a wall at column 5 for z 0..1 and a THROUGH light at column 8 facing west, its beam over the wall; the hero walks
+    // east from column 0 at z 1
+    const pushInto = (more: Rows) => {
+        world(12, floor(12, { 5: [0, 1] }), { lights: [[50, 8, 0, 1, 2, 0, 0, 1, 1]], ...more });
+        const walkGrid = walker(NONE, [], []);
+        return xs(walkGrid, fill(walkGrid, 0, 1), 1);
+    };
+    test('a Rock the beam stops at is not pushed into the wall cell', () => {
+        expect(pushInto({ rocks: [[20, 4, 0, 1]] })).toEqual([0, 1, 2, 3]);
+    });
+    test('a MIRRORABLE Rock or a Monster in the beam is pushed into the wall cell', () => {
+        expect(pushInto({ rocks: [[20, 4, 0, 1]], mirrorable: [20] })).toContain(4);
+        expect(pushInto({ monsters: [[20, 4, 0, 1, -2]] })).toContain(4);
+    });
+    test('a pad lands the hero in the wall cell only from the beam', () => {
+        // a THROUGH light at column 3 facing east, its beam over columns 4-7 (an Egg at 8 ends it); a high wall at
+        // column 2 keeps the hero on the pad at column 1, whose Marker is in the wall cell
+        world(12, floor(12, { 2: [0, 1, 2, 3], 5: [0, 1] }), {
+            lights: [[50, 3, 0, 1, 0, 0, 0, 1, 1]],
+            beam_stops: [[8, 0, 1]],
+        });
+        PROG.teleporters = [padAt(80, [1, 0, 1], 81, [5, 0, 1])];
+        const walkGrid = walker(NONE, [{ en: true, disc: true }], []);
+        expect(xs(walkGrid, fill(walkGrid, 0, 1), 1)).toEqual([0, 1]);
+    });
+});
+
 describe('pads to a Marker', () => {
     // a minor pad at column 1 whose target is a Marker above column 6; a wall at column 5
     const run = (to: Position, water: Columns = {}, oceans: number[][] = []) => {

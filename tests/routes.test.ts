@@ -1397,13 +1397,14 @@ describe('the target of a TELEPORT swap', () => {
     });
 
     describe('filling a Gem_Slot', () => {
-        const [LIGHT, SLOT, GEM] = [7, 8, 11];
+        const [LIGHT, SLOT, GEM, TREE] = [7, 8, 11, 12];
         const [LIGHT_KIND, GEM_KIND, THROUGH] = [1, 0, 1];
         const [WIDTH, HEIGHT] = [12, 6];
 
         // A 12 x 6 room at z 0: walls round the edge and in columns 8 and 9, and the east end (10, 11) is closed but for
-        // row 2. A powered-by-Gem THROUGH light at (1, 2) faces east along row 2; its room's slot is (5, 1) and the Gem
-        // is at (5, 3), in line with the slot. `extraWalls`: more wall cells as [i, j].
+        // row 2, where a Tree at (0, 2) ends the line that wraps west. A powered-by-Gem THROUGH light at (1, 2) faces
+        // east along row 2 up to an Egg at (11, 2); its room's slot is (5, 1) and the Gem is at (5, 3), in line with the
+        // slot. `extraWalls`: more wall cells as [i, j].
         const setup = (extraWalls: Array<[i: number, j: number]> = []) => {
             const wallCells = new Set(extraWalls.map(([i, j]) => i + j * WIDTH));
             for (let i = 0; i < WIDTH; i++) {
@@ -1411,8 +1412,8 @@ describe('the target of a TELEPORT swap', () => {
                 wallCells.add(i + (HEIGHT - 1) * WIDTH);
             }
             for (let j = 1; j < HEIGHT - 1; j++) {
-                for (const i of [0, 8, 9]) wallCells.add(i + j * WIDTH);
-                if (j !== 2) for (const i of [10, 11]) wallCells.add(i + j * WIDTH);
+                for (const i of [8, 9]) wallCells.add(i + j * WIDTH);
+                if (j !== 2) for (const i of [0, 10, 11]) wallCells.add(i + j * WIDTH);
             }
             const walls: Columns = {};
             for (const column of wallCells) walls[column] = [0];
@@ -1423,6 +1424,8 @@ describe('the target of a TELEPORT swap', () => {
                 extra: {
                     lights: [[LIGHT, 1, 2, 0, 0, 0, 0, 0, THROUGH]],
                     gem_slots: [[SLOT, 5, 1, 0, 0]],
+                    beam_stops: [[11, 2, 0]],
+                    trees: [[TREE, 0, 2, 0]],
                     movables: [
                         [LIGHT, 1, 2, 0, LIGHT_KIND],
                         [GEM, 5, 3, 0, GEM_KIND],
@@ -1479,20 +1482,21 @@ describe('the target of a TELEPORT swap', () => {
     });
 
     describe('unblocking a beam', () => {
-        const [LIGHT, ROCK] = [7, 12];
+        const [LIGHT, ROCK, TREE] = [7, 12, 13];
         const [LIGHT_KIND, THROUGH] = [1, 1];
         const [WIDTH, HEIGHT] = [12, 5];
 
-        // A 12 x 5 room at z 0 where only row 2 (x 1..7 and 10, 11) and the cells (6, 0) and (6, 1) are open. A powered
-        // THROUGH light at (1, 2) faces east; the Rock at (6, 2) stops its beam, and walls at x 8 and 9 shut off the east
-        // end. A hero in layer 2 at (6, 0) swaps with the Rock, which lands off the beam's line. `walls`: more wall
-        // cells as [i, j]; `side`: whether (6, 0) and (6, 1) are open; `from`: where the hero starts.
+        // A 12 x 5 room at z 0 where only row 2 (x 1..7 and 10, 11) and the cells (6, 0) and (6, 1) are open, and a Tree
+        // at (0, 2) ends the line that wraps west. A powered THROUGH light at (1, 2) faces east up to an Egg at (11, 2);
+        // the Rock at (6, 2) stops its beam, and walls at x 8 and 9 shut off the east end. A hero in layer 2 at (6, 0)
+        // swaps with the Rock, which lands off the beam's line. `walls`: more wall cells as [i, j]; `side`: whether
+        // (6, 0) and (6, 1) are open; `from`: where the hero starts.
         const setup = ({
             walls = [],
             side = true,
             from = [6, 0],
         }: { walls?: Array<[i: number, j: number]>; side?: boolean; from?: [i: number, j: number] } = {}) => {
-            const open = new Set(['10,2', '11,2']);
+            const open = new Set(['0,2', '10,2', '11,2']);
             if (side) open.add('6,0').add('6,1');
             for (let i = 1; i <= 7; i++) open.add(`${i},2`);
             for (const [i, j] of walls) open.delete(`${i},${j}`);
@@ -1503,8 +1507,10 @@ describe('the target of a TELEPORT swap', () => {
                 extra: {
                     lights: [[LIGHT, 1, 2, 0, 0, 0, 0, 0, THROUGH]],
                     gem_slots: POWERED_ROOM,
+                    beam_stops: [[11, 2, 0]],
                     movables: [[LIGHT, 1, 2, 0, LIGHT_KIND]],
                     rocks: [[ROCK, 6, 2, 0]],
+                    trees: [[TREE, 0, 2, 0]],
                 },
             });
             const walkGrid = build();

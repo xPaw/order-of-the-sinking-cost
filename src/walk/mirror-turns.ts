@@ -11,7 +11,7 @@ import { settle, visitReached } from './queue.ts';
 import { pushLandings, rockStands, sinkOf } from './rock-turns.ts';
 import { sunkTracks } from './rovers.ts';
 import { LAYER_COUNT } from './skills.ts';
-import { blocked } from './support.ts';
+import { hopBlocked } from './support.ts';
 import type { WalkGrid } from './walker.ts';
 
 /**
@@ -157,7 +157,7 @@ function noteHop(walkGrid: WalkGrid, floodState: FloodState, armCell: number, la
         hopMarked.push(armCell);
     }
 
-    if (blocked(walkGrid, floodState, landing)) return true;
+    if (hopBlocked(walkGrid, floodState, landing)) return true;
 
     const armZ = Math.floor(armCell / walkGrid.layerCells) - Z_BIAS;
 

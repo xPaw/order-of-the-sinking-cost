@@ -1,7 +1,7 @@
 // Wardrobes, the hero's walk layer and the TELEPORT swap (SKILLS.md "Wardrobes", "TELEPORT and PULL")
 import { CHARM_FLAG, PROTECTION_FLAG, rawU32, TELEPORT_FLAG, TRANSMUTE_FLAG, WAND_FLAG } from '../save.ts';
 import type { Position, World } from '../types.ts';
-import { cellOf, cellsOnSide, keyOf, LINE_STOP, WARDROBE_MARK } from './cells.ts';
+import { BEAM, BEAMSTOP, cellOf, cellsOnSide, FROZEN_MARK, keyOf, LINE_STOP, SOLID, WARDROBE_MARK } from './cells.ts';
 import type { GridShape } from './cells.ts';
 import type { FloodState } from './flood.ts';
 import { exists } from './groups.ts';
@@ -195,9 +195,9 @@ export function heroLayerOf(walkGrid: WalkGrid): number {
  * The cell a hero with TELEPORT swaps into from `cell` along side `side`: the TELEPORT line runs at the cell's z,
  * crosses water and air, wraps with the grid (inside the fast-travel box at map-room z) and ends at the first target.
  * The line steps `stride` cells at a time, the hero's powered move: it tests only the cells at multiples of the stride.
- * -1 when it ends at a solid voxel outside a THROUGH beam, a Tree, Sign, Treasure_Display or Judge, a shut Gate, a
- * frozen cell, a Mirror met on an open side (the line turns there; the turn is not modelled), a Wardrobe door edge, or
- * back at the cell. A Mirror met on its back or a closed side is a target like any other.
+ * -1 when it ends at a solid voxel (none for a hero who stands in a THROUGH beam), a Tree, Sign, Treasure_Display or
+ * Judge (a solid beam stop, which ends it in a THROUGH beam too), a shut Gate, a frozen cell, a Mirror met on an open side (the line turns there; the turn is not modelled), a
+ * Wardrobe door edge, or back at the cell. A Mirror met on its back or a closed side is a target like any other.
  */
 export function swapCell(
     walkGrid: WalkGrid,
@@ -206,13 +206,21 @@ export function swapCell(
     side: number,
     stride: number,
 ): number {
-    const { width, height, marks, cellFlags, mirrorSides, swapTargets } = walkGrid;
+    const { width, height, grid, marks, cellFlags, mirrorSides, swapTargets } = walkGrid;
     const enteredSide = (side + 2) % 4;
+    const throughWalls = (cellFlags[cell] & BEAM) !== 0;
     let previous = cell;
     let next = cellsOnSide(walkGrid, cell, side, stride);
 
     for (let stepsTaken = 0; stepsTaken < width + height && next !== cell; stepsTaken++) {
-        if (blocked(walkGrid, floodState, next)) return -1;
+        if (marks[next] & FROZEN_MARK) return -1;
+
+        if (grid[next] & SOLID) {
+            const standingBlocker = (grid[next] & BEAMSTOP) !== 0;
+            if (!throughWalls || standingBlocker) return -1;
+        } else if (blocked(walkGrid, floodState, next)) {
+            return -1;
+        }
 
         if ((marks[previous] | marks[next]) & WARDROBE_MARK) {
             if (doorOut(walkGrid, previous, side) >= 0 || doorIn(walkGrid, next, side) >= 0) return -1;

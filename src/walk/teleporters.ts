@@ -11,7 +11,7 @@ import { exists } from './groups.ts';
 import { deep, layerOf } from './ocean.ts';
 import { push } from './queue.ts';
 import { ANY_SKILL, LAYER_COUNT, PROTECTED } from './skills.ts';
-import { blocked, land, standable } from './support.ts';
+import { blockedFrom, land, standable } from './support.ts';
 import type { WalkGrid } from './walker.ts';
 
 // the ground layers of the fast-travel map rooms start here; below are the world layers
@@ -115,18 +115,21 @@ export function padCell(walkGrid: WalkGrid, floodState: FloodState, padIndex: nu
 /**
  * The cell a pad sends a hero (walk layer `layer`) to at world point `point` (a Marker) stands in: the first
  * supported cell at or below it inside its ground layer (falls have no limit); -1 inside a wall, in water deeper than
- * 0.1 or in an attacked cell the hero has no PROTECTION for.
+ * 0.1 or in an attacked cell the hero has no PROTECTION for. The hero leaves from `padAt`, the pad's cell, so he
+ * lands in a THROUGH beam's wall cell only from the beam.
  */
-function dropCell(walkGrid: WalkGrid, floodState: FloodState, point: Position, layer: number): number {
+function dropCell(walkGrid: WalkGrid, floodState: FloodState, padAt: number, point: Position, layer: number): number {
     const markerCell = cellOf(walkGrid, ...point);
     if (markerCell < 0) return -1;
 
     const layerCells = walkGrid.layerCells;
     const groundLayer = layerOf(walkGrid, Math.floor(markerCell / layerCells) - Z_BIAS);
+    let from = padAt;
 
     for (let cell = markerCell; cell >= layerCells; cell -= layerCells) {
         if (layerOf(walkGrid, Math.floor(cell / layerCells) - Z_BIAS) !== groundLayer) break;
-        if (blocked(walkGrid, floodState, cell)) return -1;
+        if (blockedFrom(walkGrid, floodState, from, cell)) return -1;
+        from = cell;
 
         if (walkGrid.cellFlags[cell] & FIRE) {
             if (layer === PROTECTED) return cell;
@@ -179,7 +182,7 @@ export function minorLanding(walkGrid: WalkGrid, floodState: FloodState, padInde
     const targetPad = walkGrid.teleporterIndexOf.get(pad.target);
     if (targetPad !== undefined) return padCell(walkGrid, floodState, targetPad);
 
-    if (pad.to) return dropCell(walkGrid, floodState, pad.to, layer);
+    if (pad.to) return dropCell(walkGrid, floodState, walkGrid.geometry.padCells[padIndex], pad.to, layer);
 
     return -1;
 }
