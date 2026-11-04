@@ -288,6 +288,12 @@ const KNOWN_ROUTES: KnownRouteSource[] = [
         note: 'from the corridor north of the pad that pachinko_rescue_w frees, the downward vertical Mirror high above it throws the hero ten cells west, over the chasm_3 room, and he drops into it',
     },
     {
+        id: 'monster_promesst_v3_from_en_root_alt',
+        to: { level: 'thief_dragger_v2' },
+        needs: [[{ level: 'en_root_alt' }], [{ level: 'green_goblins' }], [{ level: 'no_murder_weapon_wizard' }]],
+        note: 'past en_root_alt, the way on reaches the room of thief_dragger_v2, open_monster and monster_promesst_v3',
+    },
+    {
         id: 'druid_multismash_v3_smashed_column',
         to: { level: 'druid_multismash_v3' },
         needs: [[{ rock: 111225816 }], [{ rock: 111225812 }], [{ rock: 111225814 }]],
@@ -325,10 +331,10 @@ const KNOWN_ROUTES: KnownRouteSource[] = [
         note: 'through the cage beam_sisters opens into the goblin_below_intro_same_z room, then south through both Freezers of its doorway, which goblin_below_intro_same_z and thin_ice_rooms open',
     },
     {
-        id: 'first_flight_submarine',
+        id: 'first_flight_sky_drop',
         to: { level: 'first_flight' },
-        needs: [[{ freezer: 90203328 }], [{ freezer: 90203340 }]],
-        note: 'through the Freezer rover_impulse_v2 opens into the submarine pocket, then through the Freezer submarine opens',
+        needs: [[{ freezer: 111163715 }]],
+        note: 'through the Freezer air_skating_v6 opens onto the sky platform, then a drop lands in the corridor of the level',
     },
     {
         id: 'front_side_bus2_rock_bridge',
@@ -340,19 +346,19 @@ const KNOWN_ROUTES: KnownRouteSource[] = [
         id: 'missile_command_rock_bridge',
         to: { level: 'missile_command' },
         needs: [[{ freezer: 90194122 }], [{ freezer: 111267358 }]],
-        note: 'the Rocks in the Freezers bard_movable_island2 opens, with the room\'s own, fill the water east of the floor block west of missile_command, and the hero crosses them',
+        note: "the Rocks in the Freezers bard_movable_island2 opens, with the room's own, fill the water east of the floor block west of missile_command, and the hero crosses them",
+    },
+    {
+        id: 'raft_corners_2_small_lily_crossing',
+        to: { level: 'raft_corners_2_small' },
+        needs: [[{ level: 'raft_corners_alt_3' }]],
+        note: "past raft_corners_alt_3, a Rock and a skipping stone pushed into the water let the hero cross on a Lily, a stone on another Lily shielding it from the Dragon's fire, to the room of raft_corners_2_small and raft_corners_4x4",
     },
     {
         id: 'limited_offsets_surprise_v2_dragons',
         to: { level: 'limited_offsets_surprise_v2' },
         needs: [[{ freezer: 115555628 }], [{ freezer: 115555631 }]],
         note: 'the laser and the Rock in the Freezers limited_offsets opens open the red Gate between the two Dragons, which kill each other and open the monster Gate around the level',
-    },
-    {
-        id: 'orange_predicament_submarine',
-        to: { level: 'orange_predicament' },
-        needs: [[{ freezer: 90203328 }], [{ freezer: 90203340 }]],
-        note: 'through the Freezer rover_impulse_v2 opens into the submarine pocket, then through the Freezer submarine opens',
     },
     {
         id: 'orange_predicament_sky_drop',
