@@ -14,7 +14,7 @@ import type { BridgeWay } from './bridges.ts';
 import { BRIDGE_MARK, cellOf, DRIFT_MARK, neighbourOf, TRAVEL_MARK, WARDROBE_MARK } from './cells.ts';
 import type { GridShape } from './cells.ts';
 import { placeElevators } from './elevator.ts';
-import { flood, NO_TRIGGERS, noFloodState, placeTwins, revealedPadsOf, triggerIndex } from './flood.ts';
+import { flood, NO_TRIGGERS, noFloodState, placeTwins, revealedPadsOf, skillTripsOf, triggerIndex } from './flood.ts';
 import type { FloodOptions, FloodState, Seed, Triggers } from './flood.ts';
 import { freeze, freezeGates, thaw } from './freezers.ts';
 import { placeGates, placeNotPressers } from './gates.ts';
@@ -159,6 +159,8 @@ export interface WalkGrid extends GridShape {
     teleporterIndexOf: Map<number, number>;
     majorPads: number[];
     revealedPads: number[][];
+    // per MAJOR world pad, the world pads a hero holding a skill fast-travels to; none for the other pads
+    skillTrips: Array<Set<number> | undefined>;
     // per Wardrobe cell its [door side, skill]; the attacked cells, and those of them a dragon's fire runs through
     wardrobes: Map<number, [side: number, skill: number]>;
     attacked: Set<number>;
@@ -351,6 +353,7 @@ function newWalkGrid(
         teleporterIndexOf: geometry.teleporterIndexOf,
         majorPads: [],
         revealedPads: [],
+        skillTrips: [],
         wardrobes: new Map(),
         attacked: new Set(),
         burning: new Set(),
@@ -507,6 +510,7 @@ export function buildWalkGrid(
     walkGrid.triggers = triggerIndex(walkGrid);
     placeTwins(walkGrid);
     walkGrid.revealedPads = revealedPadsOf(walkGrid);
+    walkGrid.skillTrips = skillTripsOf(walkGrid);
     placeMechanics(walkGrid);
 
     return walkGrid;

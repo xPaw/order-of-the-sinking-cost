@@ -235,14 +235,16 @@ export type EndingStageName = { area: number } | { level: number } | { tower: nu
  * - tower: the tower is active;
  * - freezers: every one of them is open;
  * - solved: the level is solved;
- * - pads: one of the pads is discovered.
+ * - pads: one of the pads is discovered;
+ * - all: every one of the rules holds.
  */
 export type EndingStageDone =
     | { rule: 'achievement'; name: string }
     | { rule: 'tower'; tower: number }
     | { rule: 'freezers'; freezers: number[] }
     | { rule: 'solved'; level: number }
-    | { rule: 'pads'; pads: number[] };
+    | { rule: 'pads'; pads: number[] }
+    | { rule: 'all'; all: EndingStageDone[] };
 
 /** One stage of an ending; `seen` lists pads (indices into `teleporters`) whose discovery shows the stage by itself. */
 export interface EndingStage {

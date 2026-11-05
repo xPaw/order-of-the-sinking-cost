@@ -15,7 +15,7 @@ import { blockedFrom, land, standable } from './support.ts';
 import type { WalkGrid } from './walker.ts';
 
 // the ground layers of the fast-travel map rooms start here; below are the world layers
-const MAP_ROOM_LAYER = 3;
+export const MAP_ROOM_LAYER = 3;
 
 /** A teleporter's state: enabled, and discovered. */
 export interface TeleporterState {
@@ -191,13 +191,17 @@ export function minorLanding(walkGrid: WalkGrid, floodState: FloodState, padInde
  * A hero (walk layer `layer`) on pad `padIndex`: an enabled pad reaches the pads its discovery reveals, and sends the
  * hero on: a discovered MAJOR pad to every enabled, discovered MAJOR pad, a MINOR pad to its target pad or point. A
  * MINOR pad's trip enables its target pad, which was disabled until then. A pad's trip keeps the hero's walk layer.
+ * A hero holding a skill (a layer but 0) takes a MAJOR pad only to the world pads of its `skillTrips`.
  */
 function usePad(walkGrid: WalkGrid, floodState: FloodState, padIndex: number, layer: number): void {
     const { teleporters, teleporterStates, teleporterIndexOf } = walkGrid;
     if (!padEnabled(walkGrid, floodState, padIndex)) return;
 
+    const skillTrips = layer === 0 ? undefined : walkGrid.skillTrips[padIndex];
+
     if (floodState.reveal) {
         for (const revealed of walkGrid.revealedPads[padIndex]) {
+            if (skillTrips && !skillTrips.has(revealed)) continue;
             push(walkGrid, floodState, padCell(walkGrid, floodState, revealed), layer);
         }
     }
@@ -205,7 +209,18 @@ function usePad(walkGrid: WalkGrid, floodState: FloodState, padIndex: number, la
     const pad = teleporters[padIndex];
 
     if (pad.major) {
-        if (teleporterStates[padIndex].disc && !floodState.majorDone[layer]) {
+        if (!teleporterStates[padIndex].disc) return;
+
+        if (skillTrips) {
+            for (const majorPad of walkGrid.majorPads) {
+                if (skillTrips.has(majorPad))
+                    push(walkGrid, floodState, padCell(walkGrid, floodState, majorPad), layer);
+            }
+
+            return;
+        }
+
+        if (!floodState.majorDone[layer]) {
             floodState.majorDone[layer] = true;
 
             for (const majorPad of walkGrid.majorPads) {

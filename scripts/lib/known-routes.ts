@@ -390,6 +390,54 @@ const KNOWN_ROUTES: KnownRouteSource[] = [
         needs: [[{ freezer: 62971317 }], [{ freezer: 115377426 }], [{ freezer: 46142281 }]],
         note: 'through the Freezers clone_goblin and the_swappers open to fuse, then through the Freezer fuse opens',
     },
+    {
+        id: 'far_wings_river_lily',
+        to: { level: 'far_wings' },
+        needs: [[{ level: 'wrap_music' }]],
+        note: 'the Rock the Freezer wrap_music opens is pushed onto the Activator that respawns the Lily beside the wrapping river; the hero pushes the Lily into the river and rides it',
+    },
+    {
+        id: 'sick_270_small_river_lily',
+        to: { level: 'sick_270_small' },
+        needs: [[{ level: 'wrap_music' }]],
+        note: 'the ride of the Lily on the wrapping river, as for far_wings',
+    },
+    {
+        id: 'infinite_looping_skipper_mirrored_ikaruga_alt_river_lily',
+        to: { level: 'infinite_looping_skipper_mirrored_ikaruga_alt' },
+        needs: [[{ level: 'wrap_music' }]],
+        note: 'the ride of the Lily on the wrapping river, as for far_wings',
+    },
+    {
+        id: 'swapwiz_harder_river_lily',
+        to: { level: 'swapwiz_harder' },
+        needs: [[{ level: 'wrap_music' }]],
+        note: 'the ride of the Lily on the wrapping river, as for far_wings',
+    },
+    {
+        id: 'duality_2_river_lily',
+        to: { level: 'duality_2' },
+        needs: [[{ level: 'wrap_music' }]],
+        note: 'the ride of the Lily on the wrapping river, as for far_wings',
+    },
+    {
+        id: 'simultaneous_x_orange_light',
+        to: { level: 'simultaneous_x' },
+        needs: [[{ level: 'torus_mirrors' }]],
+        note: 'from the pad above the orange light room the hero works the Rock Spawner rocks into the pits and the resets, turns the light with the Torc from the Wardrobe there (not walked) and walks row 77 on to the level; torus_mirrors stands for the walk reaching that pad',
+    },
+    {
+        id: 'simultaneous_x_surprise_orange_light',
+        to: { level: 'simultaneous_x_surprise' },
+        needs: [[{ level: 'torus_mirrors' }]],
+        note: 'the walk of row 77 past the orange light, as for simultaneous_x',
+    },
+    {
+        id: 'all_fast_orange_light',
+        to: { level: '4wcn_all_fast' },
+        needs: [[{ level: 'three_artifacts_v3' }], [{ level: 'magnitudes_v3' }]],
+        note: 'through the orange light above simultaneous_x, which turns once three_artifacts_v3 and magnitudes_v3 are solved (the Torc turn is not walked)',
+    },
 ];
 
 /** What the names and pids of the table resolve against. */

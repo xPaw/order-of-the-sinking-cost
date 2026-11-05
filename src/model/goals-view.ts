@@ -501,7 +501,7 @@ function wayStageGoal(context: GoalsContext, raw: StageGoal): GoalView {
 // a stage that is no tower: named by its area, its level or its sky Way
 function stageGoal(context: GoalsContext, raw: StageGoal): GoalView {
     if (raw.route !== undefined) return wayStageGoal(context, raw);
-    if (raw.area !== undefined) return baseGoal(raw, areaName(PROG.areas[raw.area]), null, 'levels');
+    if (raw.area !== undefined) return baseGoal(raw, areaName(PROG.areas[raw.area]), raw.parts ?? null, 'levels');
     const goal = baseGoal(raw, context.levels[raw.level!].n, null, 'levels');
     goal.level = raw.level;
     return goal;

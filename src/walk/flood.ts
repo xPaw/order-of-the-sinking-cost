@@ -59,7 +59,7 @@ import { skipAndSwap, takeKicks } from './skipping-stones.ts';
 import type { Kick } from './skipping-stones.ts';
 import { blocked, blockedFrom, hopBlocked } from './support.ts';
 import { noteSwap, swapIndex } from './swaps.ts';
-import { padCell, padStep } from './teleporters.ts';
+import { MAP_ROOM_LAYER, padCell, padStep } from './teleporters.ts';
 import { crystalTurnsOf, NO_TRANSMUTE_TARGETS, transmute, transmuteTargetsOf, undoTransmutes } from './transmute.ts';
 import type { TransmuteTargets } from './transmute.ts';
 import type { WalkGrid } from './walker.ts';
@@ -632,6 +632,49 @@ export function revealedPadsOf(walkGrid: WalkGrid): number[][] {
                 linked(walkGrid, padIndex, padTwin, revealedIndex, revealedTwin),
             );
         });
+    });
+}
+
+/**
+ * Per MAJOR world pad, the world pads a hero holding a skill (any walk layer but 0) reaches by fast travel: those with
+ * a twin that a walk on foot from the pad's own twin reaches without a map-room Wardrobe, since entering one through its
+ * door resets the skill. Every other pad has none. Pads whose twins share a cell share one walk.
+ */
+export function skillTripsOf(walkGrid: WalkGrid): Array<Set<number> | undefined> {
+    const { teleporters, teleporterIndexOf, twinsOf } = walkGrid;
+
+    const mapRoomStart = (walkGrid.boxZ + Z_BIAS) * walkGrid.layerCells;
+    const wardrobeCells = new Set<number>();
+    for (const cell of walkGrid.wardrobes.keys()) {
+        if (cell >= mapRoomStart) wardrobeCells.add(cell);
+    }
+
+    const tripsFrom = new Map<number, Set<number>>();
+
+    return teleporters.map((pad) => {
+        if (!pad.major || pad.l >= MAP_ROOM_LAYER) return undefined;
+
+        const padTwin = teleporterIndexOf.get(pad.target);
+        if (padTwin === undefined) return undefined;
+
+        const twinCell = padCell(walkGrid, walkGrid.noFlood, padTwin);
+        if (twinCell < 0) return new Set<number>();
+
+        const known = tripsFrom.get(twinCell);
+        if (known) return known;
+
+        const groups = [pad.g, pad.ag, teleporters[padTwin].g, teleporters[padTwin].ag];
+        const options = { reveal: false, travel: false };
+        const reached = withGroups(walkGrid, groups, () => flood(walkGrid, [twinCell], wardrobeCells, null, options));
+
+        const trips = new Set<number>();
+        for (const [worldPad, twins] of twinsOf) {
+            const arrives = twins.some((twin) => reached.has(padCell(walkGrid, walkGrid.noFlood, twin)));
+            if (arrives) trips.add(worldPad);
+        }
+
+        tripsFrom.set(twinCell, trips);
+        return trips;
     });
 }
 

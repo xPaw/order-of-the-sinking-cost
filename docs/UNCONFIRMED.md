@@ -41,5 +41,5 @@ Puzzle-only open items. The viewer's walk does not use these mechanics.
 - The weight crush: the turn's fall list after a crush also skips entities with one more runtime flag, whose name is not known ([Pushing and pulling](MOVEMENT.md#pushing-and-pulling)).
 - The soft Door break has a third source not identified ([Promesst beams and powers](MOVEMENT.md#promesst-beams-and-powers)).
 - Whether a second SMASH move on one Rock in a charm move changes the outcome was not traced ([CHARM](SKILLS.md#charm)).
-- The Torc's exact rule was not traced ([TRANSMUTE and the other skills](SKILLS.md#transmute-and-the-other-skills)).
+- Torc ([TRANSMUTE and the other skills](SKILLS.md#transmute-and-the-other-skills)): whether a vertical (`vertical_up`/`vertical_down`) light stays vertical after a turn, and whether an Activator or Spawner reset restores a turned light's facing.
 - Whether a Tree made from a crystal gets a fall check was not traced ([TRANSMUTE and the other skills](SKILLS.md#transmute-and-the-other-skills)).

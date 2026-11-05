@@ -119,9 +119,9 @@ After the four sides:
 11. Travel from k (skipped by walks "on foot"):
    - an elevator frame cell reaches the far frame cell if it is not blocked (per `world.elevators` mask: bit 1 bottom → top, bit 2 top → bottom). The mask is the one for the Rocks still resting on the platform: those of the stack that exist in their level-data column, none, one or two or more; a Rock the save destroyed or moved off no longer counts, while one that fell when a Rock below it was smashed still does;
    - a pad in k or the cell below, enabled: a MINOR pad reaches its target pad's landing cell, or for a Marker target (`to`) a search down from the Marker's cell inside its ground layer (no fall cap): a blocked cell, a THRU cell entered from a cell that is not a BEAM cell (the pad's cell first) or water deeper than 0.1 ends it with no landing; an attacked cell ends it, with the hero standing there in layer 1 (support not needed) and nowhere in layer 0; else the first open cell. A trip enables the target pad for the rest of the flood, as discovering the sending pad does in the game ([Teleporter pads and fast travel](MOVEMENT.md#teleporter-pads-and-fast-travel)): a MINOR pad that the save leaves disabled sends the hero on once a trip has brought him to it, and a hero already standing on it from earlier in the flood takes it then. A target held by a closed Freezer stays disabled, since the hero stays on his pad;
-   - a discovered, enabled, existing MAJOR pad reaches every other such MAJOR pad (once per layer);
-   - an enabled MAJOR pad also reaches the world pads its discovery reveals ([Pads revealed through the map rooms](#pads-revealed-through-the-map-rooms)).
-   Every pad's trip keeps the layer, fast travel included ([Wardrobes](SKILLS.md#wardrobes)). A pad frozen in a closed Freezer leads nowhere while the Freezer stays closed: a hero on the Freezer's top doesn't take it, and a pad that sends the hero to it (a MINOR pad's target, a MAJOR pad, a reveal) leaves him where he is, since a target cell holding a frozen Freezer keeps him on his pad ([Teleporter pads and fast travel](MOVEMENT.md#teleporter-pads-and-fast-travel)). A discovered pad in a closed Freezer seeds no walk ([Seeds and the reached cells](#seeds-and-the-reached-cells)).
+   - a discovered, enabled, existing MAJOR pad reaches every other such MAJOR pad (once per layer in layer 0). A hero in another layer reaches only the pads with a twin that a walk on foot from the source pad's twin joins without a map-room Wardrobe, since entering a Wardrobe through its door resets the skill ([Wardrobes](SKILLS.md#wardrobes));
+   - an enabled MAJOR pad also reaches the world pads its discovery reveals ([Pads revealed through the map rooms](#pads-revealed-through-the-map-rooms)), a hero in another layer only those the same walk joins.
+   Every pad's trip keeps the layer ([Wardrobes](SKILLS.md#wardrobes)). A pad frozen in a closed Freezer leads nowhere while the Freezer stays closed: a hero on the Freezer's top doesn't take it, and a pad that sends the hero to it (a MINOR pad's target, a MAJOR pad, a reveal) leaves him where he is, since a target cell holding a frozen Freezer keeps him on his pad ([Teleporter pads and fast travel](MOVEMENT.md#teleporter-pads-and-fast-travel)). A discovered pad in a closed Freezer seeds no walk ([Seeds and the reached cells](#seeds-and-the-reached-cells)).
 
 Rock bridges (`world.bridges`, rows of [rock or Gem, push cell, water cell]): a non-SKIPPABLE Rock or a spare Gem on
 support, still at its level-data cell, that the hero pushes in a straight line from a standable push cell over
@@ -1071,7 +1071,7 @@ fog; `goalsView()` adds the labels, counts and lists with fog applied.
   `ending_stages`, [data/progress.json](DATAFILES.md#dataprogressjson)). A stage has a name (an area, a level, a
   tower or a sky Way, named as the page names them), a done rule and, for a stage whose area the game may leave
   unnamed, the pads whose discovery shows it. The rules: an achievement earned; a tower active; Freezers open; a
-  level solved; one of some pads discovered. A stage asks for what its rule does (the tower, the Freezers still
+  level solved; one of some pads discovered; all of several rules, the stage counting those done. A stage asks for what its rule does (the tower, the Freezers still
   closed, the level, the rank marker; a pads rule asks for nothing), so a tower stage's plan is the tower's levels and
   a Way stage's plan runs from the Way's entry levels through the Way and the hub Sign to the hub Freezer ([The
   requirement graph](#the-requirement-graph)). A done stage stays listed with its done mark and the first one not
@@ -1085,11 +1085,9 @@ fog; `goalsView()` adds the labels, counts and lists with fog applied.
   - Endgame Low, in this order: the underworld crossroads (DESCEND earned); the six Low towers in their achievements'
     order (tower active), each an achievement of its own, and an active one's pad the way into the underworld hub;
     the underworld hub (its MAJOR pad
-    discovered; shown also then); the eight end3 rooms of the set in their order, named by their first levels in the
-    set (`allocate_heroes_end3`, `design_corner`, `river_exploit_v2`, `simplify_wizard`, `end2_mirror1`,
-    `end3_off_topic_alt`, `environment_art_grid`, `end3_pipeline_setup`), each done when its exit Freezer is open
-    (the pipeline room's five Freezers; the environment art room when `environment_art_objects` is solved);
-    `end3_pipeline_aesthetics` (solved). The rooms have no name in the game, so a level names each
+    discovered; shown also then); Exit Low, one stage for the eight end3 rooms of the set, counted "n / 8", whose list
+    holds the rooms' levels and done when every room is (its exit Freezer open; the pipeline room's five Freezers; the
+    environment art room when `environment_art_objects` is solved); `end3_pipeline_aesthetics` (solved)
     ([Final Endgame](PROGRESSION.md#final-endgame)).
   - Endgame keeps its children from the Antipode teleporters: any four of the six ground towers do, so there is no
     order to list, and the plan decides which come first.
@@ -1097,7 +1095,7 @@ fog; `goalsView()` adds the labels, counts and lists with fog applied.
   A stage with an area is listed once the area is named (or a `seen` pad is discovered), a stage with a level once
   the level is not under fog, a tower once it is not hidden ([The spoiler model (viewer)](#the-spoiler-model-viewer));
   `fogged` says one is left out. An ending keeps its plan steps as its progress, and a stage carries no count of its
-  own.
+  own but the parts of an all-rule stage.
 - Labels: an ending by its name, a tower by its tower name, an achievement and Completionist by the achievement's
   name ([The page's words](#the-pages-words)). With spoilers hidden an ending is listed only once every ending before
   it is earned ([The spoiler model (viewer)](#the-spoiler-model-viewer)).

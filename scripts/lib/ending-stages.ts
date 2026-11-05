@@ -22,12 +22,13 @@ type DoneSource =
     | { rule: 'tower'; tower: string[] }
     | { rule: 'freezers'; freezers: number[] }
     | { rule: 'solved'; level: string }
-    | { rule: 'pads'; pads: number[] };
+    | { rule: 'pads'; pads: number[] }
+    | { rule: 'all'; all: DoneSource[] };
 
 /**
  * One stage. `name`: the area, level, tower (by its flag names) or sky Way (by its known route's id) it is named after.
- * `done`: when it counts as done: an achievement earned, a tower active, Freezers (by pid) open, a level solved, or pads
- * (by pid) discovered. `seen`: pads (by pid) whose discovery shows the stage even while the game has not named its area.
+ * `done`: when it counts as done: an achievement earned, a tower active, Freezers (by pid) open, a level solved, pads
+ * (by pid) discovered, or every one of several rules. `seen`: pads (by pid) whose discovery shows the stage even while the game has not named its area.
  */
 interface StageSource {
     name: NameSource;
@@ -139,40 +140,21 @@ const ENDING_SOURCES: EndingSource[] = [
                 done: { rule: 'pads', pads: [LOW_HUB_MAJOR_PAD] },
                 seen: [LOW_HUB_MAJOR_PAD],
             },
-            // the rooms, named after their first level in the set and done once their exit Freezers open
+            // the eight rooms of the set in Exit Low, done once their exit Freezers are open
             {
-                name: { level: 'allocate_heroes_end3' },
-                done: { rule: 'freezers', freezers: [115521060] },
-            },
-            {
-                name: { level: 'design_corner' },
-                done: { rule: 'freezers', freezers: [115520681] },
-            },
-            {
-                name: { level: 'river_exploit_v2' },
-                done: { rule: 'freezers', freezers: [115412927] },
-            },
-            {
-                name: { level: 'simplify_wizard' },
-                done: { rule: 'freezers', freezers: [115520798] },
-            },
-            {
-                name: { level: 'end2_mirror1' },
-                done: { rule: 'freezers', freezers: [115520818] },
-            },
-            {
-                name: { level: 'end3_off_topic_alt' },
-                done: { rule: 'freezers', freezers: [115520928] },
-            },
-            {
-                name: { level: 'environment_art_grid' },
-                done: { rule: 'solved', level: 'environment_art_objects' },
-            },
-            {
-                name: { level: 'end3_pipeline_setup' },
+                name: { area: 'area_u_exit_low' },
                 done: {
-                    rule: 'freezers',
-                    freezers: [115589257, 115589258, 115589259, 115589260, 115589263],
+                    rule: 'all',
+                    all: [
+                        { rule: 'freezers', freezers: [115521060] },
+                        { rule: 'freezers', freezers: [115520681] },
+                        { rule: 'freezers', freezers: [115412927] },
+                        { rule: 'freezers', freezers: [115520798] },
+                        { rule: 'freezers', freezers: [115520818] },
+                        { rule: 'freezers', freezers: [115520928] },
+                        { rule: 'solved', level: 'environment_art_objects' },
+                        { rule: 'freezers', freezers: [115589257, 115589258, 115589259, 115589260, 115589263] },
+                    ],
                 },
             },
             {
@@ -264,6 +246,7 @@ function resolveDone(data: EndingStageData, source: DoneSource): EndingStageDone
         return { rule: 'freezers', freezers: source.freezers.map((pid) => freezerIndex(data, pid)) };
     }
     if (source.rule === 'solved') return { rule: 'solved', level: levelIndex(data, source.level) };
+    if (source.rule === 'all') return { rule: 'all', all: source.all.map((part) => resolveDone(data, part)) };
     return { rule: 'pads', pads: source.pads.map((pid) => padIndex(data, pid)) };
 }
 

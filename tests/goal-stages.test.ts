@@ -42,6 +42,7 @@ const ROOM_B_LAST = 6;
 const FINAL_LOW = 7;
 const FIRST_WAY_AREA = 4;
 const SECOND_WAY_AREA = 5;
+const EXIT_AREA = 6;
 
 const ENDING_STAGES: EndingStages[] = [
     {
@@ -60,8 +61,17 @@ const ENDING_STAGES: EndingStages[] = [
         stages: [
             { name: { area: 2 }, done: { rule: 'achievement', name: 'DESCEND' }, seen: [] },
             { name: { area: 3 }, done: { rule: 'pads', pads: [0] }, seen: [0] },
-            { name: { level: ROOM_A }, done: { rule: 'freezers', freezers: [2] }, seen: [] },
-            { name: { level: ROOM_B_FIRST }, done: { rule: 'solved', level: ROOM_B_LAST }, seen: [] },
+            {
+                name: { area: EXIT_AREA },
+                done: {
+                    rule: 'all',
+                    all: [
+                        { rule: 'freezers', freezers: [2] },
+                        { rule: 'solved', level: ROOM_B_LAST },
+                    ],
+                },
+                seen: [],
+            },
             { name: { level: FINAL_LOW }, done: { rule: 'solved', level: FINAL_LOW }, seen: [] },
         ],
     },
@@ -116,6 +126,7 @@ function setup({
             { local_area_name: 'area_u_antipode_low', display: 'Antipode Low', pin: 4 },
             { local_area_name: 'area_s_first_way', display: 'The First Way', pin: 5 },
             { local_area_name: 'area_s_second_way', display: 'The Second Way', pin: 6 },
+            { local_area_name: 'area_u_exit_low', display: 'Exit Low', pin: 7 },
         ],
         teleporters: [pad({ pid: 1, major: 1 })],
         gold_rooms: [],
@@ -308,55 +319,62 @@ describe('the second ending as stages', () => {
 });
 
 describe('the third ending as stages', () => {
+    const exitStage = (goals: GoalsView) => endingOf(goals, 'ENDGAME3').children![2];
+
     test('the children are the stages in order, each with its own done mark', () => {
         const goals = view(setup({ descended: true, padFound: true, roomOpen: true }));
-        expect(labels(goals, 'ENDGAME3')).toEqual([
-            'Crossroads Low',
-            'Antipode Low',
-            'room_a',
-            'room_b_first',
-            'final_low',
-        ]);
-        expect(dones(goals, 'ENDGAME3')).toEqual([true, true, true, false, false]);
-        expect(activeLabels(goals, 'ENDGAME3')).toEqual(['room_b_first']);
+        expect(labels(goals, 'ENDGAME3')).toEqual(['Crossroads Low', 'Antipode Low', 'Exit Low', 'final_low']);
+        expect(dones(goals, 'ENDGAME3')).toEqual([true, true, false, false]);
+        expect(activeLabels(goals, 'ENDGAME3')).toEqual(['Exit Low']);
     });
 
-    test('a room is done by its exit Freezer, the next by the level that ends it', () => {
+    test('the rooms stage is done when all its parts are, and counts them', () => {
         const none = view(setup({ descended: true, padFound: true, solved: [ROOM_B_FIRST] }));
-        expect(dones(none, 'ENDGAME3')).toEqual([true, true, false, false, false]);
-        expect(activeLabels(none, 'ENDGAME3')).toEqual(['room_a']);
+        expect(dones(none, 'ENDGAME3')).toEqual([true, true, false, false]);
+        expect(exitStage(none).progress).toEqual([0, 2]);
 
-        const last = view(setup({ descended: true, padFound: true, roomOpen: true, solved: [ROOM_B_LAST] }));
-        expect(dones(last, 'ENDGAME3')).toEqual([true, true, true, true, false]);
-        expect(activeLabels(last, 'ENDGAME3')).toEqual(['final_low']);
+        const half = view(setup({ descended: true, padFound: true, roomOpen: true }));
+        expect(exitStage(half).progress).toEqual([1, 2]);
+
+        const all = view(setup({ descended: true, padFound: true, roomOpen: true, solved: [ROOM_B_LAST] }));
+        expect(dones(all, 'ENDGAME3')).toEqual([true, true, true, false]);
+        expect(exitStage(all).progress).toEqual([2, 2]);
+        expect(activeLabels(all, 'ENDGAME3')).toEqual(['final_low']);
     });
 
     test('the underworld hub is done when its pad is discovered', () => {
         const before = view(setup({ descended: true }));
-        expect(dones(before, 'ENDGAME3')).toEqual([true, false, false, false, false]);
+        expect(dones(before, 'ENDGAME3')).toEqual([true, false, false, false]);
         expect(activeLabels(before, 'ENDGAME3')).toEqual(['Antipode Low']);
     });
 
-    test('a room asks for its exit Freezer and the pad for nothing', () => {
+    test('the rooms stage asks for the exit Freezers and levels not done, the pad for nothing', () => {
         const { progress } = setup();
         const ending = progress.goals[2];
         if (ending.kind !== 'ending') throw new Error('not an ending');
 
         const targets = ending.children!.map((child) => child.targets.map((id) => progress.plans.G.keys[id]));
         expect(targets[1]).toEqual([]);
-        expect(targets[2]).toEqual(['g2']);
-        expect(targets[3]).toEqual(['l' + ROOM_B_LAST]);
+        expect(targets[2]).toEqual(['g2', 'l' + ROOM_B_LAST]);
+    });
+
+    test("the rooms stage lists the levels of every room's plan", () => {
+        const goals = view(setup({ descended: true, padFound: true }));
+        const stage = exitStage(goals);
+        const listed = goals.goalLevels(stage).map((entry) => entry.i);
+        expect(listed).toContain(ROOM_A);
+        expect(listed).toContain(ROOM_B_LAST);
     });
 
     test('nothing under fog is named, and the ending says more is under fog', () => {
-        const fogged = view(setup(), { areaShown: false, hiddenLevels: [ROOM_A, FINAL_LOW] });
-        expect(labels(fogged, 'ENDGAME3')).toEqual(['room_b_first']);
+        const fogged = view(setup(), { namedAreas: [EXIT_AREA], hiddenLevels: [FINAL_LOW] });
+        expect(labels(fogged, 'ENDGAME3')).toEqual(['Exit Low']);
         expect(endingOf(fogged, 'ENDGAME3').fogged).toBe(true);
     });
 
     test('a pad found shows the underworld hub although its area is not named', () => {
-        const found = view(setup({ padFound: true }), { areaShown: false, hiddenLevels: [ROOM_A, FINAL_LOW] });
-        expect(labels(found, 'ENDGAME3')).toEqual(['Antipode Low', 'room_b_first']);
+        const found = view(setup({ padFound: true }), { areaShown: false, hiddenLevels: [FINAL_LOW] });
+        expect(labels(found, 'ENDGAME3')).toEqual(['Antipode Low']);
         expect(endingOf(found, 'ENDGAME3').fogged).toBe(true);
     });
 

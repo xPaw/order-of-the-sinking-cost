@@ -31,6 +31,7 @@ export interface EndingGoal extends GoalCore {
 /**
  * A stage of an ending that is no tower, named by an area (`area`), a level (`level`) or a sky Way (`route`, an index
  * into `known_routes`); `seen` lists the pads (indices into `teleporters`) whose discovery shows the stage by itself.
+ * `parts` counts the done ones of the rules a stage done by several holds.
  */
 export interface StageGoal extends GoalCore {
     kind: 'stage';
@@ -38,6 +39,7 @@ export interface StageGoal extends GoalCore {
     level?: number;
     route?: number;
     seen: number[];
+    parts?: [number, number] | undefined;
 }
 
 export interface TowerGoal extends GoalCore {
@@ -89,6 +91,7 @@ function stageDone(progress: BaseProgress, status: { achievements: bigint }, don
     if (done.rule === 'tower') return progress.towers[done.tower].active;
     if (done.rule === 'freezers') return allOpen(progress, done.freezers);
     if (done.rule === 'solved') return progress.state[done.level] === 'solved';
+    if (done.rule === 'all') return done.all.every((part) => stageDone(progress, status, part));
     return done.pads.some((pad) => progress.tst[pad].disc);
 }
 
@@ -98,7 +101,20 @@ function stageTargetKeys(progress: BaseProgress, done: EndingStageDone): string[
     if (done.rule === 'tower') return ['t' + done.tower];
     if (done.rule === 'freezers') return closedKeys(progress, done.freezers);
     if (done.rule === 'solved') return ['l' + done.level];
+    if (done.rule === 'all') return done.all.flatMap((part) => stageTargetKeys(progress, part));
     return [];
+}
+
+// the parts of a stage and how many are done, for a stage done by several rules
+function stageParts(
+    progress: BaseProgress,
+    status: { achievements: bigint },
+    done: EndingStageDone,
+): [number, number] | undefined {
+    if (done.rule !== 'all') return undefined;
+
+    const finished = done.all.filter((part) => stageDone(progress, status, part));
+    return [finished.length, done.all.length];
 }
 
 // marks the first goal of a list not done as the active one
@@ -193,13 +209,15 @@ export function goalLadder(progress: BaseProgress & { plans: Plans }, status: { 
             }
 
             const key = `stage:${ending.name}:${position}`;
+            const { seen } = stage;
+            const parts = stageParts(progress, status, stage.done);
             if ('area' in stage.name) {
-                return goal({ key, kind: 'stage', area: stage.name.area, seen: stage.seen, done }, targetKeys);
+                return goal({ key, kind: 'stage', area: stage.name.area, seen, parts, done }, targetKeys);
             }
             if ('route' in stage.name) {
-                return goal({ key, kind: 'stage', route: stage.name.route, seen: stage.seen, done }, targetKeys);
+                return goal({ key, kind: 'stage', route: stage.name.route, seen, parts, done }, targetKeys);
             }
-            return goal({ key, kind: 'stage', level: stage.name.level, seen: stage.seen, done }, targetKeys);
+            return goal({ key, kind: 'stage', level: stage.name.level, seen, parts, done }, targetKeys);
         });
     });
     const stages = stageLists.flat();
