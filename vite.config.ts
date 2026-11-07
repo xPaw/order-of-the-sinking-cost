@@ -94,6 +94,20 @@ function scriptMap(): Plugin {
     };
 }
 
+// /levels/ is a static page of every level by area, built from the level data; an empty list fails the build
+function levelsPage(): Plugin {
+    return {
+        name: 'soko:levels-page',
+        apply: 'build',
+        async generateBundle() {
+            const { levelSections, levelsPageHtml } = await import('./scripts/lib/levels-page.ts');
+            const sections = levelSections();
+            if (sections.length === 0) this.error('no levels for the levels page: run npm run data');
+            this.emitFile({ type: 'asset', fileName: 'levels/index.html', source: levelsPageHtml(sections) });
+        },
+    };
+}
+
 // Every file in assets/ has the hash of its content in its name, so it can be cached for good (public/_headers); the
 // page's styles are one file, named like the script
 function assetFileName(asset: { names?: string[]; name?: string }): string {
@@ -106,7 +120,7 @@ export default defineConfig({
     root: resolve(ROOT, 'src'),
     base: './',
     publicDir: resolve(ROOT, 'public'),
-    plugins: [saves(), schemaForPage(), scriptMap()],
+    plugins: [saves(), schemaForPage(), scriptMap(), levelsPage()],
     json: { namedExports: false, stringify: true },
     server: { host: '127.0.0.1', port: 8765, strictPort: true },
     build: {

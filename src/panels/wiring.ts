@@ -8,7 +8,7 @@ import type { PanelKey, PanelKind } from '../shared.ts';
 import { overlayOn } from '../map/map-html.ts';
 import type { SelectHow } from '../map/map-view.ts';
 import { mapLayerOf } from '../model/layers.ts';
-import { syncSide } from '../sidebar.ts';
+import { revealLevel, syncSide } from '../sidebar.ts';
 import { findListShown } from '../sidebar/find.ts';
 import type { PanelContext } from './context.ts';
 import { cageItemOf, findItemOf } from './find-list.ts';
@@ -309,7 +309,8 @@ function panelValid(context: PanelContext, [kind, id]: PanelKey): boolean {
     return context.model.signSet.has(id);
 }
 
-// the target of the address, when it names something that exists and is not under fog
+// the target of the address, when it names something that exists and is not under fog; the example game opens whatever
+// a link names, as the visitor already knows its name
 function addressTarget(context: PanelContext): PanelKey | null {
     let found: RegExpExecArray | null = null;
 
@@ -329,14 +330,15 @@ function addressTarget(context: PanelContext): PanelKey | null {
         sign: context.signs.length,
     };
 
-    if (id >= 0 && id < counts[kind] && panelValid(context, [kind, id])) return [kind, id];
+    if (id < 0 || id >= counts[kind]) return null;
+    if (context.model.demo || panelValid(context, [kind, id])) return [kind, id];
     return null;
 }
 
 // opens the panel the address names; an address naming nothing closes the open one
 function fromAddress(context: PanelContext): void {
     const map = context.map;
-    if (!map || context.model.demo) return;
+    if (!map) return;
 
     const target = addressTarget(context);
     if (!target) {
@@ -348,7 +350,10 @@ function fromAddress(context: PanelContext): void {
     if (current?.[0] === target[0] && current[1] === target[1]) return;
 
     const [kind, id] = target;
-    if (kind === 'level') showLevelRow(context, id);
+    if (kind === 'level') {
+        revealLevel(id);
+        showLevelRow(context, id);
+    }
 
     const openers = { level: map.onPick, tower: map.onTower, gate: map.onGate, sign: map.onSign };
     openers[kind]?.(id);
@@ -373,7 +378,7 @@ export function openKeptPanel(context: PanelContext): void {
         return;
     }
 
-    if (!map || context.model.demo) return;
+    if (!map) return;
 
     if (hashDone) {
         setHash('');

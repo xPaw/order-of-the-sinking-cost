@@ -27,7 +27,7 @@ else `%USERPROFILE%\Saved Games\Order of the Sinking Star` on Windows, or that f
 | 6 | `build-map.ts` | `data/levels.json`, game `data/levels.package` | `data/map.json` | `npm run data:map` |
 | 7 | `build-progress.ts` | `data/levels.json`, `data/level_areas.json`, `data/fog.json`, `data/map.json`, `data/world.json`, game `data/levels.package` | `data/progress.json` | `npm run data:progress` |
 | 8 | `build-walk.ts` | `data/progress.json` (hashes `data/world.json` too) | `data/walk.json` | `npm run data:walk` |
-| 9 | `vite.config.ts` | `src/`, `public/_headers`, `data/schema.json`, `data/progress.json`, `data/walk.json` | `dist/index.html`, `dist/_headers`, `dist/assets/` | `npm run build` |
+| 9 | `vite.config.ts` | `src/`, `public/`, `data/schema.json`, `data/progress.json`, `data/walk.json` | `dist/index.html`, `dist/levels/index.html` (every level by area, as plain HTML), `dist/_headers`, `dist/robots.txt`, `dist/sitemap.xml`, `dist/assets/` | `npm run build` |
 
 `build-icons.ts` stands alone, like the map images: `npm run icons` renders the marker icons from the game's 3D models
 into `src/assets/icons/` (committed, not part of `npm run data`). It reads the game's render assets, the overworld
