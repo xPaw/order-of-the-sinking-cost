@@ -617,19 +617,16 @@ function main(): void {
     }
     pkg.close();
     const worldText = readTextIfPresent(paths.data('world.json'));
-    const rockPids = new Set<number>();
     if (worldText !== null) {
         const world: WorldFile = JSON.parse(worldText);
         for (const room of world.gold_rooms) room.tower = towers.findIndex((tower) => tower.pid === room.tower);
         addTowerPads(overworld, towers, world.teleporters);
-        for (const rock of world.world.rocks) rockPids.add(rock[0]);
         Object.assign(out, world);
     }
     if (out.areas && out.teleporters) {
         // the hand-written table (scripts/lib/level-table.ts): sets the needs of `levels` and returns the pad routes
         out.pad_routes = resolveLevelTable({
             levels,
-            freezers,
             signs: signRows,
             areas: out.areas,
             teleporters: out.teleporters,
@@ -640,7 +637,6 @@ function main(): void {
                 return found;
             },
             positionOf: (pid) => entityPosition(overworld, pid),
-            isRock: (pid) => rockPids.has(pid),
         });
     }
     out.ending_stages = buildEndingStages(out, FLAG_BITS);

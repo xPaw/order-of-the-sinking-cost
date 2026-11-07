@@ -633,13 +633,13 @@ A level with needs in the data is reached exactly when they hold, or the save en
 - Doorways (`chains`): a closed Freezer a pocket bumps into that opens onto nothing but more closed Freezers leads in only with one of those open too. A Freezer is a doorway for a pocket when it is not on the edge of the reached cells, no pocket holding a level outside this one bumps into it, and the walk from its cell with it open, the pocket's cells counted as reached, holds no level and bumps into closed Freezers the pocket does not. Each of those Freezers gives one way through: the doorway and that Freezer, both needed. The walk from all of a pocket's candidates at once comes first; only when it bumps into a new Freezer is each candidate walked alone. A level whose pockets bump into a Freezer as a doorway in every one of them takes the ways through of all of them; one that any of its pockets bumps into plainly leads in alone.
 - `from`: for a level a closed gate needs, the levels behind that gate a walk from the level reaches.
 - `mech`: per pocket, the mechanics the walk leaves out (world.mechs: 0 dragon, 1 beam, 2 mirror, 3 skipping stone), marked in the 3 × 3 × 3 cells around each existing one (a Mirror or MIRRORABLE Rock at its latest cell, a smashed or destroyed one not at all; a stone at its latest cell unless it sank: FLIPPING_TARGET or under the surface; beams: lit cells; dragons: fire cells). A pocket has one when a marked cell is in it or next to one of its cells.
-- Why (per blocked level): its gates (those that lead in, without the ones `inner()` rules out), the gates leading only to a revealing pad (`pad`), the levels by such a pad (`via`), the inactive Towers whose pad leads in (`viaTowers`), and the mechanics. A level with no gate and no mechanic has "no known route", even when it carries an access mark (below). The page reads "from High" instead when the level has no access mark and the level data enters it from the sky (`from`, [Level needs and pad routes](#level-needs-and-pad-routes)), once fog shows the sky; under fog it reads as for a hidden layer ([The spoiler model (viewer)](#the-spoiler-model-viewer)). With no way in from the sky either, a level whose pocket bumps only into closed gates that it unlocks itself, all shown, reads "only behind a cage it unlocks" (or "cages", "gates"): `inner()` rules those out as ways in.
+- Why (per blocked level): its gates (those that lead in, without the ones `inner()` rules out), the gates leading only to a revealing pad (`pad`), the levels by such a pad (`via`), the inactive Towers whose pad leads in (`viaTowers`), and the mechanics. A level with no gate and no mechanic has "no known route", even when it carries an access mark (below). The page reads "from High" instead when the level has no access mark and the level data enters it from the sky (`drop`, [Level needs and pad routes](#level-needs-and-pad-routes)), once fog shows the sky; under fog it reads as for a hidden layer ([The spoiler model (viewer)](#the-spoiler-model-viewer)). With no way in from the sky either, a level whose pocket bumps only into closed gates that it unlocks itself, all shown, reads "only behind a cage it unlocks" (or "cages", "gates"): `inner()` rules those out as ways in.
 - `inner(gate, level)`: a closed gate is no way in when what it still needs is the level itself, levels from which the walk reaches the level without it, or levels whose own requirements need the level. For an OR gate with more than one option: every remaining option is such a level, and it has no Sign.
 - Levels whose requirements need level L (`levelsNeedingLevel`): walking back along `unlocked_by`, every unsolved level still waiting on its requirements (not enabled in the level data, and for an OR level no option solved) that requires L or such a level. An AND level needs L through any one requirement; an OR level with more than one option only once every option is L or such a level. A gate that waits on them waits on L: a requirement cycle, no way in.
 - Way in (`P.wayIn`): per blocked level, its why-gates; when no gate leads in, the closed gates it sits behind in the static roles ([Level roles (viewer)](#level-roles-viewer)), minus the `inner` ones. When that leaves none, a gate that `inner` ruled out only because it waits on a level the walk reaches the level from stays a way in if that level has a way in of its own (a why-gate that is no gate the level sits behind): the walk leads on from that level to this one. Gates that wait on the level itself, on levels that need it, or on levels with no way in of their own stay ruled out. A doorway keeps the ways through it whose Freezer beyond it `inner` does not rule out (`P.wayInChains`), and is no way in once it has none. In the endgame areas the level data's table stands in for these or fills in where there are none ([Endgame way-in gates](#endgame-way-in-gates)). Last, the gates behind themselves are dropped ([Next steps](#next-steps)).
 - A pocket flood never walks a fall backwards: a pocket that the hero enters only by falling into it from outside gets no way in from that fall.
 - The pocket floods, of a level and of a revealing pad, take no step onto a closed Freezer's top from the side, which would walk the hero across the Freezer as if it were floor and so leave it no gate between the two halves. A fall does land on a top: the hero drops from the pocket onto it and off it again, and what he reaches that way (a strip below a row of Freezers, say) belongs to the pocket, so the Freezers on its edge are ways in. The walk does not check that the way past the top leads back to the pocket. The other floods walk the tops ([Support and open cells](#support-and-open-cells)).
-- Access (`P.access`): a blocked level on a layer where the walk reaches no cell at all (the sky or the underworld) is marked with that layer. A blocked level the level data enters from the sky (`from`, [Level needs and pad routes](#level-needs-and-pad-routes)) is marked with the sky while the walk reaches no sky cell, so its plan waits on the way onto the sky ([The requirement graph](#the-requirement-graph)).
+- Access (`P.access`): a blocked level on a layer where the walk reaches no cell at all (the sky or the underworld) is marked with that layer. A blocked level the level data enters from the sky (`drop`, [Level needs and pad routes](#level-needs-and-pad-routes)) is marked with the sky while the walk reaches no sky cell, so its plan waits on the way onto the sky ([The requirement graph](#the-requirement-graph)).
 
 ### What the walk leaves out
 
@@ -894,7 +894,7 @@ known sky Ways (w).
 - Way (w), a sky Way, a pad route with an area ([Level needs and pad routes](#level-needs-and-pad-routes)): met once its tower's hub quarter is
   reached, that is when the tower's hub Sign is read (`P.signRead`) or faced by the walk (`reach.signFaced`), or the
   tower's hub pad (`teleporter_id`, a MAJOR pad) is discovered. Else a step that needs what its route needs: all of the
-  groups, an OR of the needs inside a group of more than one; a need already met (a level solved, a Freezer open, a Sign
+  groups, an OR of the needs inside a group of more than one; a need already met (a level solved, a Sign
   read) asks for nothing. A Way whose route needs nothing known is a bare step.
 - Freezer, open: met. Closed: its unmet levels and signs, all of them, or for an OR gate of more than one the
   cheapest. An OR gate with one of them met is a step with no parts: it opens at the next overworld load.
@@ -959,15 +959,14 @@ The walk keeps handling ordinary movement; the table carries the hero across str
 past a level or pad it lands on works as usual. Both are in `data/progress.json` ([data/progress.json](DATAFILES.md#dataprogressjson)):
 the needs and the sky entry on each level, and `pad_routes`.
 
-Needs are all of the groups, one need of a group. A need is a level solved, a Freezer open, a Sign read or a Rock
-smashed (the save has destroyed it). A group with no need is one nobody knows yet; nothing meets it. No group needs
-nothing. A Rock to smash is no step in the plans.
+Needs are all of the groups, one need of a group. A need is a level solved or a Sign read. A group with no need is one nobody knows yet; nothing meets it. No group needs
+nothing.
 
 A level with `needs` is decided by them: it is reachable when they hold and not reachable otherwise, whatever the walk
 finds, except that a level the save solved or entered stays reached. A level frozen in a closed Freezer is reached only
 once it opens. A level with no `needs` is as the walk finds it. When a level's needs hold, the walk seeds its flood at
 the level ([Seeds and the reached cells](#seeds-and-the-reached-cells)), so the levels, pads, Signs and leads beyond it
-are reached with it, in the same pass. `from` ('sky') marks a blocked level entered from the sky, worded as for the
+are reached with it, in the same pass. `drop` marks a blocked level entered from the sky, worded as for the
 sky ([Pockets, leads and why](#pockets-leads-and-why)).
 
 A pad route has `to`, the pad or the cell of another overworld entity (a Sign, a Level_Entry) where the hero lands once
@@ -998,21 +997,22 @@ Mirrors sign" with the tower's name ([The spoiler model (viewer)](#the-spoiler-m
 Every level, Freezer, Sign and tower panel ends with the table route: a tower's is that of its unsolved required levels.
 Beside the panel's other map lines it draws the chain of needs left back to the Crossroads pad of the layer, as straight
 lines between its stops and not a walked path: solid gold for a need not met, dotted gold for one met, and nothing behind
-a met need or anything under fog. What a panel unlocks is dashed blue. A need on another layer runs to the pad of its
-layer and on from the pad of the layer it opens, and the panel links each other layer the route runs on.
+a met need or anything under fog. What a panel unlocks is dashed blue. A need of a High or Low level on another layer ends
+at the pad of the level's layer. A need of a ground level on another layer runs to the pad of its layer and on from the
+ground pad, and the panel links each other layer the route runs on.
 
 A table row's `requires` repeats the levels that unlock it in the game data, and the rows of a section read in that order;
 `needs` stays what reaches a level.
 
-A table row with `from: 'sky'` is entered by a drop, and `drop` is the hole. The needs of such a level end at the hole,
-which carries an arrow on the map, and the panel links the layer of the hole. A row with no `drop` is a broken route.
+A table row with a `drop` is entered by a drop through that hole. The needs of such a level end at the hole,
+which carries an arrow on the map, and the panel links the layer of the hole.
 
 The chain follows each group's shown option the save meets, else the first one shown, and goes through the levels that
-unlock a level and the levels and Signs that open a Freezer. A tower Sign or the gold-room Sign goes on to its towers, all
-of them for the gold-room Sign and without their levels. It ends at an entry with no needs or a tower, which a line joins
-to the pad, or stops at a level the table leaves to the walk, any other Sign, a Rock, a Freezer nothing opens or a level
-already on the way back. The panel marks these stops in one broken route box and always links the level table file for
-pull requests.
+unlock a level; a Freezer's panel starts it from the levels and Signs that open the Freezer. A tower Sign or the gold-room
+Sign goes on to its towers, all of them for the gold-room Sign and without their levels. It ends at an entry with no needs
+or a tower, which a line joins to the pad, or stops at a level the table leaves to the walk with nothing unlocking it, any
+other Sign, a Freezer nothing opens or a level already on the way back. The panel marks these stops in one broken
+route box and always links the level table file for pull requests.
 
 ### Next steps
 

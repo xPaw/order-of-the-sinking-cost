@@ -35,9 +35,7 @@ export interface ChainEdge {
 export type ChainStop =
     | { reason: 'unknown'; level: number }
     | { reason: 'cycle'; level: number }
-    | { reason: 'drop'; level: number }
     | { reason: 'sign'; sign: number }
-    | { reason: 'rock'; rock: number }
     | { reason: 'freezer'; freezer: number };
 
 /** The chain behind its targets. */
@@ -72,9 +70,10 @@ function endLayer(world: ChainWorld, end: ChainEnd): string {
     return world.layerOf(end[2]);
 }
 
-// a need of a level entered by a drop is met at the hole; the map draws a line on one layer only, so a need on another
-// layer runs to its layer's hub and on from the hub of the layer it opens
-function addLine(world: ChainWorld, chain: NeedChain, from: ChainEnd, to: ChainEnd, met: boolean): void {
+// A need of a level entered by a drop is met at the hole. The map draws a line on one layer only, so a need on another
+// layer runs to its layer's hub and on from the hub of the layer it opens. High and Low are entered at their hubs, so a
+// need of theirs on another layer ends at the hub: returns whether the line ended there.
+function addLine(world: ChainWorld, chain: NeedChain, from: ChainEnd, to: ChainEnd, met: boolean): boolean {
     let end = to;
     if (typeof to === 'number') end = world.levels[to].drop ?? to;
 
@@ -85,11 +84,17 @@ function addLine(world: ChainWorld, chain: NeedChain, from: ChainEnd, to: ChainE
 
     if (fromLayer === toLayer || !fromHub || !toHub) {
         chain.edges.push({ from, to: end, met });
-        return;
+        return false;
+    }
+
+    if (toLayer !== 'ground') {
+        chain.edges.push({ from: toHub, to: end, met });
+        return true;
     }
 
     chain.edges.push({ from, to: fromHub, met });
     chain.edges.push({ from: toHub, to: end, met });
+    return false;
 }
 
 // a need under fog ends the chain with no line; a met need gets its line and nothing behind it
@@ -100,7 +105,7 @@ function followNeed(follow: Follow, need: RouteNeed, to: ChainEnd): void {
     const met = needMet(need, view);
 
     if ('level' in need) {
-        addLine(world, chain, need.level, to, met);
+        if (addLine(world, chain, need.level, to, met)) return;
         if (met) {
             if (!chain.levels.includes(need.level)) chain.levels.push(need.level);
         } else if (follow.path.has(need.level)) {
@@ -108,14 +113,9 @@ function followNeed(follow: Follow, need: RouteNeed, to: ChainEnd): void {
         } else {
             followLevel(follow, need.level);
         }
-    } else if ('freezer' in need) {
-        addLine(world, chain, world.freezers[need.freezer].p, to, met);
-        if (!met) followFreezer(follow, need.freezer);
-    } else if ('sign' in need) {
-        addLine(world, chain, world.signs[need.sign].p, to, met);
-        if (!met) followSign(follow, need.sign);
-    } else if (!met) {
-        chain.stops.push({ reason: 'rock', rock: need.rock });
+    } else {
+        const atHub = addLine(world, chain, world.signs[need.sign].p, to, met);
+        if (!atHub && !met) followSign(follow, need.sign);
     }
 }
 
@@ -150,7 +150,7 @@ function followSign(follow: Follow, signIndex: number): void {
         if (!world.towerShown(tower)) continue;
 
         const towerAt = world.towers[tower].p;
-        addLine(world, chain, towerAt, sign.p, false);
+        if (addLine(world, chain, towerAt, sign.p, false)) continue;
 
         const hub = world.hubs.get(endLayer(world, towerAt));
         if (hub) chain.edges.push({ from: hub, to: towerAt, met: true });
@@ -168,16 +168,17 @@ function followLevel(follow: Follow, levelIndex: number): void {
     if (level.drop !== undefined) {
         if (!world.dropShown(level.drop)) return;
         chain.drops.push(level.drop);
-    } else if (level.from === 'sky') {
-        chain.stops.push({ reason: 'drop', level: levelIndex });
     }
+
+    // the levels that unlock a level stand in for a way in the table leaves out
+    const hasUnlockers = level.req.length > 0;
 
     follow.path.add(levelIndex);
     if (level.needs === undefined) {
-        chain.stops.push({ reason: 'unknown', level: levelIndex });
+        if (!hasUnlockers) chain.stops.push({ reason: 'unknown', level: levelIndex });
     } else if (level.needs.length === 0) {
         const hub = world.hubs.get(endLayer(world, levelIndex));
-        if (hub && level.req.length === 0) chain.edges.push({ from: hub, to: levelIndex, met: true });
+        if (hub && !hasUnlockers) chain.edges.push({ from: hub, to: levelIndex, met: true });
     } else {
         for (const group of level.needs) {
             if (group.length === 0) {
@@ -224,7 +225,7 @@ function followFreezer(follow: Follow, freezerIndex: number): void {
  * Follows the needs of a level back, level by level and through a Freezer's openers, until an entry with no needs,
  * which a line joins to its layer's hub. In a group of alternatives it follows the shown one the save meets, else the
  * first one shown. It goes through a Sign that counts towers to those towers, which a line joins to the hub. It stops at
- * a level with no entry, a sky drop with no known hole, any other Sign, a Rock, a Freezer nothing opens and a level
+ * a level with no entry, any other Sign, a Freezer nothing opens and a level
  * already on the way back.
  */
 export function needChain(world: ChainWorld, view: NeedsView, ...targets: ChainTarget[]): NeedChain {

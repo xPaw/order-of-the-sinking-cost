@@ -2,7 +2,6 @@
 // (VIEWER.md "Level needs and pad routes")
 import type {
     Area,
-    Freezer,
     PadRoute,
     Position,
     ProgressLevel,
@@ -11,7 +10,7 @@ import type {
     Sign,
     Teleporter,
 } from '../../src/types.ts';
-import { areaByName, freezerByPid, levelByName, signByPid } from './index-lookup.ts';
+import { areaByName, levelByName, signByPid } from './index-lookup.ts';
 import { LEVEL_TABLE, PAD_ROUTES } from './level-table.ts';
 import type { Need, PadRouteRow } from './level-table.ts';
 
@@ -20,7 +19,6 @@ const PREFIX = 'level_table';
 /** What the names and pids of the table resolve against. */
 export interface TableData {
     levels: ProgressLevel[];
-    freezers: Freezer[];
     signs: Sign[];
     areas: Area[];
     teleporters: Teleporter[];
@@ -28,18 +26,10 @@ export interface TableData {
     skyTower: (flagName: string) => number | undefined;
     /** The position of the overworld entity with this pid. */
     positionOf: (pid: number) => Position | undefined;
-    /** Whether the overworld has a Rock with this pid. */
-    isRock: (pid: number) => boolean;
 }
 
 function resolveNeed(source: Need, data: TableData): RouteNeed {
     if ('level' in source) return { level: levelByName(data.levels, source.level, PREFIX) };
-    if ('freezer' in source) return { freezer: freezerByPid(data.freezers, source.freezer, PREFIX) };
-
-    if ('rock' in source) {
-        if (!data.isRock(source.rock)) throw new Error(`${PREFIX}: no Rock ${source.rock}`);
-        return { rock: source.rock };
-    }
 
     if ('sign' in source) return { sign: signByPid(data.signs, source.sign, PREFIX) };
 
@@ -89,7 +79,6 @@ function applyLevelTable(data: TableData): void {
 
             const level = data.levels[levelByName(data.levels, name, PREFIX)];
             if (row.needs !== 'unknown') level.needs = resolveNeeds(row.needs, data);
-            if (row.from !== undefined) level.from = row.from;
             if (row.drop !== undefined) level.drop = row.drop;
         }
     }
@@ -99,8 +88,8 @@ function applyLevelTable(data: TableData): void {
 }
 
 /**
- * Resolves the table against the data: sets the needs of the levels, and returns the pad routes. A name, Freezer, Sign
- * or Rock the data lacks fails the build.
+ * Resolves the table against the data: sets the needs of the levels, and returns the pad routes. A name, Sign or Rock
+ * the data lacks fails the build.
  */
 export function resolveLevelTable(data: TableData): PadRoute[] {
     applyLevelTable(data);

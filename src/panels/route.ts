@@ -31,7 +31,6 @@ const LAYER_HUBS = new Map<string, Position>([
 // whether a need may show: what is under fog ends the chain without a word
 function needShown(context: PanelContext, need: RouteNeed): boolean {
     if ('level' in need) return !context.progress.hidden[need.level];
-    if ('freezer' in need) return context.gateShown(context.freezers[need.freezer]);
     if ('sign' in need) return signOn(context, need.sign);
     return true;
 }
@@ -59,8 +58,6 @@ function levelLink(context: PanelContext, levelIndex: number): string {
 function stopText(context: PanelContext, stop: ChainStop): string {
     if (stop.reason === 'unknown') return `Stops at ${levelLink(context, stop.level)}: unknown`;
     if (stop.reason === 'cycle') return `Stops at ${levelLink(context, stop.level)}: it needs itself`;
-    if (stop.reason === 'drop') return `Stops at ${levelLink(context, stop.level)}: its hole is not known`;
-    if (stop.reason === 'rock') return `Stops at Rock ${stop.rock}`;
 
     if (stop.reason === 'sign') {
         const pid = context.signs[stop.sign].pid;

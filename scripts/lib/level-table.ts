@@ -1,12 +1,11 @@
-export type Need = { level: string } | { freezer: number } | { sign: number } | { rock: number };
+export type Need = { level: string } | { sign: number };
 
 export interface LevelRow {
     levels: string[];
     /** The levels that unlock playing these levels, from the game data. */
     requires?: string[];
     needs: Need[][] | 'unknown';
-    from?: 'sky';
-    /** The hole the hero drops through. */
+    /** The hole the hero drops through; a level with one is entered from the sky. */
     drop?: [number, number, number];
 }
 
@@ -20,41 +19,37 @@ export const LEVEL_TABLE: LevelRow[] = [
     },
     // Heroes and Light
     {
-        // the column of three Rocks west of the level is smashed by the SMASH beam and then the multi beam, which snipperclips_diagonal frees, and the hero walks down the column to the level
-        levels: ['druid_multismash_v3'],
-        needs: [
-            [{ rock: 111225816 }],
-            [{ rock: 111225812 }],
-            [{ rock: 111225814 }],
-        ],
-    },
-    {
-        // the three Rocks in the corridor west of the level are smashed by the SMASH beam and then the multi beam, and the hero walks through to the level
-        levels: ['red_yellow_alter_with_intro_v2'],
-        needs: [
-            [{ rock: 111225459 }],
-            [{ rock: 111225465 }],
-            [{ rock: 111225467 }],
-        ],
-    },
-    {
         levels: ['snipperclips_0_square'],
         needs: [
-            [{ freezer: 90180832 }],
+            [{ level: 'promesst3_streamlined' }],
         ],
     },
     {
         levels: ['snipperclips_square'],
         requires: ['snipperclips_0_square'],
         needs: [
-            [{ freezer: 90180988 }],
+            [{ level: 'snipperclips_0_square' }],
         ],
     },
     {
         levels: ['snipperclips_diagonal'],
         requires: ['snipperclips_square'],
         needs: [
-            [{ freezer: 90180988 }],
+            [{ level: 'snipperclips_0_square' }],
+        ],
+    },
+    {
+        // the column of three Rocks west of the level is smashed by the SMASH beam and then the multi beam, which snipperclips_diagonal frees, and the hero walks down the column to the level
+        levels: ['druid_multismash_v3'],
+        needs: [
+            [{ level: 'snipperclips_diagonal' }],
+        ],
+    },
+    {
+        // the three Rocks in the corridor west of the level are smashed by the SMASH beam and then the multi beam, and the hero walks through to the level
+        levels: ['red_yellow_alter_with_intro_v2'],
+        needs: [
+            [{ level: 'snipperclips_diagonal' }],
         ],
     },
     {
@@ -312,8 +307,8 @@ export const LEVEL_TABLE: LevelRow[] = [
         // south of the two Freezers in the corridor below heroes1_4
         needs: [
             [{ level: 'heroes1_10_inv_v4_b' }],
-            [{ freezer: 111254912 }],
-            [{ freezer: 111254914 }],
+            [{ level: 'heroes1_4' }],
+            [{ level: 'heroes1_7_v2' }],
         ],
     },
     {
@@ -322,8 +317,8 @@ export const LEVEL_TABLE: LevelRow[] = [
         // south of the two Freezers in the corridor below heroes1_4
         needs: [
             [{ level: 'heroes1_10_inv_v4_b' }],
-            [{ freezer: 111254912 }],
-            [{ freezer: 111254914 }],
+            [{ level: 'heroes1_4' }],
+            [{ level: 'heroes1_7_v2' }],
         ],
     },
     {
@@ -332,8 +327,8 @@ export const LEVEL_TABLE: LevelRow[] = [
         // south of the two Freezers in the corridor below heroes1_4
         needs: [
             [{ level: 'heroes1_10_inv_v4_b' }],
-            [{ freezer: 111254912 }],
-            [{ freezer: 111254914 }],
+            [{ level: 'heroes1_4' }],
+            [{ level: 'heroes1_7_v2' }],
         ],
     },
     {
@@ -342,8 +337,8 @@ export const LEVEL_TABLE: LevelRow[] = [
         // south of the two Freezers in the corridor below heroes1_4
         needs: [
             [{ level: 'heroes1_10_inv_v4_b' }],
-            [{ freezer: 111254912 }],
-            [{ freezer: 111254914 }],
+            [{ level: 'heroes1_4' }],
+            [{ level: 'heroes1_7_v2' }],
         ],
     },
     {
@@ -352,8 +347,8 @@ export const LEVEL_TABLE: LevelRow[] = [
         // south of the two Freezers in the corridor below heroes1_4
         needs: [
             [{ level: 'heroes1_10_inv_v4_b' }],
-            [{ freezer: 111254912 }],
-            [{ freezer: 111254914 }],
+            [{ level: 'heroes1_4' }],
+            [{ level: 'heroes1_7_v2' }],
         ],
     },
     {
@@ -471,20 +466,23 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['mirror_sink'],
         requires: ['mirror_17'],
-        needs: 'unknown',
-        from: 'sky',
+        needs: [
+            [{ level: 'mirror_8_v5' }],
+        ],
     },
     {
         levels: ['mirror_20'],
         requires: ['mirror_sink'],
-        needs: 'unknown',
-        from: 'sky',
+        needs: [
+            [{ level: 'mirror_8_v5' }],
+        ],
     },
     {
         levels: ['mirror_18'],
         requires: ['mirror_20'],
-        needs: 'unknown',
-        from: 'sky',
+        needs: [
+            [{ level: 'mirror_8_v5' }],
+        ],
     },
     {
         levels: ['mirror_10_alt2'],
@@ -543,36 +541,40 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: [
             [{ level: 'already_dropped_v2' }],
         ],
-        from: 'sky',
     },
     {
         levels: ['use_and_remove'],
         requires: ['two_step'],
-        needs: 'unknown',
-        from: 'sky',
+        needs: [
+            [{ level: 'already_dropped_v2' }],
+        ],
     },
     {
         levels: ['infinite_crystal_hack_v5'],
         requires: ['use_and_remove'],
-        needs: 'unknown',
-        from: 'sky',
+        needs: [
+            [{ level: 'already_dropped_v2' }],
+        ],
     },
     {
         levels: ['mundane_mirror'],
-        needs: 'unknown',
-        from: 'sky',
+        needs: [
+            [{ level: 'mirror_10_alt2' }],
+        ],
     },
     {
         levels: ['mirror_10_b_v2'],
         requires: ['mundane_mirror'],
-        needs: 'unknown',
-        from: 'sky',
+        needs: [
+            [{ level: 'mirror_10_alt2' }],
+        ],
     },
     {
         levels: ['mirror_10_d'],
         requires: ['mirror_10_b_v2'],
-        needs: 'unknown',
-        from: 'sky',
+        needs: [
+            [{ level: 'mirror_10_alt2' }],
+        ],
     },
     // Vault of the Beamcasters
     {
@@ -589,9 +591,8 @@ export const LEVEL_TABLE: LevelRow[] = [
         levels: ['orange_cross'],
         requires: ['double_trouble'],
         needs: [
-            [{ level: 'double_trouble' }],
+            [{ level: 'first_flight' }],
         ],
-        from: 'sky',
     },
     // Skipping Stones
     {
@@ -1274,7 +1275,7 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['cleric_isles'],
         needs: [
-            [{ freezer: 115361714 }],
+            [{ level: 'flamethrower' }],
         ],
     },
     {
@@ -1517,7 +1518,13 @@ export const LEVEL_TABLE: LevelRow[] = [
                 { level: 'close_to_button' },
                 { level: 'crystal_bridges' },
                 { level: 'flip_flop_v2' },
-                { freezer: 115377002 },
+                { level: 'detachment' },
+            ],
+            [
+                { level: 'close_to_button' },
+                { level: 'crystal_bridges' },
+                { level: 'flip_flop_v2' },
+                { level: 'drop_tool' },
             ],
         ],
     },
@@ -1555,7 +1562,13 @@ export const LEVEL_TABLE: LevelRow[] = [
                 { level: 'close_to_button' },
                 { level: 'crystal_bridges' },
                 { level: 'flip_flop_v2' },
-                { freezer: 115377002 },
+                { level: 'detachment' },
+            ],
+            [
+                { level: 'close_to_button' },
+                { level: 'crystal_bridges' },
+                { level: 'flip_flop_v2' },
+                { level: 'drop_tool' },
             ],
         ],
     },
@@ -1968,7 +1981,6 @@ export const LEVEL_TABLE: LevelRow[] = [
                 { level: 'flamethrower' },
             ],
         ],
-        from: 'sky',
         drop: [130, 131, 36],
     },
     {
@@ -1980,7 +1992,6 @@ export const LEVEL_TABLE: LevelRow[] = [
                 { level: 'flamethrower' },
             ],
         ],
-        from: 'sky',
         drop: [130, 131, 36],
     },
     {
@@ -2050,16 +2061,21 @@ export const LEVEL_TABLE: LevelRow[] = [
     },
     // Heroes, Duplicated
     {
+        // the Freezers going_up_v4 and fly_and_flip open lead down the column to the hole
         levels: ['clone_adjust_mirror'],
-        needs: 'unknown',
-        from: 'sky',
+        needs: [
+            [{ level: 'going_up_v4' }],
+            [{ level: 'fly_and_flip' }],
+        ],
         drop: [134, 117, 37],
     },
     {
         levels: ['clone_maze'],
         requires: ['clone_adjust_mirror'],
-        needs: 'unknown',
-        from: 'sky',
+        needs: [
+            [{ level: 'going_up_v4' }],
+            [{ level: 'fly_and_flip' }],
+        ],
         drop: [134, 117, 37],
     },
     {
@@ -2074,7 +2090,6 @@ export const LEVEL_TABLE: LevelRow[] = [
                 { level: 'flamethrower' },
             ],
         ],
-        from: 'sky',
         drop: [130, 131, 36],
     },
     {
@@ -2087,7 +2102,6 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: [
             [{ level: 'clone_maze' }],
         ],
-        from: 'sky',
     },
     {
         levels: ['clone_adjust_two_rocks'],
@@ -2095,7 +2109,6 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: [
             [{ level: 'clone_maze' }],
         ],
-        from: 'sky',
     },
     {
         levels: ['pull_line'],
@@ -2103,7 +2116,6 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: [
             [{ level: 'clone_maze' }],
         ],
-        from: 'sky',
     },
     {
         levels: ['arcadiav2_big'],
@@ -2223,7 +2235,7 @@ export const LEVEL_TABLE: LevelRow[] = [
         levels: ['purple_clm_v4'],
         needs: [
             [{ level: 'orange_doubledoubleback' }],
-            [{ freezer: 111150999 }],
+            [{ level: 'sidetrack' }],
         ],
     },
     {
@@ -2231,28 +2243,28 @@ export const LEVEL_TABLE: LevelRow[] = [
         requires: ['purple_clm_v4'],
         needs: [
             [{ level: 'orange_doubledoubleback' }],
-            [{ freezer: 111150999 }],
+            [{ level: 'sidetrack' }],
         ],
     },
     // Reflected Beams
     {
         levels: ['tempered_glass_red'],
         needs: [
-            [{ freezer: 106974224 }],
+            [{ level: 'green_crystal_rover' }],
         ],
     },
     {
         levels: ['red_rooms_v5'],
         requires: ['tempered_glass_red'],
         needs: [
-            [{ freezer: 106974224 }],
+            [{ level: 'green_crystal_rover' }],
         ],
     },
     {
         levels: ['rover_water_purple_v9'],
         requires: ['red_rooms_v5'],
         needs: [
-            [{ freezer: 106974224 }],
+            [{ level: 'green_crystal_rover' }],
         ],
     },
     {
@@ -2260,7 +2272,7 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: [
             [
                 { level: 'smash_or_dash_vs2' },
-                { freezer: 115439713 },
+                { level: 'rover_water_purple_v9' },
             ],
         ],
     },
@@ -2270,27 +2282,27 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: [
             [
                 { level: 'smash_or_dash_vs2' },
-                { freezer: 115439713 },
+                { level: 'rover_water_purple_v9' },
             ],
         ],
     },
     {
         levels: ['rover_water_purple_sequel_v3'],
         needs: [
-            [{ freezer: 115439713 }],
+            [{ level: 'rover_water_purple_v9' }],
         ],
     },
     {
         levels: ['wrapping_mirror_red_v4'],
         requires: ['red_rooms_v5'],
         needs: [
-            [{ freezer: 106974224 }],
+            [{ level: 'green_crystal_rover' }],
         ],
     },
     {
         levels: ['double_sideways'],
         needs: [
-            [{ freezer: 111266483 }],
+            [{ level: 'orange_predicament' }],
         ],
     },
     {
@@ -2300,22 +2312,22 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['mirror_non_turner_v3'],
         needs: [
-            [{ freezer: 62923440 }],
+            [{ level: 'dual_screen' }],
         ],
     },
     {
         levels: ['adjust_explorer_v4'],
         requires: ['mirror_non_turner_v3'],
         needs: [
-            [{ freezer: 62923440 }],
+            [{ level: 'dual_screen' }],
         ],
     },
     {
         levels: ['green_torq_mirror_vs4'],
         requires: ['adjust_explorer_v4'],
         needs: [
-            [{ freezer: 87035116 }],
-            [{ freezer: 87035120 }],
+            [{ level: 'wrapping_mirror_red_v4' }],
+            [{ level: 'adjust_explorer_v4' }],
         ],
     },
     {
@@ -2424,7 +2436,6 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: [
             [{ level: 'on_the_rocks' }],
         ],
-        from: 'sky',
         drop: [131, 44, 29],
     },
     {
@@ -2611,7 +2622,7 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['gem_beam_placement'],
         needs: [
-            [{ freezer: 115348084 }],
+            [{ level: 'promesst3_streamlined' }],
         ],
     },
     // Stones Illuminated
@@ -2621,7 +2632,6 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: [
             [{ level: 'air_skating_v6' }],
         ],
-        from: 'sky',
         drop: [16, 60, 38],
     },
     {
@@ -2630,7 +2640,6 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: [
             [{ level: 'air_skating_v6' }],
         ],
-        from: 'sky',
         drop: [8, 42, 38],
     },
     {
@@ -2639,21 +2648,20 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: [
             [{ level: 'air_skating_v6' }],
         ],
-        from: 'sky',
         drop: [20, 39, 38],
     },
     {
         levels: ['orange_skip_place_v3'],
         requires: ['skip_orange_maze_v3'],
         needs: [
-            [{ freezer: 111150955 }],
+            [{ level: 'skip_orange_maze_v3' }],
         ],
     },
     {
         levels: ['skip_orange_wall_v3'],
         requires: ['orange_skip_place_v3'],
         needs: [
-            [{ freezer: 111150955 }],
+            [{ level: 'skip_orange_maze_v3' }],
         ],
     },
     {
@@ -2661,7 +2669,7 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: [
             [
                 { level: 'skipping_wrapping_v3' },
-                { freezer: 111150955 },
+                { level: 'skip_orange_maze_v3' },
             ],
         ],
     },
@@ -2671,8 +2679,8 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: [
             [
                 { level: 'skipping_wrapping_v3' },
-                { freezer: 90203320 },
-                { freezer: 111150955 },
+                { level: 'rover_impulse_v2' },
+                { level: 'skip_orange_maze_v3' },
             ],
         ],
     },
@@ -2682,8 +2690,8 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: [
             [
                 { level: 'skipping_wrapping_v3' },
-                { freezer: 90203320 },
-                { freezer: 111150955 },
+                { level: 'rover_impulse_v2' },
+                { level: 'skip_orange_maze_v3' },
             ],
         ],
     },
@@ -2757,15 +2765,14 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['crystal_rover_intro'],
         needs: [
-            [{ freezer: 90203340 }],
+            [{ level: 'submarine' }],
         ],
-        from: 'sky',
         drop: [7, 61, 29],
     },
     {
         levels: ['green_crystal_rover'],
         needs: [
-            [{ freezer: 111152405 }],
+            [{ level: 'crystal_rover_intro' }],
         ],
     },
     {
@@ -2774,7 +2781,7 @@ export const LEVEL_TABLE: LevelRow[] = [
             [
                 { level: 'skipping_wrapping_v3' },
                 { level: 'sp_crystal_tuto' },
-                { freezer: 90203340 },
+                { level: 'submarine' },
             ],
         ],
     },
@@ -2783,7 +2790,7 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: [
             [
                 { level: 'sp_crystal_tuto' },
-                { freezer: 90202953 },
+                { level: 'skipping_promesst' },
             ],
         ],
     },
@@ -2791,8 +2798,8 @@ export const LEVEL_TABLE: LevelRow[] = [
         // through the Freezer rover_impulse_v2 opens into the submarine pocket, then through the Freezer submarine opens
         levels: ['skip_or_sink_r'],
         needs: [
-            [{ freezer: 90203328 }],
-            [{ freezer: 90203340 }],
+            [{ level: 'rover_impulse_v2' }],
+            [{ level: 'submarine' }],
         ],
     },
     {
@@ -2952,22 +2959,16 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['gated_twice_v2'],
         needs: [
-            [
-                { freezer: 112198043 },
-                { freezer: 112198044 },
-            ],
-            [{ freezer: 115524995 }],
+            [{ level: 'carry_simplified' }],
+            [{ level: '3d_intro_heroes' }],
         ],
     },
     {
         levels: ['gated_twice_thief_v2'],
         requires: ['gated_twice_v2'],
         needs: [
-            [
-                { freezer: 112198043 },
-                { freezer: 112198044 },
-            ],
-            [{ freezer: 115524995 }],
+            [{ level: 'carry_simplified' }],
+            [{ level: '3d_intro_heroes' }],
         ],
     },
     {
@@ -3026,7 +3027,12 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: [
             [
                 { level: 'gated_twice_thief_v2' },
-                { freezer: 111233689 },
+                { level: 'connect_the_dots_v5' },
+                { sign: 115389568 },
+            ],
+            [
+                { level: 'gated_twice_thief_v2' },
+                { level: 'zombie_graves_v3' },
                 { sign: 115389568 },
             ],
         ],
@@ -3109,7 +3115,9 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['fire_stairs_part_2'],
         requires: ['fire_stairs_v2'],
-        needs: 'unknown',
+        needs: [
+            [{ level: 'priest_3d_goblin_pass' }],
+        ],
     },
     {
         levels: ['loading_docks_v2'],
@@ -3161,7 +3169,11 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: [
             [
                 { level: 'sky_druid_kill_tall_2_goblins' },
-                { freezer: 111233689 },
+                { level: 'connect_the_dots_v5' },
+            ],
+            [
+                { level: 'sky_druid_kill_tall_2_goblins' },
+                { level: 'zombie_graves_v3' },
             ],
         ],
     },
@@ -3171,7 +3183,11 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: [
             [
                 { level: 'sky_druid_kill_tall_2_goblins' },
-                { freezer: 111233689 },
+                { level: 'connect_the_dots_v5' },
+            ],
+            [
+                { level: 'sky_druid_kill_tall_2_goblins' },
+                { level: 'zombie_graves_v3' },
             ],
         ],
     },
@@ -3181,7 +3197,11 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: [
             [
                 { level: 'sky_druid_kill_tall_2_goblins' },
-                { freezer: 111233689 },
+                { level: 'connect_the_dots_v5' },
+            ],
+            [
+                { level: 'sky_druid_kill_tall_2_goblins' },
+                { level: 'zombie_graves_v3' },
             ],
         ],
     },
@@ -3215,8 +3235,11 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: 'unknown',
     },
     {
+        // the red Gem is moved a long way, as for green_hat, and getting it up here takes drop_sokoban
         levels: ['into_the_water_3'],
-        needs: 'unknown',
+        needs: [
+            [{ level: 'drop_sokoban' }],
+        ],
     },
     {
         levels: ['air_skating_v6'],
@@ -3282,10 +3305,11 @@ export const LEVEL_TABLE: LevelRow[] = [
         ],
     },
     {
-        // the Rock sokobridge_v4 frees is pushed off the ledge and lands as a stair up to the level
+        // the red Gem is moved a long way, past the Freezer that also leads to breaking the Rocks on the way to Low
         levels: ['green_hat'],
         needs: [
-            [{ level: 'sokobridge_v4' }],
+            [{ sign: 115389567 }],
+            [{ level: 'stay_lit' }],
         ],
     },
     {
@@ -3296,10 +3320,7 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['taking_the_lift'],
         needs: [
-            [
-                { freezer: 111153040 },
-                { sign: 115389567 },
-            ],
+            [{ level: 'sokobridge_v4' }],
         ],
     },
     {
@@ -3311,10 +3332,7 @@ export const LEVEL_TABLE: LevelRow[] = [
         levels: ['drop_sokoban'],
         requires: ['trick_landing'],
         needs: [
-            [
-                { freezer: 111153040 },
-                { sign: 115389567 },
-            ],
+            [{ level: 'taking_the_lift' }],
         ],
     },
     {
@@ -3820,18 +3838,25 @@ export const LEVEL_TABLE: LevelRow[] = [
     },
     // Protection and Support
     {
+        // the Freezer stands on the elevator up to the dragon's fire line, which holds up the Protected hero along the pads
         levels: ['priest_3d_intro_dragon_v4'],
-        needs: 'unknown',
+        needs: [
+            [{ level: 'priest_3d_goblin_pass' }],
+        ],
     },
     {
         levels: ['priest_bottom_v2'],
         requires: ['priest_3d_intro_dragon_v4'],
-        needs: 'unknown',
+        needs: [
+            [{ level: 'priest_3d_goblin_pass' }],
+        ],
     },
     {
         levels: ['fire_stairs_v2'],
         requires: ['priest_bottom_v2'],
-        needs: 'unknown',
+        needs: [
+            [{ level: 'priest_3d_goblin_pass' }],
+        ],
     },
     {
         levels: ['priest_warrior_descent'],
@@ -3852,7 +3877,9 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['priest_two_warriors_v3'],
         requires: ['from_the_depths'],
-        needs: 'unknown',
+        needs: [
+            [{ level: 'priest_bottom_v2' }],
+        ],
     },
     {
         levels: ['monster_stack'],
@@ -3965,7 +3992,7 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['bard_movable_island'],
         needs: [
-            [{ freezer: 115380334 }],
+            [{ level: 'front_side_bus3' }],
         ],
     },
     {
@@ -4119,7 +4146,7 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['skip_purple_drop_alt'],
         needs: [
-            [{ freezer: 115470447 }],
+            [{ level: 'breaking_bread' }],
         ],
     },
     {
@@ -4148,7 +4175,7 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['stone_rescue_v3'],
         needs: [
-            [{ freezer: 111195724 }],
+            [{ level: 'skip_purple_drop_alt' }],
         ],
     },
     {
@@ -4507,9 +4534,6 @@ export const LEVEL_TABLE: LevelRow[] = [
             [{ level: 'stay_lit' }],
             [{ level: 'bridgey3_abstract_art' }],
             [{ level: 'overwrite' }],
-            [{ rock: 62941709 }],
-            [{ rock: 62941723 }],
-            [{ rock: 111153054 }],
         ],
     },
     {
@@ -4525,9 +4549,6 @@ export const LEVEL_TABLE: LevelRow[] = [
             [{ level: 'stay_lit' }],
             [{ level: 'bridgey3_abstract_art' }],
             [{ level: 'overwrite' }],
-            [{ rock: 62941709 }],
-            [{ rock: 62941723 }],
-            [{ rock: 111153054 }],
         ],
     },
     // Mirrors and Rivers
@@ -4854,7 +4875,9 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['double_trouble'],
         requires: ['first_flight'],
-        needs: 'unknown',
+        needs: [
+            [{ level: 'first_flight' }],
+        ],
     },
     {
         levels: ['worlds_collide_ps'],
@@ -4864,83 +4887,83 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['heroes3_10'],
         needs: [
-            [{ freezer: 115414729 }],
+            [{ level: 'heroes2_22_v2' }],
         ],
     },
     {
         levels: ['heroes3_11_v2'],
         requires: ['heroes3_10'],
         needs: [
-            [{ freezer: 115414729 }],
+            [{ level: 'heroes2_22_v2' }],
         ],
     },
     {
         levels: ['druid_and_dragon'],
         requires: ['heroes3_11_v2'],
         needs: [
-            [{ freezer: 115414729 }],
+            [{ level: 'heroes2_22_v2' }],
         ],
     },
     {
         levels: ['wizard_and_druid_alt_5'],
         requires: ['druid_and_dragon'],
         needs: [
-            [{ freezer: 115414729 }],
+            [{ level: 'heroes2_22_v2' }],
         ],
     },
     {
         levels: ['heroes3_15_v4'],
         requires: ['wizard_and_druid_alt_5'],
         needs: [
-            [{ freezer: 115414729 }],
+            [{ level: 'heroes2_22_v2' }],
         ],
     },
     {
         levels: ['heroes3_13_v2'],
         requires: ['heroes3_15_v4'],
         needs: [
-            [{ freezer: 115414729 }],
+            [{ level: 'heroes2_22_v2' }],
         ],
     },
     {
         levels: ['heroes3_druid_b_v2'],
         requires: ['heroes3_13_v2'],
         needs: [
-            [{ freezer: 115414729 }],
+            [{ level: 'heroes2_22_v2' }],
         ],
     },
     {
         levels: ['heroes3_druid_a'],
         requires: ['heroes3_druid_b_v2'],
         needs: [
-            [{ freezer: 115414729 }],
+            [{ level: 'heroes2_22_v2' }],
         ],
     },
     {
         levels: ['wizard_and_druid_alt'],
         requires: ['wizard_and_druid_alt_5'],
         needs: [
-            [{ freezer: 115414729 }],
+            [{ level: 'heroes2_22_v2' }],
         ],
     },
     {
         levels: ['heroes3_1_v3'],
         needs: [
-            [{ freezer: 115414729 }],
+            [{ level: 'heroes2_22_v2' }],
         ],
     },
     {
         levels: ['heroes3_2_v4'],
         requires: ['heroes3_1_v3'],
         needs: [
-            [{ freezer: 115414729 }],
+            [{ level: 'heroes2_22_v2' }],
         ],
     },
     {
         levels: ['heroes3_3_v2'],
         requires: ['heroes3_2_v4'],
         needs: [
-            [{ freezer: 115414729 }],
+            [{ level: 'heroes2_22_v2' }],
         ],
     },
     {
@@ -4950,42 +4973,42 @@ export const LEVEL_TABLE: LevelRow[] = [
         ],
         requires: ['heroes3_3_v2'],
         needs: [
-            [{ freezer: 115414729 }],
+            [{ level: 'heroes2_22_v2' }],
         ],
     },
     {
         levels: ['heroes3_8_thief'],
         requires: ['heroes3_5'],
         needs: [
-            [{ freezer: 115414729 }],
+            [{ level: 'heroes2_22_v2' }],
         ],
     },
     {
         levels: ['heroes3_6_v3'],
         requires: ['heroes3_8_thief'],
         needs: [
-            [{ freezer: 115414729 }],
+            [{ level: 'heroes2_22_v2' }],
         ],
     },
     {
         levels: ['heroes3_7_v4'],
         requires: ['heroes3_6_v3'],
         needs: [
-            [{ freezer: 115414729 }],
+            [{ level: 'heroes2_22_v2' }],
         ],
     },
     {
         levels: ['heroes3_8_v4_alt'],
         requires: ['heroes3_7_v4'],
         needs: [
-            [{ freezer: 115414729 }],
+            [{ level: 'heroes2_22_v2' }],
         ],
     },
     {
         levels: ['heroes3_8_v3_alt3'],
         requires: ['heroes3_8_v4_alt'],
         needs: [
-            [{ freezer: 115414729 }],
+            [{ level: 'heroes2_22_v2' }],
         ],
     },
     {
@@ -5087,7 +5110,7 @@ export const LEVEL_TABLE: LevelRow[] = [
         levels: ['floating_orange_purple'],
         requires: ['double_sideways'],
         needs: [
-            [{ freezer: 111266483 }],
+            [{ level: 'orange_predicament' }],
         ],
     },
     {
@@ -5179,7 +5202,7 @@ export const LEVEL_TABLE: LevelRow[] = [
                 { level: 'first_flight' },
                 { level: 'frantic_factory_v2' },
                 { level: 'purple_beam_intro_v2_alt' },
-                { freezer: 62923495 },
+                { level: 'promesst3_streamlined' },
             ],
         ],
     },
@@ -5339,14 +5362,7 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['buff_explorer'],
         needs: [
-            [
-                { level: '3d_intro_promesst_v5' },
-                { level: 'dragons_layer' },
-                { level: 'green_hat' },
-                { level: 'sokobridge_v4' },
-                { level: 'thin_ice_rooms' },
-                { sign: 115389567 },
-            ],
+            [{ level: 'sokobridge_v4' }],
         ],
     },
     {
@@ -5380,7 +5396,6 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: [
             [
                 { level: '3d_intro_promesst_v5' },
-                { level: 'green_hat' },
                 { level: 'sokobridge_v4' },
                 { level: 'strong_monsters_v2' },
                 { level: 'thin_ice_rooms' },
@@ -5440,6 +5455,15 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: 'unknown',
     },
     {
+        levels: ['trader_descend'],
+        needs: 'unknown',
+    },
+    {
+        levels: ['cliff_hopping'],
+        requires: ['trader_descend'],
+        needs: 'unknown',
+    },
+    {
         levels: [
             'blind_spot_v2',
             'falling_blocker_v3',
@@ -5452,7 +5476,15 @@ export const LEVEL_TABLE: LevelRow[] = [
                 { level: 'cliff_hopping' },
                 { level: 'repel' },
                 { level: 'to_kill_a_goblin' },
-                { freezer: 62988686 },
+                { level: 'sunk_cost_2_v3' },
+            ],
+            [
+                { level: '3d_intro_mirrors' },
+                { level: 'bothersome_mirror' },
+                { level: 'cliff_hopping' },
+                { level: 'repel' },
+                { level: 'to_kill_a_goblin' },
+                { level: 'long_platform_v2' },
             ],
         ],
     },
@@ -5466,7 +5498,15 @@ export const LEVEL_TABLE: LevelRow[] = [
                 { level: 'cliff_hopping' },
                 { level: 'repel' },
                 { level: 'to_kill_a_goblin' },
-                { freezer: 62988686 },
+                { level: 'sunk_cost_2_v3' },
+            ],
+            [
+                { level: '3d_intro_mirrors' },
+                { level: 'bothersome_mirror' },
+                { level: 'cliff_hopping' },
+                { level: 'repel' },
+                { level: 'to_kill_a_goblin' },
+                { level: 'long_platform_v2' },
             ],
         ],
     },
@@ -5480,7 +5520,16 @@ export const LEVEL_TABLE: LevelRow[] = [
                 { level: 'make_a_right_simpler' },
                 { level: 'repel' },
                 { level: 'to_kill_a_goblin' },
-                { freezer: 62988686 },
+                { level: 'sunk_cost_2_v3' },
+            ],
+            [
+                { level: '3d_intro_mirrors' },
+                { level: 'bothersome_mirror' },
+                { level: 'cliff_hopping' },
+                { level: 'make_a_right_simpler' },
+                { level: 'repel' },
+                { level: 'to_kill_a_goblin' },
+                { level: 'long_platform_v2' },
             ],
         ],
     },
@@ -5495,18 +5544,18 @@ export const LEVEL_TABLE: LevelRow[] = [
                 { level: 'make_a_right_simpler' },
                 { level: 'repel' },
                 { level: 'to_kill_a_goblin' },
-                { freezer: 62988686 },
+                { level: 'sunk_cost_2_v3' },
+            ],
+            [
+                { level: '3d_intro_mirrors' },
+                { level: 'bothersome_mirror' },
+                { level: 'cliff_hopping' },
+                { level: 'make_a_right_simpler' },
+                { level: 'repel' },
+                { level: 'to_kill_a_goblin' },
+                { level: 'long_platform_v2' },
             ],
         ],
-    },
-    {
-        levels: ['trader_descend'],
-        needs: 'unknown',
-    },
-    {
-        levels: ['cliff_hopping'],
-        requires: ['trader_descend'],
-        needs: 'unknown',
     },
     {
         // the Mirror pushed east off the z 34 ledge falls and teleports the Rock into the gap north of the plateau, the way to the level
@@ -5536,9 +5585,6 @@ export const LEVEL_TABLE: LevelRow[] = [
             [{ level: 'stay_lit' }],
             [{ level: 'bridgey3_abstract_art' }],
             [{ level: 'overwrite' }],
-            [{ rock: 62941709 }],
-            [{ rock: 62941723 }],
-            [{ rock: 111153054 }],
         ],
     },
     {
@@ -5552,17 +5598,20 @@ export const LEVEL_TABLE: LevelRow[] = [
         levels: ['nowhere_to_smash_combo'],
         needs: [
             [
+                { level: 'push_down_chain' },
                 { level: 'boot_cycle_warrior' },
                 { level: 'endpoint_maze' },
                 { level: 'endpoint_wrap_druid_alt' },
                 { level: 'mirror_rover_orange_2' },
-                { level: 'push_down_chain' },
             ],
         ],
     },
     {
+        // stands on a Freezer that nowhere_to_smash_combo thaws, and drops to the floor
         levels: ['do_not_want'],
-        needs: 'unknown',
+        needs: [
+            [{ level: 'nowhere_to_smash_combo' }],
+        ],
     },
     {
         levels: ['wand_reintro'],
@@ -5588,14 +5637,43 @@ export const LEVEL_TABLE: LevelRow[] = [
         ],
     },
     {
-        levels: [
-            'get_through_alt',
-            'get_through_depths',
-            'rubble_chain',
-            'save_for_later',
-            'smartbomb_combo_v3',
+        // the levels of the tower come down one after another: each frees what lets the next one drop to the floor
+        levels: ['get_through_alt'],
+        needs: [
+            [{ level: 'nowhere_to_smash_combo' }],
         ],
-        needs: 'unknown',
+    },
+    {
+        levels: ['get_through_depths'],
+        needs: [
+            [{ level: 'get_through_alt' }],
+        ],
+    },
+    {
+        levels: ['save_for_later'],
+        needs: [
+            [{ level: 'get_through_depths' }],
+        ],
+    },
+    {
+        // stands on a Freezer that nowhere_to_smash_combo thaws, and drops to the floor
+        levels: ['rubble_chain'],
+        needs: [
+            [{ level: 'nowhere_to_smash_combo' }],
+        ],
+    },
+    {
+        // on the floor of the open room south of the tower, a fall from the walkway
+        levels: ['smartbomb_combo_v3'],
+        needs: [
+            [
+                { level: 'push_down_chain' },
+                { level: 'boot_cycle_warrior' },
+                { level: 'endpoint_maze' },
+                { level: 'endpoint_wrap_druid_alt' },
+                { level: 'mirror_rover_orange_2' },
+            ],
+        ],
     },
     // Lily Beam Rotation
     {
@@ -5617,7 +5695,9 @@ export const LEVEL_TABLE: LevelRow[] = [
     // Gems as Obstacles
     {
         levels: ['gem_trap'],
-        needs: 'unknown',
+        needs: [
+            [{ level: 'get_through_alt' }],
+        ],
     },
     {
         levels: ['gem_trap2'],

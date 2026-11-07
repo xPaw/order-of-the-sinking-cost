@@ -2,16 +2,10 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 import { LEVEL_TABLE } from '../scripts/lib/level-table.ts';
-import type { LevelRow, Need } from '../scripts/lib/level-table.ts';
+import type { LevelRow } from '../scripts/lib/level-table.ts';
 
 interface ProgressLevel {
     n: string;
-    req: number[];
-    or?: number;
-}
-
-interface ProgressFreezer {
-    pid: number;
     req: number[];
     or?: number;
 }
@@ -22,15 +16,13 @@ interface Placement {
     row: LevelRow;
 }
 
-// One way to meet a prerequisite: all of these levels
-type Alternative = string[];
-
+// A prerequisite is met by any one of its levels
 interface Prerequisite {
     kind: string;
-    alternatives: Alternative[];
+    alternatives: string[];
 }
 
-const PROGRESS: { levels: ProgressLevel[]; freezers: ProgressFreezer[] } = JSON.parse(
+const PROGRESS: { levels: ProgressLevel[] } = JSON.parse(
     readFileSync(new URL('../data/progress.json', import.meta.url), 'utf8'),
 );
 const SOURCE = readFileSync(new URL('../scripts/lib/level-table.ts', import.meta.url), 'utf8');
@@ -64,35 +56,25 @@ function placements(): Map<string, Placement> {
     return placed;
 }
 
-function requiredNames(level: ProgressLevel | ProgressFreezer): string[] {
+function requiredNames(level: ProgressLevel): string[] {
     return level.req.map((index) => PROGRESS.levels[index].n);
 }
 
-// The ways one alternative of a need is met, as levels: a level, or the levels a Freezer needs (all of them, or any
-// one for an `or` Freezer)
-function needAlternatives(need: Need, freezers: Map<number, ProgressFreezer>): Alternative[] {
-    if ('level' in need) return [[need.level]];
-    if (!('freezer' in need)) return [];
-    const freezer = freezers.get(need.freezer);
-    if (!freezer) return [];
-    const names = requiredNames(freezer);
-    if (freezer.or) return names.map((name) => [name]);
-    return names.length > 0 ? [names] : [];
-}
-
-// What a level needs first: every game `req` (one of them for `or`), then each group of its table needs
-function prerequisites(level: ProgressLevel, row: LevelRow, freezers: Map<number, ProgressFreezer>): Prerequisite[] {
+// What a level needs first: every game `req` (one of them for `or`), then the levels of each group of its table needs
+function prerequisites(level: ProgressLevel, row: LevelRow): Prerequisite[] {
     const result: Prerequisite[] = [];
     const reqs = requiredNames(level);
     if (level.or) {
-        result.push({ kind: 'req', alternatives: reqs.map((name) => [name]) });
+        result.push({ kind: 'req', alternatives: reqs });
     } else {
-        for (const name of reqs) result.push({ kind: 'req', alternatives: [[name]] });
+        for (const name of reqs) result.push({ kind: 'req', alternatives: [name] });
     }
     if (row.needs === 'unknown') return result;
     for (const group of row.needs) {
-        const alternatives: Alternative[] = [];
-        for (const need of group) alternatives.push(...needAlternatives(need, freezers));
+        const alternatives: string[] = [];
+        for (const need of group) {
+            if ('level' in need) alternatives.push(need.level);
+        }
         result.push({ kind: 'needs', alternatives });
     }
     return result;
@@ -112,22 +94,18 @@ function reaches(links: Map<string, Set<string>>, from: string, target: string):
     return false;
 }
 
-function linkMap(placed: Map<string, Placement>, freezers: Map<number, ProgressFreezer>): Map<string, Set<string>> {
+function linkMap(placed: Map<string, Placement>): Map<string, Set<string>> {
     const links = new Map<string, Set<string>>();
     for (const level of PROGRESS.levels) {
         const at = placed.get(level.n);
         if (!at) continue;
         const names = new Set<string>();
-        for (const prerequisite of prerequisites(level, at.row, freezers)) {
-            for (const alternative of prerequisite.alternatives) for (const name of alternative) names.add(name);
+        for (const prerequisite of prerequisites(level, at.row)) {
+            for (const name of prerequisite.alternatives) names.add(name);
         }
         links.set(level.n, names);
     }
     return links;
-}
-
-function freezerMap(): Map<number, ProgressFreezer> {
-    return new Map(PROGRESS.freezers.map((freezer) => [freezer.pid, freezer]));
 }
 
 describe('Level table order', () => {
@@ -137,31 +115,20 @@ describe('Level table order', () => {
 
     test('a level follows what it requires and needs in its section', () => {
         const placed = placements();
-        const freezers = freezerMap();
-        const links = linkMap(placed, freezers);
+        const links = linkMap(placed);
         const failures: string[] = [];
         for (const level of PROGRESS.levels) {
             const at = placed.get(level.n);
             if (!at) continue;
-            for (const prerequisite of prerequisites(level, at.row, freezers)) {
+            for (const prerequisite of prerequisites(level, at.row)) {
                 // Only levels of the same section count; a prerequisite with none there asks nothing
-                const inSection: Alternative[] = [];
-                for (const alternative of prerequisite.alternatives) {
-                    const names = alternative.filter((name) => placed.get(name)?.section === at.section);
-                    if (names.length > 0) inSection.push(names);
-                }
+                const inSection = prerequisite.alternatives.filter((name) => placed.get(name)?.section === at.section);
                 if (inSection.length === 0) continue;
-                const met = inSection.some((alternative) => {
-                    return alternative.every((name) => placed.get(name)!.position < at.position);
-                });
-                if (met) continue;
-                for (const alternative of inSection) {
-                    for (const name of alternative) {
-                        if (placed.get(name)!.position < at.position) continue;
-                        // Two levels that require each other cannot both come second
-                        if (reaches(links, name, level.n)) continue;
-                        failures.push(`${level.n} comes before ${name} (${prerequisite.kind}) in ${at.section}`);
-                    }
+                if (inSection.some((name) => placed.get(name)!.position < at.position)) continue;
+                for (const name of inSection) {
+                    // Two levels that require each other cannot both come second
+                    if (reaches(links, name, level.n)) continue;
+                    failures.push(`${level.n} comes before ${name} (${prerequisite.kind}) in ${at.section}`);
                 }
             }
         }

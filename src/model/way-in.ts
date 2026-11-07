@@ -469,7 +469,7 @@ export function accessOf(state: LevelState[], reach: Reachability | null): Array
         const z = PROG.levels[i].p[2];
         const layer = layers.find((candidate) => z >= candidate.z[0] && z < candidate.z[1]);
         if (layer && layer.key !== 'ground' && !layerReached.get(layer.key)) return layer.key;
-        if (PROG.levels[i].from === 'sky' && !layerReached.get('sky')) return 'sky';
+        if (PROG.levels[i].drop !== undefined && !layerReached.get('sky')) return 'sky';
         return null;
     });
 }

@@ -936,12 +936,9 @@ describe('unlock plans through cycles', () => {
             towers: [],
             signOk: () => true,
             signRead: () => true,
-            rockSmashed: () => false,
             needsView: {
                 levelSolved: () => false,
-                freezerOpen: () => false,
                 signRead: () => false,
-                rockSmashed: () => false,
             },
         };
     };

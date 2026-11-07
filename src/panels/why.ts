@@ -101,7 +101,7 @@ export function whyParts(context: WhyContext, levelIndex: number): WhyParts {
     }
 
     // the level is entered from the sky; named once the sky shows
-    const skyEntry = PROG.levels[levelIndex].from === 'sky';
+    const skyEntry = PROG.levels[levelIndex].drop !== undefined;
     const fromSky = skyEntry && context.model.stepShown({ t: 'a', id: 'sky' });
     return {
         gate: gateText(context, levelIndex, wayIn(context, levelIndex)),

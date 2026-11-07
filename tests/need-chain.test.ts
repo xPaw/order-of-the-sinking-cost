@@ -50,9 +50,7 @@ function worldOf(levels: ProgressLevel[], freezers: Freezer[] = []): ChainWorld 
 function viewOf(solved: number[] = []): NeedsView {
     return {
         levelSolved: (index) => solved.includes(index),
-        freezerOpen: () => false,
         signRead: () => false,
-        rockSmashed: () => false,
     };
 }
 
@@ -69,20 +67,27 @@ describe('needChain', () => {
         ]);
     });
 
-    test('runs a need on another layer through the hubs of both layers', () => {
+    test('ends a need of a High level on another layer at the hub', () => {
         const high = { ...level('b', [[{ level: 0 }]]), p: [9, 9, 33] as Position };
         const chain = needChain(worldOf([level('a', []), high]), viewOf(), { level: 1 });
 
+        expect(chain.edges.map((edge) => [edge.from, edge.to])).toEqual([[SKY_HUB, 1]]);
+    });
+
+    test('runs a need of a ground level on High through the hubs of both layers', () => {
+        const high = { ...level('a', []), p: [9, 9, 33] as Position };
+        const chain = needChain(worldOf([high, level('b', [[{ level: 0 }]])]), viewOf(), { level: 1 });
+
         expect(chain.edges.map((edge) => [edge.from, edge.to])).toEqual([
-            [0, START],
-            [SKY_HUB, 1],
-            [START, 0],
+            [0, SKY_HUB],
+            [START, 1],
+            [SKY_HUB, 0],
         ]);
     });
 
     test('ends the need of a dropped level at its hole', () => {
         const high = { ...level('a', []), p: [9, 9, 33] as Position };
-        const dropped = { ...level('b', [[{ level: 0 }]]), from: 'sky' as const, drop: HOLE };
+        const dropped = { ...level('b', [[{ level: 0 }]]), drop: HOLE };
         const chain = needChain(worldOf([high, dropped]), viewOf(), { level: 1 });
 
         expect(chain.drops).toEqual([HOLE]);
@@ -92,30 +97,20 @@ describe('needChain', () => {
         ]);
     });
 
-    test('runs a ground need of a dropped level to the hole through the hubs', () => {
-        const dropped = { ...level('b', [[{ level: 0 }]]), from: 'sky' as const, drop: HOLE };
+    test('ends a ground need of a dropped level at the hub of the hole', () => {
+        const dropped = { ...level('b', [[{ level: 0 }]]), drop: HOLE };
         const chain = needChain(worldOf([level('a', []), dropped]), viewOf(), { level: 1 });
 
-        expect(chain.edges.map((edge) => [edge.from, edge.to])).toEqual([
-            [0, START],
-            [SKY_HUB, HOLE],
-            [START, 0],
-        ]);
+        expect(chain.edges.map((edge) => [edge.from, edge.to])).toEqual([[SKY_HUB, HOLE]]);
     });
 
     test('ends the chain at a hole under fog', () => {
-        const dropped = { ...level('a', [[{ rock: 9 }]]), from: 'sky' as const, drop: HOLE };
+        const dropped = { ...level('a', [[{ sign: 0 }]]), drop: HOLE };
         const world = { ...worldOf([dropped]), dropShown: () => false };
         const chain = needChain(world, viewOf(), { level: 0 });
 
         expect(chain.drops).toEqual([]);
         expect(chain.stops).toEqual([]);
-    });
-
-    test('stops at a sky drop with no known hole', () => {
-        const dropped = { ...level('a', []), from: 'sky' as const };
-
-        expect(needChain(worldOf([dropped]), viewOf(), { level: 0 }).stops).toEqual([{ reason: 'drop', level: 0 }]);
     });
 
     test('goes through the levels that unlock a level before the hub', () => {
@@ -140,6 +135,18 @@ describe('needChain', () => {
         const chain = needChain(world, viewOf(), { level: 1 });
 
         expect(chain.stops).toEqual([{ reason: 'unknown', level: 0 }]);
+    });
+
+    test('follows the unlocks of a level the table leaves to the walk', () => {
+        const unlocked = { ...level('b', undefined), req: [0] };
+        const world = worldOf([level('a', []), unlocked]);
+        const chain = needChain(world, viewOf(), { level: 1 });
+
+        expect(chain.stops).toEqual([]);
+        expect(chain.edges.map((edge) => [edge.from, edge.to])).toEqual([
+            [0, 1],
+            [START, 0],
+        ]);
     });
 
     test('draws a met need and stops following there', () => {
@@ -167,14 +174,11 @@ describe('needChain', () => {
         expect(chain.edges.filter((edge) => edge.from === START)).toHaveLength(1);
     });
 
-    test('stops at a Sign and at a Rock', () => {
-        const world = worldOf([level('a', [[{ sign: 0 }]]), level('b', [[{ rock: 9 }]])]);
+    test('stops at a Sign', () => {
+        const world = worldOf([level('a', [[{ sign: 0 }]])]);
 
-        const bySign = needChain(world, viewOf(), { level: 0 });
-        expect(bySign.stops).toEqual([{ reason: 'sign', sign: 0 }]);
-
-        const byRock = needChain(world, viewOf(), { level: 1 });
-        expect(byRock.stops).toEqual([{ reason: 'rock', rock: 9 }]);
+        const chain = needChain(world, viewOf(), { level: 0 });
+        expect(chain.stops).toEqual([{ reason: 'sign', sign: 0 }]);
     });
 
     test('goes through a tower Sign to its tower and the gold-room Sign to every tower', () => {
@@ -191,18 +195,6 @@ describe('needChain', () => {
         ]);
     });
 
-    test('goes through the levels that open a Freezer', () => {
-        const world = worldOf([level('a', []), level('b', [[{ freezer: 0 }]])], [freezerAt(50, [3, 3, 0], [0])]);
-        const chain = needChain(world, viewOf(), { level: 1 });
-
-        expect(chain.freezers).toEqual([0]);
-        expect(chain.edges.map((edge) => [edge.from, edge.to])).toEqual([
-            [[3, 3, 0], 1],
-            [0, [3, 3, 0]],
-            [START, 0],
-        ]);
-    });
-
     test('follows a Freezer back through what opens it', () => {
         const world = worldOf([level('a', [])], [freezerAt(50, [3, 3, 0], [0])]);
         const chain = needChain(world, viewOf(), { freezer: 0 });
@@ -215,9 +207,9 @@ describe('needChain', () => {
     });
 
     test('stops at a Freezer nothing opens', () => {
-        const world = worldOf([level('a', [[{ freezer: 0 }]])], [freezerAt(50, [3, 3, 0], [])]);
+        const world = worldOf([level('a', [])], [freezerAt(50, [3, 3, 0], [])]);
 
-        expect(needChain(world, viewOf(), { level: 0 }).stops).toEqual([{ reason: 'freezer', freezer: 0 }]);
+        expect(needChain(world, viewOf(), { freezer: 0 }).stops).toEqual([{ reason: 'freezer', freezer: 0 }]);
     });
 
     test('follows the option the save meets in a group of alternatives, else the first', () => {

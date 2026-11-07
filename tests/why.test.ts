@@ -27,7 +27,7 @@ interface Stub {
 function context({ fromSky, skyShown, bumped = [], gateShown = true }: Stub): WhyContext {
     // the level data enters level 0 from the sky, or not
     const entry = level('stub');
-    if (fromSky) entry.from = 'sky';
+    if (fromSky) entry.drop = [0, 0, 0];
     PROG.levels = [entry];
     return {
         progress: {

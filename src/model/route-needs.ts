@@ -5,16 +5,12 @@ import type { PadRoute, RouteNeed } from '../types.ts';
 /** What a save says about the things a route can ask for. */
 export interface NeedsView {
     levelSolved: (level: number) => boolean;
-    freezerOpen: (freezer: number) => boolean;
     signRead: (pid: number) => boolean;
-    rockSmashed: (pid: number) => boolean;
 }
 
 /** Whether a save meets one need. */
 export function needMet(need: RouteNeed, view: NeedsView): boolean {
     if ('level' in need) return view.levelSolved(need.level);
-    if ('freezer' in need) return view.freezerOpen(need.freezer);
-    if ('rock' in need) return view.rockSmashed(need.rock);
     if ('sign' in need) return view.signRead(PROG.signs[need.sign].pid);
     return unknownNeed(need);
 }
@@ -22,15 +18,12 @@ export function needMet(need: RouteNeed, view: NeedsView): boolean {
 /** The requirement graph nodes a need can point at. */
 export interface NeedNodes {
     levelId: number[];
-    gateId: number[];
     signId: (sign: number) => number;
 }
 
-/** The graph node a need asks for; undefined for a need with no step to plan. */
-export function needId(need: RouteNeed, nodes: NeedNodes): number | undefined {
+/** The graph node a need asks for. */
+export function needId(need: RouteNeed, nodes: NeedNodes): number {
     if ('level' in need) return nodes.levelId[need.level];
-    if ('freezer' in need) return nodes.gateId[need.freezer];
-    if ('rock' in need) return undefined;
     if ('sign' in need) return nodes.signId(need.sign);
     return unknownNeed(need);
 }

@@ -43,9 +43,7 @@ export interface ProgressLevel {
      * the level is reachable; absent, the walk decides. An empty list is reachable from the start.
      */
     needs?: RouteNeed[][];
-    /** 'sky' when a blocked level is entered from the sky. */
-    from?: 'sky';
-    /** The hole a level with `from` is dropped into from. */
+    /** The hole a level entered from the sky is dropped into from. */
     drop?: Position;
 }
 
@@ -212,10 +210,9 @@ export interface ProgressMap {
 export type EndgameWayIn = [level: number, freezers: number[], replace: number];
 
 /**
- * What a level or pad route asks for: a level solved, a Freezer open, a Sign read or a Rock smashed, by index into
- * `levels`, `freezers`, `signs`; a Rock by pid.
+ * What a level or pad route asks for: a level solved or a Sign read, by index into `levels`, `signs`.
  */
-export type RouteNeed = { level: number } | { freezer: number } | { sign: number } | { rock: number };
+export type RouteNeed = { level: number } | { sign: number };
 
 /** Where a pad route takes the hero: a teleporter (index into `teleporters`), or a position. */
 export type RouteTarget = { pad: number } | { at: Position };

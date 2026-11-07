@@ -82,13 +82,10 @@ function progress({ state, wayIn = [], towers = [], rank = 0, extra = {} }: Prog
         signOk,
         // a Sign counts as read once its rule holds
         signRead: (pid: number) => signOk(ruleOf(pid)),
-        rockSmashed: () => false,
         // reads the fields of the built progress, which a test may replace or change after
         needsView: {
             levelSolved: (levelIndex) => built.state[levelIndex] === 'solved',
-            freezerOpen: (freezer) => built.gateOpen[freezer],
             signRead: (pid) => built.signRead(pid),
-            rockSmashed: (pid) => built.rockSmashed(pid),
         },
         needed: [],
         ...extra,
@@ -472,11 +469,6 @@ describe('a level with needs', () => {
         const plan = keys(setup([[{ level: 0 }]], [0]), ['level', 3]);
         expect(plan).toContain('l0');
         expect(plan).not.toContain('g0');
-    });
-
-    test('a Freezer the needs ask for is one of its steps', () => {
-        const plan = keys(setup([[{ freezer: 0 }]]), ['level', 3]);
-        expect(plan).toEqual(expect.arrayContaining(['l2', 'g0', 'l3']));
     });
 
     test('a level whose needs give no step keeps a step of its own', () => {

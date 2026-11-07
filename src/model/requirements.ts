@@ -248,7 +248,6 @@ export function requirementGraph(progress: BaseProgress): Graph {
     // what needs still ask for: each group not met yet, the need itself or an OR of the group's
     const needNodes: NeedNodes = {
         levelId,
-        gateId,
         signId: (sign) => signIds.get('s' + sign)!,
     };
     const needsParts = (key: string, needs: RouteNeed[][]): number[] => {
@@ -256,12 +255,8 @@ export function requirementGraph(progress: BaseProgress): Graph {
         needs.forEach((group, groupIndex) => {
             if (group.some((need) => needMet(need, progress.needsView))) return;
 
-            // an empty group is a need that is not known, and a Rock to smash has no step: there is nothing to plan
-            const members: number[] = [];
-            for (const need of group) {
-                const id = needId(need, needNodes);
-                if (id !== undefined) members.push(id);
-            }
+            // an empty group is a need that is not known: there is nothing to plan
+            const members = group.map((need) => needId(need, needNodes));
             if (members.length === 0) return;
             if (members.length === 1) {
                 parts.push(members[0]);

@@ -105,11 +105,9 @@ describe('the needs of a level in the walk', () => {
     });
 });
 
-const view = (solved: number[], open: number[] = [], read: number[] = [], smashed: number[] = []): NeedsView => ({
+const view = (solved: number[], read: number[] = []): NeedsView => ({
     levelSolved: (level) => solved.includes(level),
-    freezerOpen: (freezer) => open.includes(freezer),
     signRead: (pid) => read.includes(pid),
-    rockSmashed: (pid) => smashed.includes(pid),
 });
 
 const { PROG } = await import('../src/data.ts');
@@ -135,17 +133,10 @@ describe('the needs of a route', () => {
         expect(needsMet(needs, view([0, 2]))).toBe(true);
     });
 
-    test('a Freezer needs to be open and a Sign read', () => {
-        const needs: RouteNeed[][] = [[{ freezer: 4 }], [{ sign: 0 }]];
-        expect(needsMet(needs, view([], [4], []))).toBe(false);
-        expect(needsMet(needs, view([], [], [90]))).toBe(false);
-        expect(needsMet(needs, view([], [4], [90]))).toBe(true);
-    });
-
-    test('a Rock needs to be smashed', () => {
-        const needs: RouteNeed[][] = [[{ level: 0 }], [{ rock: 7 }]];
-        expect(needsMet(needs, view([0]))).toBe(false);
-        expect(needsMet(needs, view([0], [], [], [7]))).toBe(true);
+    test('a Sign needs to be read', () => {
+        const needs: RouteNeed[][] = [[{ sign: 0 }]];
+        expect(needsMet(needs, view([], []))).toBe(false);
+        expect(needsMet(needs, view([], [90]))).toBe(true);
     });
 
     test('a group with no need is one nothing meets', () => {
