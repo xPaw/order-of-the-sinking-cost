@@ -112,7 +112,7 @@ export const setSpoilersHidden = (value: boolean): void => {
  * Hooks into the last drawn progress view, which sets the ones it has: apply (the list filter changed), open(level),
  * tower(i) and area() frame them on the map, hero() frames the hero, overlay(kind) shows or hides a kind of mark,
  * find(kind) lists the items of a kind of mark, list() closes the open panel so that the list shows, panelOpen() tells
- * whether a panel covers the list, reveal() names a revealed level everywhere, side: the model the sidebar shows, hash() opens the panel the address names (#level=<name>, #tower=<i>, #gate=<pid> or #sign=<i>).
+ * whether a panel covers the list, reveal() names a revealed level everywhere, side: the model the sidebar shows, hash() opens the panel the address names (#level=<name>, #tower=<pid>, #gate=<pid> or #sign=<pid>).
  */
 export interface Hooks {
     apply: ((redraw?: boolean) => void) | null;

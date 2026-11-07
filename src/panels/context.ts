@@ -10,7 +10,7 @@ import { FOG_LAYER_KEYS, mapLayerOf } from '../model/layers.ts';
 import type { GoalLevel, GoalView } from '../model/goals-view.ts';
 import type { ProgressModel } from '../model/progress-model.ts';
 import type { ShownProgress } from '../model/progress.ts';
-import type { Area, Freezer, Position, ProgressLevel, Sign, Teleporter } from '../types.ts';
+import type { Area, Freezer, GoldRoom, Position, ProgressLevel, Sign, Teleporter, Tower } from '../types.ts';
 import { panelHash, panelKeep, setHash } from './hash.ts';
 
 /** A level of the goal as the list shows it: the goal's levels by group, and the solved ones. */
@@ -40,6 +40,8 @@ export class PanelContext {
     camp: string;
     freezers: Freezer[];
     signs: Sign[];
+    towers: Tower[];
+    goldRooms: GoldRoom[];
     areas: Area[];
 
     // the area name of each Freezer asked about, for this draw
@@ -84,9 +86,6 @@ export class PanelContext {
     back: PanelKey[] = [];
     chainPoints: Position[] = [];
 
-    // the level whose table route the map shows, if any
-    routeLevel: number | null = null;
-
     // the map's overlays, and the panel of each node kind (both set with the map)
     overlays: () => MapOverlay[] = () => [];
 
@@ -111,6 +110,8 @@ export class PanelContext {
         this.camp = state.camp;
         this.freezers = PROG.freezers;
         this.signs = PROG.signs || [];
+        this.towers = PROG.towers;
+        this.goldRooms = PROG.gold_rooms;
         this.areas = PROG.areas || [];
 
         const gateAtCell = new Map(

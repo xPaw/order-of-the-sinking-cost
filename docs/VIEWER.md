@@ -995,13 +995,24 @@ The page words a Way, as a plan step and as a stage of Endgame High ([Goals (vie
 name (the plan step with a link that frames the area on the map) and, while the area is not named, "Way to the High
 Mirrors sign" with the tower's name ([The spoiler model (viewer)](#the-spoiler-model-viewer)).
 
-Every level has a Debug route button at the foot of its panel, whatever the No spoilers switch says. It marks a broken
-route in the panel, links the level table file for pull requests and, in place of the panel's other map lines, draws the
-chain of the level's needs back to the hero's start, as straight lines between its stops and not a walked path: solid
-for a need not met, dashed for one met. The chain follows each group's option the save meets, else the first, and goes
-through the levels and Signs that open a Freezer. It ends at an entry with no needs, which a line joins to the start, or
-stops at a level the table leaves to the walk, a Sign, a Rock, a Freezer nothing opens or a level already on the way
-back; each stop has a numbered badge, and the panel says where the chain ends when it does not reach the start.
+Every level, Freezer, Sign and tower panel ends with the table route: a tower's is that of its unsolved required levels.
+Beside the panel's other map lines it draws the chain of needs left back to the Crossroads pad of the layer, as straight
+lines between its stops and not a walked path: solid gold for a need not met, dotted gold for one met, and nothing behind
+a met need or anything under fog. What a panel unlocks is dashed blue. A need on another layer runs to the pad of its
+layer and on from the pad of the layer it opens, and the panel links each other layer the route runs on.
+
+A table row's `requires` repeats the levels that unlock it in the game data, and the rows of a section read in that order;
+`needs` stays what reaches a level.
+
+A table row with `from: 'sky'` is entered by a drop, and `drop` is the hole. The needs of such a level end at the hole,
+which carries an arrow on the map, and the panel links the layer of the hole. A row with no `drop` is a broken route.
+
+The chain follows each group's shown option the save meets, else the first one shown, and goes through the levels that
+unlock a level and the levels and Signs that open a Freezer. A tower Sign or the gold-room Sign goes on to its towers, all
+of them for the gold-room Sign and without their levels. It ends at an entry with no needs or a tower, which a line joins
+to the pad, or stops at a level the table leaves to the walk, any other Sign, a Rock, a Freezer nothing opens or a level
+already on the way back. The panel marks these stops in one broken route box and always links the level table file for
+pull requests.
 
 ### Next steps
 

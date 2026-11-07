@@ -1025,10 +1025,6 @@ summary {
     border-radius: var(--r3);
     margin: var(--s2) 0;
 }
-.routebtn {
-    width: 100%;
-    margin: var(--s3) 0 var(--s2);
-}
 /* a save file read only in part */
 .fwarn {
     background: var(--panel2);
@@ -1708,13 +1704,17 @@ main > .mapbox {
     stroke-linecap: round;
     pointer-events: none;
 }
-.mw .link.req {
+.mw .link.req,
+.mw .link.met {
     stroke: var(--gold);
 }
+.mw .link.met {
+    stroke-dasharray: 2 6;
+    opacity: 0.7;
+}
 .mw .link.unl {
-    stroke: #f3ead6;
-    stroke-dasharray: 6 5;
-    opacity: 0.85;
+    stroke: #7fd6ff;
+    stroke-dasharray: 8 6;
 }
 /* a step badge keeps its screen size and sits on the marker's upper right corner */
 .mw .bd {

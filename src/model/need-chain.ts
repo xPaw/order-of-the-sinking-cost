@@ -1,18 +1,27 @@
-// The chain of table needs behind a level, followed back to the hero's start or to where the table stops
+// The chain of table needs behind a level or Freezer, followed back to the middle of the map or to where the table stops
 // (VIEWER.md "Level needs and pad routes")
-import type { Freezer, Position, ProgressLevel, RouteNeed, Sign } from '../types.ts';
+import type { Freezer, GoldRoom, Position, ProgressLevel, RouteNeed, Sign, Tower } from '../types.ts';
 import { needMet } from './route-needs.ts';
 import type { NeedsView } from './route-needs.ts';
 
 /** A level (by index) or a position. */
 export type ChainEnd = number | Position;
 
-/** What the chain is built over: the table's rows and where the hero starts. */
+/** What a chain is followed back from. */
+export type ChainTarget = { level: number } | { freezer: number } | { sign: number };
+
+/** What the chain is built over: the table's rows and the pad each map layer's lines start from. */
 export interface ChainWorld {
     levels: ProgressLevel[];
     freezers: Freezer[];
     signs: Sign[];
-    start: Position | undefined;
+    towers: Tower[];
+    goldRooms: GoldRoom[];
+    layerOf: (z: number) => string;
+    hubs: Map<string, Position>;
+    shown: (need: RouteNeed) => boolean;
+    towerShown: (tower: number) => boolean;
+    dropShown: (at: Position) => boolean;
 }
 
 /** One need of the chain: a line from where it stands to what it opens. */
@@ -26,26 +35,20 @@ export interface ChainEdge {
 export type ChainStop =
     | { reason: 'unknown'; level: number }
     | { reason: 'cycle'; level: number }
+    | { reason: 'drop'; level: number }
     | { reason: 'sign'; sign: number }
-    | { reason: 'rock'; rock: number; at: ChainEnd }
+    | { reason: 'rock'; rock: number }
     | { reason: 'freezer'; freezer: number };
 
-/** The chain behind one level. `reachesStart` is true when a line runs from the start and no branch stops short. */
+/** The chain behind its targets. */
 export interface NeedChain {
     edges: ChainEdge[];
     stops: ChainStop[];
     levels: number[];
     freezers: number[];
     signs: number[];
-    reachesStart: boolean;
-}
-
-/** Where a stop stands. */
-export function stopEnd(world: ChainWorld, stop: ChainStop): ChainEnd {
-    if (stop.reason === 'unknown' || stop.reason === 'cycle') return stop.level;
-    if (stop.reason === 'sign') return world.signs[stop.sign].p;
-    if (stop.reason === 'rock') return stop.at;
-    return world.freezers[stop.freezer].p;
+    /** The holes the hero drops through. */
+    drops: Position[];
 }
 
 interface Follow {
@@ -58,31 +61,99 @@ interface Follow {
     freezersDone: Set<number>;
 }
 
-// the option the save meets, else the first
-function optionOf(options: RouteNeed[], view: NeedsView): RouteNeed {
-    return options.find((need) => needMet(need, view)) ?? options[0];
+// the shown option the save meets, else the first one shown
+function optionOf(follow: Follow, options: RouteNeed[]): RouteNeed {
+    const shown = options.filter((need) => follow.world.shown(need));
+    return shown.find((need) => needMet(need, follow.view)) ?? shown[0] ?? options[0];
 }
 
+function endLayer(world: ChainWorld, end: ChainEnd): string {
+    if (typeof end === 'number') return world.layerOf(world.levels[end].p[2]);
+    return world.layerOf(end[2]);
+}
+
+// a need of a level entered by a drop is met at the hole; the map draws a line on one layer only, so a need on another
+// layer runs to its layer's hub and on from the hub of the layer it opens
+function addLine(world: ChainWorld, chain: NeedChain, from: ChainEnd, to: ChainEnd, met: boolean): void {
+    let end = to;
+    if (typeof to === 'number') end = world.levels[to].drop ?? to;
+
+    const fromLayer = endLayer(world, from);
+    const toLayer = endLayer(world, end);
+    const fromHub = world.hubs.get(fromLayer);
+    const toHub = world.hubs.get(toLayer);
+
+    if (fromLayer === toLayer || !fromHub || !toHub) {
+        chain.edges.push({ from, to: end, met });
+        return;
+    }
+
+    chain.edges.push({ from, to: fromHub, met });
+    chain.edges.push({ from: toHub, to: end, met });
+}
+
+// a need under fog ends the chain with no line; a met need gets its line and nothing behind it
 function followNeed(follow: Follow, need: RouteNeed, to: ChainEnd): void {
     const { world, view, chain } = follow;
+    if (!world.shown(need)) return;
+
     const met = needMet(need, view);
 
     if ('level' in need) {
-        chain.edges.push({ from: need.level, to, met });
-        if (follow.path.has(need.level)) {
+        addLine(world, chain, need.level, to, met);
+        if (met) {
+            if (!chain.levels.includes(need.level)) chain.levels.push(need.level);
+        } else if (follow.path.has(need.level)) {
             chain.stops.push({ reason: 'cycle', level: need.level });
         } else {
             followLevel(follow, need.level);
         }
     } else if ('freezer' in need) {
-        chain.edges.push({ from: world.freezers[need.freezer].p, to, met });
-        followFreezer(follow, need.freezer);
+        addLine(world, chain, world.freezers[need.freezer].p, to, met);
+        if (!met) followFreezer(follow, need.freezer);
     } else if ('sign' in need) {
-        chain.edges.push({ from: world.signs[need.sign].p, to, met });
-        if (!chain.signs.includes(need.sign)) chain.signs.push(need.sign);
-        chain.stops.push({ reason: 'sign', sign: need.sign });
-    } else {
-        chain.stops.push({ reason: 'rock', rock: need.rock, at: to });
+        addLine(world, chain, world.signs[need.sign].p, to, met);
+        if (!met) followSign(follow, need.sign);
+    } else if (!met) {
+        chain.stops.push({ reason: 'rock', rock: need.rock });
+    }
+}
+
+// all the needs, or the one that holds when any one is enough
+function followAll(follow: Follow, needs: RouteNeed[], anyOne: boolean, to: ChainEnd): void {
+    let followed = needs;
+    if (anyOne && needs.length > 1) followed = [optionOf(follow, needs)];
+    for (const need of followed) followNeed(follow, need, to);
+}
+
+// the towers a Sign's rule counts: its own, or the ground towers of the gold rooms
+function signTowers(world: ChainWorld, sign: Sign): number[] {
+    if (sign.tower !== undefined) return [sign.tower];
+    if (sign.gold) return world.goldRooms.map((room) => room.tower);
+    return [];
+}
+
+// a Sign that counts towers follows them to the hub; any other Sign ends the chain
+function followSign(follow: Follow, signIndex: number): void {
+    const { world, chain } = follow;
+    if (chain.signs.includes(signIndex)) return;
+    chain.signs.push(signIndex);
+
+    const sign = world.signs[signIndex];
+    const towers = signTowers(world, sign);
+    if (towers.length === 0) {
+        chain.stops.push({ reason: 'sign', sign: signIndex });
+        return;
+    }
+
+    for (const tower of towers) {
+        if (!world.towerShown(tower)) continue;
+
+        const towerAt = world.towers[tower].p;
+        addLine(world, chain, towerAt, sign.p, false);
+
+        const hub = world.hubs.get(endLayer(world, towerAt));
+        if (hub) chain.edges.push({ from: hub, to: towerAt, met: true });
     }
 }
 
@@ -91,17 +162,22 @@ function followLevel(follow: Follow, levelIndex: number): void {
 
     const { world, chain } = follow;
     follow.levelsDone.add(levelIndex);
-    follow.path.add(levelIndex);
     chain.levels.push(levelIndex);
 
     const level = world.levels[levelIndex];
+    if (level.drop !== undefined) {
+        if (!world.dropShown(level.drop)) return;
+        chain.drops.push(level.drop);
+    } else if (level.from === 'sky') {
+        chain.stops.push({ reason: 'drop', level: levelIndex });
+    }
+
+    follow.path.add(levelIndex);
     if (level.needs === undefined) {
         chain.stops.push({ reason: 'unknown', level: levelIndex });
     } else if (level.needs.length === 0) {
-        if (world.start) {
-            chain.edges.push({ from: world.start, to: levelIndex, met: true });
-            chain.reachesStart = true;
-        }
+        const hub = world.hubs.get(endLayer(world, levelIndex));
+        if (hub && level.req.length === 0) chain.edges.push({ from: hub, to: levelIndex, met: true });
     } else {
         for (const group of level.needs) {
             if (group.length === 0) {
@@ -109,9 +185,13 @@ function followLevel(follow: Follow, levelIndex: number): void {
                 continue;
             }
 
-            followNeed(follow, optionOf(group, follow.view), levelIndex);
+            followNeed(follow, optionOf(follow, group), levelIndex);
         }
     }
+
+    // reaching a level is not playing it: the levels that unlock it come on top of the table's needs
+    const unlockers = level.req.map((required): RouteNeed => ({ level: required }));
+    followAll(follow, unlockers, Boolean(level.or), levelIndex);
 
     follow.path.delete(levelIndex);
 }
@@ -137,24 +217,24 @@ function followFreezer(follow: Follow, freezerIndex: number): void {
         return;
     }
 
-    let followed = options;
-    if (freezer.or && options.length > 1) followed = [optionOf(options, follow.view)];
-    for (const need of followed) followNeed(follow, need, freezer.p);
+    followAll(follow, options, Boolean(freezer.or), freezer.p);
 }
 
 /**
  * Follows the needs of a level back, level by level and through a Freezer's openers, until an entry with no needs,
- * which a line joins to the start. In a group of alternatives it follows the one the save meets, else the first. It
- * stops at a level with no entry, a Sign, a Rock, a Freezer nothing opens and a level already on the way back.
+ * which a line joins to its layer's hub. In a group of alternatives it follows the shown one the save meets, else the
+ * first one shown. It goes through a Sign that counts towers to those towers, which a line joins to the hub. It stops at
+ * a level with no entry, a sky drop with no known hole, any other Sign, a Rock, a Freezer nothing opens and a level
+ * already on the way back.
  */
-export function needChain(world: ChainWorld, view: NeedsView, levelIndex: number): NeedChain {
+export function needChain(world: ChainWorld, view: NeedsView, ...targets: ChainTarget[]): NeedChain {
     const chain: NeedChain = {
         edges: [],
         stops: [],
         levels: [],
         freezers: [],
         signs: [],
-        reachesStart: false,
+        drops: [],
     };
 
     const follow: Follow = {
@@ -166,7 +246,11 @@ export function needChain(world: ChainWorld, view: NeedsView, levelIndex: number
         freezersDone: new Set(),
     };
 
-    followLevel(follow, levelIndex);
-    if (chain.stops.length > 0) chain.reachesStart = false;
+    for (const target of targets) {
+        if ('level' in target) followLevel(follow, target.level);
+        else if ('freezer' in target) followFreezer(follow, target.freezer);
+        else followSign(follow, target.sign);
+    }
+
     return chain;
 }

@@ -1,5 +1,5 @@
-// The panel kept open per campaign and the page address that names it (#level=<name>, #tower=<i>, #gate=<pid> or
-// #sign=<i>) (VIEWER.md "The page (viewer)")
+// The panel kept open per campaign and the page address that names it (#level=<name>, #tower=<pid>, #gate=<pid> or
+// #sign=<pid>) (VIEWER.md "The page (viewer)")
 import { hooks } from '../shared.ts';
 import type { PanelKey, PanelKind } from '../shared.ts';
 
@@ -25,28 +25,30 @@ export function setHash(hash: string): void {
     } catch {}
 }
 
-/** What the address names a level and a Freezer by. */
+/** What the address names a level, a Freezer, a tower and a Sign by. */
 export interface AddressNames {
     levels: Array<{ n: string }>;
     freezers: Array<{ pid: number }>;
+    towers: Array<{ pid: number }>;
+    signs: Array<{ pid: number }>;
 }
 
-/** The hash that names a panel: a level by its name, a Freezer by its pid, a tower or Sign by its index. */
+/** The hash that names a panel: a level by its name, anything else by its pid. */
 export function panelHash([kind, id]: PanelKey, names: AddressNames): string {
     if (kind === 'level') return kind + '=' + encodeURIComponent(names.levels[id].n);
     if (kind === 'gate') return kind + '=' + names.freezers[id].pid;
-    return kind + '=' + id;
+    if (kind === 'tower') return kind + '=' + names.towers[id].pid;
+    return kind + '=' + names.signs[id].pid;
 }
 
 /** The index a decoded address value names for a kind of panel; -1 when it names nothing. */
 export function addressedIndex(kind: PanelKind, value: string, names: AddressNames): number {
     if (kind === 'level') return names.levels.findIndex((level) => level.n === value);
-    if (kind === 'gate') {
-        const pid = Number(value);
-        return names.freezers.findIndex((freezer) => freezer.pid === pid);
-    }
-    if (/^\d+$/.test(value)) return Number(value);
-    return -1;
+
+    const pid = Number(value);
+    if (kind === 'gate') return names.freezers.findIndex((freezer) => freezer.pid === pid);
+    if (kind === 'tower') return names.towers.findIndex((tower) => tower.pid === pid);
+    return names.signs.findIndex((sign) => sign.pid === pid);
 }
 
 addEventListener('hashchange', () => hooks.hash?.());

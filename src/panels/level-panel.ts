@@ -38,7 +38,7 @@ import {
 } from './plan-chips.ts';
 import type { Chain } from './plan-chips.ts';
 import { routeSection } from './route.ts';
-import type { RouteLines } from './route.ts';
+import type { RouteSection } from './route.ts';
 import { approxTip, wayIn, whyParts, whyText } from './why.ts';
 
 /** The unlock plan section of a level's panel, and what the sections after it need from the plan. */
@@ -66,8 +66,8 @@ interface LevelPanelParts {
     /** The shown Freezers that this level helps open. */
     unlockedGates: number[];
     towerInfo: TowerSection;
-    /** The table route to draw, while it is shown. */
-    route: RouteLines | null;
+    /** The table route to draw. */
+    route: RouteSection;
 }
 
 function stateChipsHtml(context: PanelContext, levelIndex: number): string {
@@ -240,9 +240,10 @@ function wikiTacticsHtml(level: ProgressLevel): string {
     return `<div class="extlink"><a href="${escapeHtml(url)}" target="_blank" rel="noopener">WikiTactics</a></div>`;
 }
 
-// the lines the map draws for the level: what it requires and unlocks, its tower, the gates around it and its chain
+// the lines the map draws for the level: what it requires and unlocks, its tower, the gates around it, its chain and
+// its route
 function levelLinks(context: PanelContext, parts: LevelPanelParts): MapLink[] {
-    const { levelIndex, chain, gates, unlockedGates, towerInfo } = parts;
+    const { levelIndex, chain, gates, unlockedGates, towerInfo, route } = parts;
     const level = context.levels[levelIndex];
     const unlocks = context.progress.unlocks[levelIndex];
 
@@ -263,6 +264,7 @@ function levelLinks(context: PanelContext, parts: LevelPanelParts): MapLink[] {
     ]);
 
     return uniqueLinks([
+        ...route.links,
         ...requirementLinks,
         ...unlockLinks,
         ...towerLinks,
@@ -272,27 +274,9 @@ function levelLinks(context: PanelContext, parts: LevelPanelParts): MapLink[] {
     ]);
 }
 
-// what the map highlights for a level with its route shown: the route alone
-function routeSelection(context: PanelContext, parts: LevelPanelParts, route: RouteLines): MapSelection {
-    const level = context.levels[parts.levelIndex];
-
-    return {
-        levels: new Set([parts.levelIndex, ...route.levels]),
-        focus: parts.levelIndex,
-        overlays: new Set(route.overlays),
-        html: parts.html,
-        z: level.p[2],
-        points: [level.p, ...route.points],
-        links: route.links,
-        steps: route.steps,
-    };
-}
-
-// what the map highlights for the level: its requirements, unlocks, tower, gates and chain
+// what the map highlights for the level: its requirements, unlocks, tower, gates, chain and route
 function levelSelection(context: PanelContext, parts: LevelPanelParts): MapSelection {
     const { levelIndex, html, chain, gates, unlockedGates, towerInfo, route } = parts;
-    if (route) return routeSelection(context, parts, route);
-
     const level = context.levels[levelIndex];
     const unlocks = context.progress.unlocks[levelIndex];
     const { tower, towerIndex } = towerInfo;
@@ -305,10 +289,14 @@ function levelSelection(context: PanelContext, parts: LevelPanelParts): MapSelec
     if (tower) towerPoints.push(tower.p);
 
     return {
-        levels: new Set([levelIndex, ...level.req, ...unlocks.levels, ...gateLevels, ...chain.levels]),
+        levels: new Set([levelIndex, ...level.req, ...unlocks.levels, ...gateLevels, ...chain.levels, ...route.levels]),
         focus: levelIndex,
         frontier: chain.frontier,
-        overlays: new Set([...chain.overlays, ...unlockedGates.map((freezerIndex) => 'g' + freezerIndex)]),
+        overlays: new Set([
+            ...chain.overlays,
+            ...route.overlays,
+            ...unlockedGates.map((freezerIndex) => 'g' + freezerIndex),
+        ]),
         tower: selectedTower,
         html,
         z: level.p[2],
@@ -321,7 +309,7 @@ function levelSelection(context: PanelContext, parts: LevelPanelParts): MapSelec
             ...chain.points,
         ],
         links: levelLinks(context, parts),
-        steps: chain.steps,
+        steps: [...chain.steps, ...route.steps],
     };
 }
 
@@ -364,7 +352,7 @@ export function showLevelPanel(context: PanelContext, levelIndex: number, how?: 
     html += tower.html;
     html += wikiTacticsHtml(level);
 
-    const route = routeSection(context, levelIndex);
+    const route = routeSection(context, level.p[2], { level: levelIndex });
     html += route.html;
 
     const parts: LevelPanelParts = {
@@ -374,7 +362,7 @@ export function showLevelPanel(context: PanelContext, levelIndex: number, how?: 
         gates,
         unlockedGates,
         towerInfo: tower,
-        route: route.lines,
+        route,
     };
     context.map?.select(levelSelection(context, parts), how);
 }

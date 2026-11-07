@@ -10,6 +10,7 @@ import type { TowerProgress } from '../model/towers.ts';
 import type { PanelContext } from './context.ts';
 import { markSelected } from './list.ts';
 import { chainOf, layerNote, levelChip, panelHead, pathHtml, pointsOf, stepsOf, uniqueLinks } from './plan-chips.ts';
+import { routeSection } from './route.ts';
 
 // a bar and count of a tower's levels solved; while some are under fog only the ones not under fog are counted, and
 // the count says there are more. Activated and Gold follow as chips.
@@ -77,8 +78,12 @@ export function showTowerPanel(context: PanelContext, towerIndex: number, how?: 
     html += '<div class="h">Levels</div>' + columnHtml(context, shownNormal, tower.req);
     if (dropdowns.length) html += '<div class="h">Dropdowns</div>' + columnHtml(context, dropdowns, 0);
 
-    // lines from the tower to its unsolved levels: solid for required ones, dashed for dropdowns
+    const route = routeSection(context, tower.p[2], ...todo.map((level) => ({ level })));
+    html += route.html;
+
+    // the levels' routes, then lines from the tower to its unsolved levels: solid for required ones, dashed for dropdowns
     const links = uniqueLinks([
+        ...route.links,
         ...todo.map((level): MapLink => [tower.p, level, 'req']),
         ...unsolvedDropdowns.map((level): MapLink => [tower.p, level, 'unl']),
         ...chain.links.filter(([, to]) => !(Array.isArray(to) && to === tower.p)),
@@ -89,16 +94,16 @@ export function showTowerPanel(context: PanelContext, towerIndex: number, how?: 
 
     context.map?.select(
         {
-            levels: new Set([...shownNormal, ...dropdowns, ...chain.levels]),
+            levels: new Set([...shownNormal, ...dropdowns, ...chain.levels, ...route.levels]),
             frontier: chain.frontier,
-            overlays: chain.overlays,
+            overlays: new Set([...chain.overlays, ...route.overlays]),
             tower: towerIndex,
             exact: true,
             html,
             z: tower.p[2],
             points: [tower.p, ...pointsOf(context, framed), ...chain.points],
             links,
-            steps: chain.steps,
+            steps: [...chain.steps, ...route.steps],
         },
         how,
     );

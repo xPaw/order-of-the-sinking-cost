@@ -307,11 +307,11 @@ const linkEndKey = (end: LinkEnd): string => {
     return String(end);
 };
 
-/** The map's lines without repeats: [from, to, kind], an end being a level index or a position. */
+/** The map's lines without repeats, the first of the same two ends kept: an end is a level index or a position. */
 export function uniqueLinks(links: MapLink[]): MapLink[] {
     const seen = new Set<string>();
-    return links.filter(([from, to, kind]) => {
-        const key = linkEndKey(from) + '>' + linkEndKey(to) + kind;
+    return links.filter(([from, to]) => {
+        const key = linkEndKey(from) + '>' + linkEndKey(to);
         if (seen.has(key)) return false;
 
         seen.add(key);

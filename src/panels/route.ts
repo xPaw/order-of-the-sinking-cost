@@ -1,29 +1,39 @@
-// A level panel's Debug route button: the chain of the level's table needs back to the start, drawn on the map
-// (VIEWER.md "Level needs and pad routes")
-import { PROG } from '../data.ts';
+// The route section of a level, Freezer, Sign or tower panel: the chain of table needs that are left, as lines on the map,
+// where it breaks and how to correct it (VIEWER.md "Level needs and pad routes")
 import type { MapLink, MapStep } from '../map/map-view.ts';
 import { capitalized, freezerNoun } from '../model/freezer-names.ts';
-import { needChain, stopEnd } from '../model/need-chain.ts';
-import type { ChainStop, ChainWorld } from '../model/need-chain.ts';
-import type { Position } from '../types.ts';
+import { layerName, mapLayerOf } from '../model/layers.ts';
+import { needChain } from '../model/need-chain.ts';
+import type { ChainEnd, ChainStop, ChainTarget, ChainWorld, NeedChain } from '../model/need-chain.ts';
+import type { Position, RouteNeed } from '../types.ts';
 import { escapeHtml } from '../util.ts';
 import type { PanelContext } from './context.ts';
+import { signOn } from './plan-chips.ts';
 
 const TABLE_FILE_URL = 'https://github.com/xPaw/order-of-the-sinking-cost/blob/main/scripts/lib/level-table.ts';
 
-/** What the map draws for a shown route. */
-export interface RouteLines {
+/** A panel's route text and what the map draws for it. */
+export interface RouteSection {
+    html: string;
     links: MapLink[];
     levels: number[];
     overlays: string[];
-    points: Position[];
     steps: MapStep[];
 }
 
-/** A level's route button and, while the route is shown, where it ends; the lines for the map. */
-export interface RouteSection {
-    html: string;
-    lines: RouteLines | null;
+// the Crossroads pad in the middle of each map layer
+const LAYER_HUBS = new Map<string, Position>([
+    ['ground', [80, 71, 0]],
+    ['sky', [80, 72, 33]],
+    ['underworld', [80, 68, -21]],
+]);
+
+// whether a need may show: what is under fog ends the chain without a word
+function needShown(context: PanelContext, need: RouteNeed): boolean {
+    if ('level' in need) return !context.progress.hidden[need.level];
+    if ('freezer' in need) return context.gateShown(context.freezers[need.freezer]);
+    if ('sign' in need) return signOn(context, need.sign);
+    return true;
 }
 
 function chainWorld(context: PanelContext): ChainWorld {
@@ -31,7 +41,13 @@ function chainWorld(context: PanelContext): ChainWorld {
         levels: context.levels,
         freezers: context.freezers,
         signs: context.signs,
-        start: PROG.fog?.start.hero,
+        towers: context.towers,
+        goldRooms: context.goldRooms,
+        layerOf: mapLayerOf,
+        hubs: LAYER_HUBS,
+        shown: (need) => needShown(context, need),
+        towerShown: (tower) => !context.progress.towerHidden[tower],
+        dropShown: (at) => context.model.shownAt(mapLayerOf(at[2]), at),
     };
 }
 
@@ -43,6 +59,7 @@ function levelLink(context: PanelContext, levelIndex: number): string {
 function stopText(context: PanelContext, stop: ChainStop): string {
     if (stop.reason === 'unknown') return `Stops at ${levelLink(context, stop.level)}: unknown`;
     if (stop.reason === 'cycle') return `Stops at ${levelLink(context, stop.level)}: it needs itself`;
+    if (stop.reason === 'drop') return `Stops at ${levelLink(context, stop.level)}: its hole is not known`;
     if (stop.reason === 'rock') return `Stops at Rock ${stop.rock}`;
 
     if (stop.reason === 'sign') {
@@ -55,34 +72,51 @@ function stopText(context: PanelContext, stop: ChainStop): string {
     return `Stops at <button class="plain lnk" data-pgate="${stop.freezer}">${label} ${pid}</button>: nothing opens it`;
 }
 
-/** The route section of a level, whatever the No spoilers switch says. */
-export function routeSection(context: PanelContext, levelIndex: number): RouteSection {
-    const shown = context.routeLevel === levelIndex;
-    if (!shown) return { html: '<button class="routebtn" data-route>Debug route</button>', lines: null };
+const endPosition = (context: PanelContext, end: ChainEnd): Position =>
+    typeof end === 'number' ? context.levels[end].p : end;
 
-    let html = '<button class="routebtn on" data-route>Hide debug route</button>';
+// the map shows one layer: a link for each other layer the route runs on, which frames `points` there
+function otherLayersHtml(context: PanelContext, chain: NeedChain, points: Position[], z: number): string {
+    let html = '';
+    for (const layer of LAYER_HUBS.keys()) {
+        const onLayer = points.some((point) => mapLayerOf(point[2]) === layer);
+        const canShow = context.map?.layers.includes(layer);
+        if (onLayer && canShow && layer !== mapLayerOf(z)) {
+            const link = `<button class="plain lnk" data-clayer="${layer}">${escapeHtml(layerName(layer))}</button>`;
+            let lead = 'Route continues on';
+            if (chain.drops.some((at) => mapLayerOf(at[2]) === layer)) lead = 'Drop through a hole on';
+            html += `<div class="muted">${lead} ${link}</div>`;
+        }
+    }
 
-    const world = chainWorld(context);
-    const chain = needChain(world, context.progress.needsView, levelIndex);
-    for (const stop of chain.stops) html += `<div class="err">Broken route. ${stopText(context, stop)}</div>`;
+    return html;
+}
+
+/** The route section of what a panel at height `z` asks for. */
+export function routeSection(context: PanelContext, z: number, ...targets: ChainTarget[]): RouteSection {
+    const chain = needChain(chainWorld(context), context.progress.needsView, ...targets);
+
+    let html = '';
+    if (chain.stops.length > 0) {
+        const stops = chain.stops.map((stop) => `<div>${stopText(context, stop)}</div>`).join('');
+        html += `<div class="err">Broken route.${stops}</div>`;
+    }
+
+    const points = chain.edges.flatMap((edge) => [endPosition(context, edge.from), endPosition(context, edge.to)]);
+    points.push(...chain.drops);
+    context.chainPoints = [...context.chainPoints, ...points];
+    html += otherLayersHtml(context, chain, points, z);
 
     const link = `<a href="${TABLE_FILE_URL}" target="_blank" rel="noopener">level table file</a>`;
     html += `<div class="muted">If this route is wrong, you can open a pull request against the ${link}.</div>`;
 
-    const points: Position[] = chain.levels.map((level) => context.levels[level].p);
     const links = chain.edges.map((edge): MapLink => {
         let kind: MapLink[2] = 'req';
-        if (edge.met) kind = 'unl';
+        if (edge.met) kind = 'met';
         return [edge.from, edge.to, kind];
     });
 
-    for (const edge of chain.edges) {
-        for (const end of [edge.from, edge.to]) {
-            if (typeof end !== 'number') points.push(end);
-        }
-    }
-
-    const steps = chain.stops.map((stop, stopIndex): MapStep => [stopEnd(world, stop), stopIndex + 1]);
     const overlays = [...chain.freezers.map((freezer) => 'g' + freezer), ...chain.signs.map((sign) => 's' + sign)];
-    return { html, lines: { links, levels: chain.levels, overlays, points, steps } };
+    const steps = chain.drops.map((at): MapStep => [at, '↓']);
+    return { html, links, levels: chain.levels, overlays, steps };
 }

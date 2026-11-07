@@ -24,6 +24,7 @@ import {
     stepsOf,
     uniqueLinks,
 } from './plan-chips.ts';
+import { routeSection } from './route.ts';
 
 function leadsToHtml(context: PanelContext, leadsAll: number[], leads: number[]): string {
     if (!leadsAll.length) return '';
@@ -78,6 +79,9 @@ export function showGatePanel(context: PanelContext, freezerIndex: number, how?:
     context.chainPoints = chain.points;
     html += leadsToHtml(context, leadsAll, leads);
 
+    const route = routeSection(context, freezer.p[2], { freezer: freezerIndex });
+    html += route.html;
+
     const signsShown: number[] = [];
 
     for (const sign of signs) {
@@ -86,6 +90,7 @@ export function showGatePanel(context: PanelContext, freezerIndex: number, how?:
     }
 
     const links = uniqueLinks([
+        ...route.links,
         ...freezer.req.map((requirement): MapLink => [requirement, freezer.p, 'req']),
         ...signsShown.map((signIndex): MapLink => [context.signs[signIndex].p, freezer.p, 'req']),
         ...leads.map((lead): MapLink => [freezer.p, lead, 'unl']),
@@ -95,9 +100,9 @@ export function showGatePanel(context: PanelContext, freezerIndex: number, how?:
     const signOverlays = signsShown.map((signIndex) => 's' + signIndex);
     context.map?.select(
         {
-            levels: new Set([...freezer.req, ...leads, ...chain.levels]),
+            levels: new Set([...freezer.req, ...leads, ...chain.levels, ...route.levels]),
             frontier: chain.frontier,
-            overlays: new Set(['g' + freezerIndex, ...signOverlays, ...chain.overlays]),
+            overlays: new Set(['g' + freezerIndex, ...signOverlays, ...chain.overlays, ...route.overlays]),
             html,
             z: freezer.p[2],
             points: [
@@ -107,7 +112,7 @@ export function showGatePanel(context: PanelContext, freezerIndex: number, how?:
                 ...chain.points,
             ],
             links,
-            steps: chain.steps,
+            steps: [...chain.steps, ...route.steps],
         },
         how,
     );

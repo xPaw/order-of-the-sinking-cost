@@ -77,7 +77,7 @@ function resolvePadRoute(source: PadRouteRow, data: TableData): PadRoute {
     return route;
 }
 
-// Sets `needs` and `from` on the levels the table lists with needs; a level the table gives 'unknown' keeps neither.
+// Sets `needs`, `from` and `drop` on the levels the table lists with needs; a level the table gives 'unknown' keeps neither.
 // Every level has to appear exactly once.
 function applyLevelTable(data: TableData): void {
     const listed = new Set<string>();
@@ -90,6 +90,7 @@ function applyLevelTable(data: TableData): void {
             const level = data.levels[levelByName(data.levels, name, PREFIX)];
             if (row.needs !== 'unknown') level.needs = resolveNeeds(row.needs, data);
             if (row.from !== undefined) level.from = row.from;
+            if (row.drop !== undefined) level.drop = row.drop;
         }
     }
 

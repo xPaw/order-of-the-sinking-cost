@@ -13,7 +13,7 @@ const ROOM_SEARCH_KEY = 'room-search sources';
 const IMPORT_PATH = /from '(\.{1,2}\/[^']+)'/g;
 
 interface ProgressData {
-    levels: Array<{ needs?: unknown; from?: unknown }>;
+    levels: Array<{ needs?: unknown; from?: unknown; drop?: unknown }>;
 }
 
 function sha256(bytes: Uint8Array): string {
@@ -60,6 +60,7 @@ function progressHash(): string {
     for (const level of progress.levels) {
         delete level.needs;
         delete level.from;
+        delete level.drop;
     }
 
     return sha256(new TextEncoder().encode(JSON.stringify(progress)));

@@ -9,7 +9,18 @@ import { signStateOf } from '../model/unlocking.ts';
 import type { Sign } from '../types.ts';
 import type { PanelContext } from './context.ts';
 import { markSelected } from './list.ts';
-import { areaPlaceHtml, chainOf, gateChip, layerNote, panelHead, pathHtml, signNeed, stepsOf } from './plan-chips.ts';
+import {
+    areaPlaceHtml,
+    chainOf,
+    gateChip,
+    layerNote,
+    panelHead,
+    pathHtml,
+    signNeed,
+    stepsOf,
+    uniqueLinks,
+} from './plan-chips.ts';
+import { routeSection } from './route.ts';
 
 function opensHtml(context: PanelContext, sign: Sign, gateIds: number[]): string {
     if (!gateIds.length) return '';
@@ -66,18 +77,21 @@ export function showSignPanel(context: PanelContext, signIndex: number, how?: Se
 
     html += opensHtml(context, sign, gateIds);
 
+    const route = routeSection(context, sign.p[2], { sign: signIndex });
+    html += route.html;
+
     const gateLinks = gateIds.map((freezerIndex): MapLink => [sign.p, context.freezers[freezerIndex].p, 'req']);
     const gateOverlays = gateIds.map((freezerIndex) => 'g' + freezerIndex);
     context.map?.select(
         {
-            levels: chain.levels,
+            levels: new Set([...chain.levels, ...route.levels]),
             frontier: chain.frontier,
-            overlays: new Set(['s' + signIndex, ...gateOverlays, ...chain.overlays]),
+            overlays: new Set(['s' + signIndex, ...gateOverlays, ...chain.overlays, ...route.overlays]),
             html,
             z: sign.p[2],
             points: [sign.p, ...gateIds.map((freezerIndex) => context.freezers[freezerIndex].p), ...chain.points],
-            links: [...gateLinks, ...chain.links],
-            steps: chain.steps,
+            links: uniqueLinks([...route.links, ...gateLinks, ...chain.links]),
+            steps: [...chain.steps, ...route.steps],
         },
         how,
     );

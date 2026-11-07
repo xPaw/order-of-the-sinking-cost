@@ -45,6 +45,8 @@ export interface ProgressLevel {
     needs?: RouteNeed[][];
     /** 'sky' when a blocked level is entered from the sky. */
     from?: 'sky';
+    /** The hole a level with `from` is dropped into from. */
+    drop?: Position;
 }
 
 /** One row of data/progress.json `sets`. */

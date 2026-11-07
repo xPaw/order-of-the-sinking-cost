@@ -113,11 +113,11 @@ export interface MapOverlay {
 /** An end of a link: a marker index, or the position of a tower. */
 export type LinkEnd = number | Position;
 
-/** A line from the first end to the second: solid for a requirement, dashed for what it unlocks. */
-export type MapLink = [from: LinkEnd, to: LinkEnd, kind: 'req' | 'unl'];
+/** A line from the first end to the second: solid for a requirement, dotted for a met one, dashed for what it unlocks. */
+export type MapLink = [from: LinkEnd, to: LinkEnd, kind: 'req' | 'met' | 'unl'];
 
-/** A numbered badge of an unlock chain on one of its ends. */
-export type MapStep = [end: LinkEnd, number: number];
+/** A badge on an end of a chain: the number of an unlock step, or an arrow on a hole. */
+export type MapStep = [end: LinkEnd, label: number | string];
 
 /**
  * What the map highlights: `levels` are the markers of the selection, `tower` the tower index, `exact` always fits the
@@ -1077,7 +1077,7 @@ export class MapView {
         return this.options.markers[end];
     }
 
-    // lines from the selected level to the levels it requires (solid) and the ones it unlocks (dashed), on this layer,
+    // lines from the selected level to the levels it requires (gold) and the ones it unlocks (blue, dashed), on this layer,
     // under the towers and markers; placeLinks sets their ends for the current zoom
     private linkAttributes(): MarkAttributes[] {
         const layer = this.currentLayer;
@@ -1266,7 +1266,7 @@ export class MapView {
         const stepMarks = this.shownMarks.stepMarks;
         let count = 0;
 
-        for (const [end, stepNumber] of this.selection?.steps || []) {
+        for (const [end, stepLabel] of this.selection?.steps || []) {
             const point = this.endPoint(end);
             if (!point || mapLayerOf(point.z) !== this.currentLayer) continue;
             if (!isPosition(end) && this.options.style(this.options.markers[end]).gone) continue;
@@ -1277,7 +1277,7 @@ export class MapView {
             badge.set({ class: 'bd', style: placedAt(x, y) });
 
             const label = badge.element.lastElementChild;
-            if (label && label.textContent !== String(stepNumber)) label.textContent = String(stepNumber);
+            if (label && label.textContent !== String(stepLabel)) label.textContent = String(stepLabel);
         }
 
         stepMarks.hideFrom(count);
