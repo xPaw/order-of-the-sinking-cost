@@ -485,9 +485,9 @@ function stageShown(context: GoalsContext, child: TowerGoal | StageGoal): boolea
     return !context.progress.hidden[child.level!];
 }
 
-// the known route of a sky Way stage, which has an area and a tower
+// the pad route of a sky Way stage, which has an area and a tower
 function wayRoute(route: number): { area: number; tower: number } {
-    const { area, tower } = PROG.known_routes[route];
+    const { area, tower } = PROG.pad_routes[route];
     return { area: area!, tower: tower! };
 }
 

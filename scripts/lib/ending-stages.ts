@@ -7,12 +7,13 @@ import type {
     EndingStageName,
     EndingStages,
     Freezer,
-    KnownRoute,
+    PadRoute,
     Progress,
     ProgressLevel,
     Teleporter,
     Tower,
 } from '../../src/types.ts';
+import { areaByName, freezerByPid, levelByName, padByPid } from './index-lookup.ts';
 import { loadSchema } from './package.ts';
 
 type NameSource = { area: string } | { level: string } | { tower: string[] } | { route: string };
@@ -26,7 +27,7 @@ type DoneSource =
     | { rule: 'all'; all: DoneSource[] };
 
 /**
- * One stage. `name`: the area, level, tower (by its flag names) or sky Way (by its known route's id) it is named after.
+ * One stage. `name`: the area, level, tower (by its flag names) or sky Way (by its pad route's id) it is named after.
  * `done`: when it counts as done: an achievement earned, a tower active, Freezers (by pid) open, a level solved, pads
  * (by pid) discovered, or every one of several rules. `seen`: pads (by pid) whose discovery shows the stage even while the game has not named its area.
  */
@@ -171,21 +172,11 @@ interface EndingStageData {
     areas: Area[];
     freezers: Freezer[];
     teleporters: Teleporter[];
-    routes: KnownRoute[];
+    routes: PadRoute[];
     flagBits: Record<string, number>;
 }
 
-function levelIndex(data: EndingStageData, name: string): number {
-    const found = data.levels.findIndex((level) => level.n === name);
-    if (found < 0) throw new Error(`ending_stages: no level ${name}`);
-    return found;
-}
-
-function areaIndex(data: EndingStageData, name: string): number {
-    const found = data.areas.findIndex((area) => area.local_area_name === name);
-    if (found < 0) throw new Error(`ending_stages: no area ${name}`);
-    return found;
-}
+const PREFIX = 'ending_stages';
 
 function towerIndex(data: EndingStageData, flagNames: string[]): number {
     let flags = 0;
@@ -202,24 +193,12 @@ function towerIndex(data: EndingStageData, flagNames: string[]): number {
 
 function routeIndex(data: EndingStageData, id: string): number {
     const found = data.routes.findIndex((route) => route.id === id);
-    if (found < 0) throw new Error(`ending_stages: no known route ${id}`);
+    if (found < 0) throw new Error(`ending_stages: no pad route ${id}`);
 
     const route = data.routes[found];
     if (route.area === undefined || route.tower === undefined) {
-        throw new Error(`ending_stages: known route ${id} is no sky Way`);
+        throw new Error(`ending_stages: pad route ${id} is no sky Way`);
     }
-    return found;
-}
-
-function freezerIndex(data: EndingStageData, pid: number): number {
-    const found = data.freezers.findIndex((freezer) => freezer.pid === pid);
-    if (found < 0) throw new Error(`ending_stages: no Freezer ${pid}`);
-    return found;
-}
-
-function padIndex(data: EndingStageData, pid: number): number {
-    const found = data.teleporters.findIndex((pad) => pad.pid === pid);
-    if (found < 0) throw new Error(`ending_stages: no pad ${pid}`);
     return found;
 }
 
@@ -231,8 +210,8 @@ function achievementName(name: string): string {
 }
 
 function resolveName(data: EndingStageData, source: NameSource): EndingStageName {
-    if ('area' in source) return { area: areaIndex(data, source.area) };
-    if ('level' in source) return { level: levelIndex(data, source.level) };
+    if ('area' in source) return { area: areaByName(data.areas, source.area, PREFIX) };
+    if ('level' in source) return { level: levelByName(data.levels, source.level, PREFIX) };
     if ('tower' in source) return { tower: towerIndex(data, source.tower) };
     return { route: routeIndex(data, source.route) };
 }
@@ -243,11 +222,11 @@ function resolveDone(data: EndingStageData, source: DoneSource): EndingStageDone
         return { rule: 'tower', tower: towerIndex(data, source.tower) };
     }
     if (source.rule === 'freezers') {
-        return { rule: 'freezers', freezers: source.freezers.map((pid) => freezerIndex(data, pid)) };
+        return { rule: 'freezers', freezers: source.freezers.map((pid) => freezerByPid(data.freezers, pid, PREFIX)) };
     }
-    if (source.rule === 'solved') return { rule: 'solved', level: levelIndex(data, source.level) };
+    if (source.rule === 'solved') return { rule: 'solved', level: levelByName(data.levels, source.level, PREFIX) };
     if (source.rule === 'all') return { rule: 'all', all: source.all.map((part) => resolveDone(data, part)) };
-    return { rule: 'pads', pads: source.pads.map((pid) => padIndex(data, pid)) };
+    return { rule: 'pads', pads: source.pads.map((pid) => padByPid(data.teleporters, pid, PREFIX)) };
 }
 
 function resolveStage(data: EndingStageData, source: StageSource): EndingStage {
@@ -255,7 +234,7 @@ function resolveStage(data: EndingStageData, source: StageSource): EndingStage {
     return {
         name: resolveName(data, source.name),
         done: resolveDone(data, source.done),
-        seen: seenPids.map((pid) => padIndex(data, pid)),
+        seen: seenPids.map((pid) => padByPid(data.teleporters, pid, PREFIX)),
     };
 }
 
@@ -264,7 +243,7 @@ function resolveStage(data: EndingStageData, source: StageSource): EndingStage {
  * Empty until the progress rows hold the areas and the pads.
  */
 export function buildEndingStages(progress: Partial<Progress>, flagBits: Record<string, number>): EndingStages[] {
-    const { levels, towers, areas, freezers, teleporters, known_routes: routes } = progress;
+    const { levels, towers, areas, freezers, teleporters, pad_routes: routes } = progress;
     if (!levels || !towers || !areas || !freezers || !teleporters || !routes) return [];
 
     const data: EndingStageData = { levels, towers, areas, freezers, teleporters, routes, flagBits };

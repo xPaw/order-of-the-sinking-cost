@@ -13,7 +13,6 @@ import type {
     EndgameWayIn,
     Freezer,
     FreezerSign,
-    KnownRoute,
     LevelSet,
     Position,
     Progress,
@@ -29,7 +28,7 @@ import type {
 import type { FogFile, LevelAreasFile, LevelEntry, LevelsFile, PlacedEntity } from './lib/data-files.ts';
 import { buildEndingStages } from './lib/ending-stages.ts';
 import { flagsOf, get, positionOf, refOf, vectorOf, type Fields } from './lib/fields.ts';
-import { buildKnownRoutes } from './lib/known-routes.ts';
+import { resolveLevelTable } from './lib/level-needs.ts';
 import { modulo, roundTo, roundVector } from './lib/math.ts';
 import { writeJsonAtomic } from './lib/output.ts';
 import { Package, pidString, type EntitiesHeader, type EntityRecord } from './lib/package.ts';
@@ -237,36 +236,6 @@ function entityPosition(overworld: Overworld, pid: number): Position | undefined
         if (found) return roundedPosition(found.fields);
     }
     return undefined;
-}
-
-// The table of known routes (scripts/lib/known-routes.ts) with its names and pids resolved to indices
-function resolveKnownRoutes(
-    overworld: Overworld,
-    levels: ProgressLevel[],
-    towers: Tower[],
-    freezers: Freezer[],
-    signs: Sign[],
-    areas: Area[],
-    teleporters: Teleporter[],
-    rockPids: Set<number>,
-): KnownRoute[] {
-    const skyTower = (flagName: string): number | undefined => {
-        const towerFlags = FLAG_BITS[flagName] + FLAG_BITS.UPSTAIRS;
-        const found = towers.findIndex((candidate) => candidate.t === towerFlags);
-        if (found < 0) return undefined;
-        return found;
-    };
-
-    return buildKnownRoutes({
-        levels,
-        freezers,
-        signs,
-        areas,
-        teleporters,
-        skyTower,
-        positionOf: (pid) => entityPosition(overworld, pid),
-        isRock: (pid) => rockPids.has(pid),
-    });
 }
 
 // Plain towers first, then the high ones, then the low ones; by their flags within each
@@ -639,7 +608,7 @@ function main(): void {
         const p = roundedPosition(giver.fields);
         return { pid: giver.pid, p, l: layerOf(p[2]) };
     });
-    out.known_routes = [];
+    out.pad_routes = [];
     if (areaData) out.areas = buildAreas(areaData, levels, worldMap);
     if (fog) out.fog = buildFogSummary(fog);
     if (worldMap) {
@@ -657,16 +626,22 @@ function main(): void {
         Object.assign(out, world);
     }
     if (out.areas && out.teleporters) {
-        out.known_routes = resolveKnownRoutes(
-            overworld,
+        // the hand-written table (scripts/lib/level-table.ts): sets the needs of `levels` and returns the pad routes
+        out.pad_routes = resolveLevelTable({
             levels,
-            towers,
             freezers,
-            signRows,
-            out.areas,
-            out.teleporters,
-            rockPids,
-        );
+            signs: signRows,
+            areas: out.areas,
+            teleporters: out.teleporters,
+            skyTower: (flagName) => {
+                const towerFlags = FLAG_BITS[flagName] + FLAG_BITS.UPSTAIRS;
+                const found = towers.findIndex((candidate) => candidate.t === towerFlags);
+                if (found < 0) return undefined;
+                return found;
+            },
+            positionOf: (pid) => entityPosition(overworld, pid),
+            isRock: (pid) => rockPids.has(pid),
+        });
     }
     out.ending_stages = buildEndingStages(out, FLAG_BITS);
     const progressPath = paths.data('progress.json');

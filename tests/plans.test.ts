@@ -11,7 +11,7 @@ import type { LevelState, SignRule } from '../src/model/unlocking.ts';
 import { SIGN_INDEX } from '../src/model/requirements.ts';
 import { gatesBehindThemselves, signWayInOf } from '../src/model/way-in.ts';
 import type { WhyBlocked } from '../src/model/way-in.ts';
-import type { KnownRoute } from '../src/types.ts';
+import type { RouteNeed } from '../src/types.ts';
 import type { Reachability } from '../src/walk/reachability.ts';
 import { level } from './fixtures.ts';
 
@@ -60,7 +60,7 @@ function progress({ state, wayIn = [], towers = [], rank = 0, extra = {} }: Prog
         return false;
     };
     const blockedWhy = (): WhyBlocked => ({ gates: [], pad: [], via: [], viaTowers: [], mech: [] });
-    return {
+    const built: PlannedProgress = {
         state,
         unlocks: state.map(() => ({ levels: [] })),
         wayIn: state.map((levelState, i) => (levelState === 'blocked' ? wayIn[i] || [] : null)),
@@ -83,9 +83,17 @@ function progress({ state, wayIn = [], towers = [], rank = 0, extra = {} }: Prog
         // a Sign counts as read once its rule holds
         signRead: (pid: number) => signOk(ruleOf(pid)),
         rockSmashed: () => false,
+        // reads the fields of the built progress, which a test may replace or change after
+        needsView: {
+            levelSolved: (levelIndex) => built.state[levelIndex] === 'solved',
+            freezerOpen: (freezer) => built.gateOpen[freezer],
+            signRead: (pid) => built.signRead(pid),
+            rockSmashed: (pid) => built.rockSmashed(pid),
+        },
         needed: [],
         ...extra,
     };
+    return built;
 }
 
 describe('plans do not depend on the root', () => {
@@ -366,7 +374,7 @@ describe('a Sign the walk cannot face yet', () => {
 const isReachability = (value: unknown): value is Reachability =>
     typeof value === 'object' && value !== null && 'signFaced' in value && 'cols' in value;
 
-describe('a known sky Way', () => {
+describe('a sky Way', () => {
     // a sky tower of level 0 whose hub Sign 90 opens gate 0; the Way to its quarter (area 5) asks for level 1 and one
     // of levels 2 and 3 (none when `entry` is empty); the tower's hub pad is teleporter 7
     const setup = (entry: number[][], extra: Partial<PlannedProgress> = {}) => {
@@ -374,7 +382,7 @@ describe('a known sky Way', () => {
             levels: [level('tw', { t: 17 }), level('first'), level('alt_a'), level('alt_b')],
             freezers: [{ req: [], signs: [{ pid: 90, tower: 0 }] }],
             signs: [{ pid: 90, tower: 0, gates: [0], p: [0, 0, 0] }],
-            known_routes: [
+            pad_routes: [
                 {
                     id: 'way',
                     to: { pad: 7 },
@@ -438,40 +446,40 @@ describe('a known sky Way', () => {
     });
 });
 
-describe('a known route to a level', () => {
-    // level 3 is not reachable and no gate leads in; the route to it needs level 0 and one of levels 1 and 2 (each
-    // playable), or what `needs` says; freezer 0 (opened by level 2) is a way in of the walk when `wayIn` says so
-    const setup = (needs: KnownRoute['needs'], wayIn: number[] = []) => {
+describe('a level with needs', () => {
+    // level 3 is not reachable and no gate leads in; it needs level 0 and one of levels 1 and 2 (each playable), or
+    // what `needs` says; freezer 0 (opened by level 2) is a way in of the walk when `wayIn` says so
+    const setup = (needs: RouteNeed[][], wayIn: number[] = []) => {
         Object.assign(PROG, {
-            levels: [level('a'), level('b'), level('c'), level('target')],
+            levels: [level('a'), level('b'), level('c'), level('target', { needs })],
             freezers: [{ req: [2], signs: [] }],
             signs: [],
-            known_routes: [{ id: 'to_target', to: { level: 3 }, needs }],
+            pad_routes: [],
             gold_rooms: [],
         });
         const state: LevelState[] = ['unlocked', 'unlocked', 'unlocked', 'blocked'];
         return progress({ state, wayIn: [[], [], [], wayIn] });
     };
 
-    test('a level with no gate leading in takes the route', () => {
+    test('a level with no gate leading in asks for its needs', () => {
         const plan = keys(setup([[{ level: 0 }], [{ level: 1 }, { level: 2 }]]), ['level', 3]);
         expect(plan).toContain('l0');
         expect(plan.filter((key) => key === 'l1' || key === 'l2')).toHaveLength(1);
         expect(plan).toContain('l3');
     });
 
-    test('the route is one more way in, the cheapest way is taken', () => {
+    test('the needs stand in place of a way in of the walk', () => {
         const plan = keys(setup([[{ level: 0 }]], [0]), ['level', 3]);
         expect(plan).toContain('l0');
         expect(plan).not.toContain('g0');
     });
 
-    test('a Freezer the route asks for is one of its steps', () => {
+    test('a Freezer the needs ask for is one of its steps', () => {
         const plan = keys(setup([[{ freezer: 0 }]]), ['level', 3]);
         expect(plan).toEqual(expect.arrayContaining(['l2', 'g0', 'l3']));
     });
 
-    test('a level with no route keeps a step of its own', () => {
+    test('a level whose needs give no step keeps a step of its own', () => {
         const plan = keys(setup([]), ['level', 3]);
         expect(plan).toEqual(['l3']);
     });
@@ -490,7 +498,7 @@ describe('a level that asks for the endgame table gates', () => {
                 { req: [3], signs: [] },
             ],
             signs: [],
-            known_routes: [],
+            pad_routes: [],
             gold_rooms: [],
         });
         const state: LevelState[] = ['unlocked', 'unlocked', 'unlocked', 'unlocked', 'blocked'];

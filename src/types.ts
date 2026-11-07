@@ -38,6 +38,13 @@ export interface ProgressLevel {
     areaNear?: number;
     /** [index into `areas`, float_parameter] of every area box holding it, when more than one area does. */
     overlap?: Array<[areaIndex: number, floatParameter: number]>;
+    /**
+     * What the level asks for to be reachable, all of the groups, one need inside a group. Present, it decides whether
+     * the level is reachable; absent, the walk decides. An empty list is reachable from the start.
+     */
+    needs?: RouteNeed[][];
+    /** 'sky' when a blocked level is entered from the sky. */
+    from?: 'sky';
 }
 
 /** One row of data/progress.json `sets`. */
@@ -202,30 +209,32 @@ export interface ProgressMap {
 /** One row of data/progress.json `endgame_way_ins`: [level, freezer indices, 1 to replace the walk's gates]. */
 export type EndgameWayIn = [level: number, freezers: number[], replace: number];
 
-/** What a known route asks for: a level solved, a Freezer open or a Sign read, by index into `levels`, `freezers`, `signs`. */
+/**
+ * What a level or pad route asks for: a level solved, a Freezer open, a Sign read or a Rock smashed, by index into
+ * `levels`, `freezers`, `signs`; a Rock by pid.
+ */
 export type RouteNeed = { level: number } | { freezer: number } | { sign: number } | { rock: number };
 
-/** Where a known route takes the hero: a level's entrance, a teleporter (index into `teleporters`), or a position. */
-export type RouteTarget = { level: number } | { pad: number } | { at: Position };
+/** Where a pad route takes the hero: a teleporter (index into `teleporters`), or a position. */
+export type RouteTarget = { pad: number } | { at: Position };
 
 /**
- * One row of data/progress.json `known_routes`: a route the walk does not find, written by hand. With every group of
- * `needs` met (all of the groups needed, one of the needs inside a group) the hero reaches `to`. `area` and `tower` mark a
- * sky Way: the sky Way area (index into `areas`) that leads to the hub quarter of the sky tower (index into `towers`)
- * whose hub pad `to` is. `onto` (sky or underworld) marks the way onto that layer, which then asks for the route's needs.
+ * One row of data/progress.json `pad_routes`: a route to a pad the walk does not find, written by hand. With every
+ * group of `needs` met (all of the groups needed, one of the needs inside a group) the hero reaches `to`. `area` and
+ * `tower` mark a sky Way: the sky Way area (index into `areas`) that leads to the hub quarter of the sky tower (index
+ * into `towers`) whose hub pad `to` is.
  */
-export interface KnownRoute {
+export interface PadRoute {
     id: string;
     to: RouteTarget;
     needs: RouteNeed[][];
     area?: number;
     tower?: number;
-    onto?: string;
 }
 
 /**
- * What names an ending's stage: an area, a level, a tower or a sky Way (a known route with an area and a tower), by
- * index into `areas`, `levels`, `towers`, `known_routes`.
+ * What names an ending's stage: an area, a level, a tower or a sky Way (a pad route with an area and a tower), by
+ * index into `areas`, `levels`, `towers`, `pad_routes`.
  */
 export type EndingStageName = { area: number } | { level: number } | { tower: number } | { route: number };
 
@@ -550,7 +559,7 @@ export interface Progress extends WorldFile {
     fog: ProgressFog;
     map: ProgressMap;
     endgame_way_ins: EndgameWayIn[];
-    known_routes: KnownRoute[];
+    pad_routes: PadRoute[];
     ending_stages: EndingStages[];
 }
 

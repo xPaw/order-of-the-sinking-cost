@@ -143,7 +143,16 @@ export default defineConfig({
         tabWidth: 4,
         useTabs: false,
         endOfLine: 'lf',
-        ignorePatterns: ['data/**', 'docs/**', 'ida/**', '**/*.md', '**/*.json', 'dist/**', 'node_modules/**'],
+        ignorePatterns: [
+            'data/**',
+            'docs/**',
+            'ida/**',
+            '**/*.md',
+            '**/*.json',
+            'dist/**',
+            'node_modules/**',
+            'scripts/lib/level-table.ts',
+        ],
     },
     lint: {
         ignorePatterns: ['data/**', 'dist/**', 'ida/**', 'node_modules/**'],

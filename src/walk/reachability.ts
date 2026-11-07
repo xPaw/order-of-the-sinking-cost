@@ -3,7 +3,7 @@
 import { PROG, WORLD } from '../data.ts';
 import { heroesWithSkill, latestFlag, PROTECTION_FLAG, TELEPORT_FLAG, TRANSMUTE_FLAG } from '../save.ts';
 import type { History, LatestValues } from '../save.ts';
-import type { KnownRoute } from '../types.ts';
+import type { PadRoute } from '../types.ts';
 import { addTo, gridCol, STEP, Z_BIAS } from './cells.ts';
 import type { FloodOptions, Seed } from './flood.ts';
 import { ICE } from './freezers.ts';
@@ -28,9 +28,7 @@ export interface ViaPads {
  * the others. `lightLeads`: per closed Freezer that holds a powered Promesst_Light, the levels not entered that opening
  * it reaches beyond those `leads` and `pocket` give it, through the light's beam. `from`: per level not reached that
  * such a Freezer needs, the levels behind it a walk from it reaches.
- * `mech`: per level, the unmodelled mechanics in or next to the pockets that hold it. `fromSky`: per level, 1 when a
- * hero stepping off a sky ledge falls into one of those pockets, or walks on from where he lands to the level.
- * `viaPads`: per level, what the pads revealed from those pockets lead through, and what the MINOR pads that land the
+ * `mech`: per level, the unmodelled mechanics in or next to the pockets that hold it. `viaPads`: per level, what the pads revealed from those pockets lead through, and what the MINOR pads that land the
  * hero where he walks on to the level lead through. `dead`: the kept hero positions inside a wall. `reached`: the cells
  * the main flood reached. `cols`: the reached cells per map layer and column, less the Lily drift cells the hero only
  * rides through. `signFaced`: per Sign, 1 when a reached cell next to it has no Fence between and the Sign's own cell
@@ -48,7 +46,6 @@ export interface Reachability {
     chains: Map<number, Map<number, number[][]>>;
     from: Map<number, Set<number>>;
     mech: Uint8Array;
-    fromSky: Uint8Array;
     viaPads: Map<number, ViaPads>;
     dead: number;
     cols: Record<string, Uint8Array>;
@@ -107,15 +104,13 @@ interface ReachContext {
 
 /**
  * The pad pockets and level pockets of one walk: per level, the pocket floods that hold it (`ofLevel`, indices into
- * `ways`) and the levels of the first pocket it is in (`first`); `fromSky`: per level, 1 when a hero stepping off a sky
- * ledge falls into a pocket that holds it, or walks on from where he lands to it; `landing`: per level, what the MINOR
- * pads that land the hero where he walks on to it lead through, less what its own pockets hold.
+ * `ways`) and the levels of the first pocket it is in (`first`); `landing`: per level, what the MINOR pads that land
+ * the hero where he walks on to it lead through, less what its own pockets hold.
  */
 interface Pockets {
     ways: PocketWays[];
     ofLevel: Map<number, number[]>;
     first: Map<number, Set<number>>;
-    fromSky: Uint8Array;
     landing: Map<number, ViaPads>;
 }
 
@@ -234,10 +229,9 @@ function addKeptHeroSeeds(walk: Walker, history: History, seeds: Seed[]): number
     return deadSeeds;
 }
 
-/** The cell where a known route lands the hero. */
-function routeCell(walk: Walker, route: KnownRoute, levelCells: number[]): number {
+/** The cell where a pad route lands the hero. */
+function routeCell(walk: Walker, route: PadRoute): number {
     const target = route.to;
-    if ('level' in target) return walk.land(levelCells[target.level]);
     if ('pad' in target) return walk.padCell(target.pad);
     return walk.land(walk.cellOf(...target.at), false);
 }
@@ -252,9 +246,26 @@ function enteredSeed(walk: Walker, levelCell: number): Seed {
 }
 
 /**
+ * Per level, whether it is reached by what its data lists: it is when the save entered it, or its needs hold and it is
+ * not frozen in a closed Freezer. Undefined for a level with no needs in the data, which the walk decides.
+ */
+function reachedByNeeds(
+    needsHold: ReadonlyArray<boolean | undefined>,
+    entered: readonly boolean[],
+    frozenIn: Array<number | undefined>,
+): Array<boolean | undefined> {
+    return PROG.levels.map((_, levelIndex) => {
+        const hold = needsHold[levelIndex];
+        if (hold === undefined) return undefined;
+        if (entered[levelIndex]) return true;
+        return hold && frozenIn[levelIndex] === undefined;
+    });
+}
+
+/**
  * The seeds of the main flood: the current hero, the kept hero positions, the entered levels, the activated Area_Pins,
- * the discovered teleporters and the targets of the known routes whose needs are met. `dead`: the kept positions inside
- * a wall, which seed nothing.
+ * the discovered teleporters, the targets of the pad routes whose needs are met and the levels reached by their needs.
+ * `dead`: the kept positions inside a wall, which seed nothing.
  */
 function seedsOf(
     walk: Walker,
@@ -263,7 +274,8 @@ function seedsOf(
     teleporterStates: TeleporterState[],
     entered: readonly boolean[],
     levelCells: number[],
-    routes: readonly KnownRoute[],
+    padRoutes: readonly PadRoute[],
+    byNeeds: ReadonlyArray<boolean | undefined>,
 ): { seeds: Seed[]; dead: number } {
     const seeds: Seed[] = [history.hero ? walk.heroSeed(history.hero) : -1];
     const dead = addKeptHeroSeeds(walk, history, seeds);
@@ -280,7 +292,11 @@ function seedsOf(
         if (teleporterStates[padIndex].disc) seeds.push(walk.padCell(padIndex));
     });
 
-    for (const route of routes) seeds.push(routeCell(walk, route, levelCells));
+    for (const route of padRoutes) seeds.push(routeCell(walk, route));
+
+    PROG.levels.forEach((_, levelIndex) => {
+        if (byNeeds[levelIndex] && !entered[levelIndex]) seeds.push(walk.land(levelCells[levelIndex]));
+    });
 
     return { seeds, dead };
 }
@@ -468,7 +484,6 @@ interface PocketFloods {
     pockets: Pockets;
     pocketCells: Array<Set<number>>;
     done: Uint8Array;
-    enteredFromSky: (cells: Iterable<number>) => boolean;
     pads: PadRevealers;
     padPockets: Map<number, PadPocket>;
     roverFreezers: Set<number>;
@@ -511,11 +526,11 @@ function padWaysOf(
 
 /**
  * Floods the pocket of the level at position `position` of `rest`, the walkable cells around it, and records what it
- * holds: its levels take its mechanics and sky entrance, and the closed gates on its edge (and those its pads lead
+ * holds: its levels take its mechanics, and the closed gates on its edge (and those its pads lead
  * through) have the pocket's levels behind them. A level whose cell is no cell the hero stands in has no pocket.
  */
 function floodPocketOfLevel(state: PocketFloods, position: number): void {
-    const { context, byGate, mech, pockets, done, enteredFromSky } = state;
+    const { context, byGate, mech, pockets, done } = state;
     const { walk, reached, levelCells, frozenIn, restCells } = context;
     const levelIndex = context.rest[position];
     if (done[levelIndex]) return;
@@ -531,7 +546,6 @@ function floodPocketOfLevel(state: PocketFloods, position: number): void {
     const pocketLevels = restLevelsIn(context, cells);
     const mechanicsBits = walk.mechAt(cells);
     const members = new Set(pocketLevels);
-    const skyAbove = enteredFromSky(cells);
     const { viaPad, viaLevel } = padWaysOf(state, cells, bumped, members);
     noteSignWays(context.signWays, cells, [...bumped, ...viaPad]);
 
@@ -540,11 +554,10 @@ function floodPocketOfLevel(state: PocketFloods, position: number): void {
     state.pocketCells.push(cells);
 
     // a way into any pocket that holds a level leads on to it, so a level in several pockets takes the
-    // mechanics and the sky entrance of each
+    // mechanics of each
     for (const pocketLevel of pocketLevels) {
         done[pocketLevel] = 1;
         mech[pocketLevel] |= mechanicsBits;
-        if (skyAbove) pockets.fromSky[pocketLevel] = 1;
         if (!pockets.first.has(pocketLevel)) pockets.first.set(pocketLevel, members);
         addTo(pockets.ofLevel, pocketLevel, pocketIndex);
     }
@@ -789,22 +802,6 @@ function addLandingWays(context: ReachContext, pockets: Pockets, byGate: Map<num
 }
 
 /**
- * Marks the levels of `rest` that the hero reaches by walking on from the cells he lands in off a sky ledge
- * (`landings`), not only those in a pocket he falls into.
- */
-function addSkyWalk(context: ReachContext, landings: number[], pockets: Pockets): void {
-    const { walk, reached, rest, restCells } = context;
-    const seeds = landings.filter((landing) => !reached.has(landing));
-    if (seeds.length === 0) return;
-
-    const skyWalk = walk.flood(seeds, reached, null, { reveal: false });
-
-    rest.forEach((levelIndex, position) => {
-        if (skyWalk.has(restCells[position])) pockets.fromSky[levelIndex] = 1;
-    });
-}
-
-/**
  * A level not reached sits behind the closed gates on the edge of the pockets of walkable cells that hold it, and may
  * need the unmodelled mechanics in or next to them: floods the pocket of each level of `rest` not in a pocket yet, and
  * adds their gates to `byGate` and their mechanics to `mech`.
@@ -815,11 +812,8 @@ function floodPockets(context: ReachContext, byGate: Map<number, Set<number>>, m
         ways: [],
         ofLevel: new Map(),
         first: new Map(),
-        fromSky: new Uint8Array(levelCount),
         landing: new Map(),
     };
-
-    const sky = context.walk.skyEntrances();
 
     const state: PocketFloods = {
         context,
@@ -828,7 +822,6 @@ function floodPockets(context: ReachContext, byGate: Map<number, Set<number>>, m
         pockets,
         pocketCells: [],
         done: new Uint8Array(levelCount),
-        enteredFromSky: sky.into,
         pads: padRevealersOf(context),
         padPockets: new Map(),
         roverFreezers: roverFreezersOf(),
@@ -837,7 +830,6 @@ function floodPockets(context: ReachContext, byGate: Map<number, Set<number>>, m
 
     context.rest.forEach((_, position) => floodPocketOfLevel(state, position));
     addDoorways(state);
-    addSkyWalk(context, sky.landings, pockets);
     addLandingWays(context, pockets, byGate);
 
     return pockets;
@@ -996,9 +988,11 @@ function gateLists(byGate: Map<number, Set<number>>, front: Set<number>, onEdge:
 /**
  * Flood fill over walkable cells from everywhere the save shows the hero has been: every hero position the history
  * keeps (vertical Beamcaster beams, mirrors and dragon swaps take the hero where the walk can't follow), entered
- * levels, activated Area_Pins and discovered teleporters, and from the targets of `routes`, the known routes whose
- * needs the save meets. `dead` counts the kept hero positions (the current one among them) inside a wall no beam runs
- * through; they seed nothing.
+ * levels, activated Area_Pins and discovered teleporters, from the targets of `padRoutes`, the pad routes whose needs
+ * the save meets, and from the levels whose needs hold. `needsHold`: per level, whether the needs its data lists hold,
+ * undefined for a level with none; such a level is reachable exactly when they hold (or the save entered it), whatever
+ * the walk finds, and one with none is as the walk finds it. `dead` counts the kept hero positions (the current one
+ * among them) inside a wall no beam runs through; they seed nothing.
  */
 export function reachability(
     history: History,
@@ -1006,23 +1000,26 @@ export function reachability(
     teleporterStates: TeleporterState[],
     closedFreezers: readonly boolean[],
     entered: readonly boolean[],
-    routes: readonly KnownRoute[] = [],
+    padRoutes: readonly PadRoute[] = [],
+    needsHold: ReadonlyArray<boolean | undefined> = [],
 ): Reachability {
     const walk = walker(latest, teleporterStates, closedFreezers);
     const levels = PROG.levels;
     const levelCells = levels.map((level) => walk.cellOf(...level.p));
 
-    const { seeds, dead } = seedsOf(walk, history, latest, teleporterStates, entered, levelCells, routes);
+    const frozenIn = frozenInOf(closedFreezers);
+    const byNeeds = reachedByNeeds(needsHold, entered, frozenIn);
+    const { seeds, dead } = seedsOf(walk, history, latest, teleporterStates, entered, levelCells, padRoutes, byNeeds);
     const front = new Set<number>();
     const stoneFront = new Set<number>();
     const reached = walk.flood(seeds, null, front, { stoneFront });
     const isReached = (cell: number): boolean => reached.has(cell) || reached.has(walk.land(cell));
 
-    const frozenIn = frozenInOf(closedFreezers);
-    const level = levels.map(
+    const walked = levels.map(
         (_, levelIndex) => frozenIn[levelIndex] === undefined && isReached(levelCells[levelIndex]),
     );
-    const rest = restOf(walk, entered, level, levelCells, frozenIn);
+    const rest = restOf(walk, entered, walked, levelCells, frozenIn);
+    const level = walked.map((reachedByWalk, levelIndex) => byNeeds[levelIndex] ?? reachedByWalk);
     const signFaced = signsFaced(walk, reached);
     const signWays = signWaysOf(walk, signFaced);
     noteSignWays(signWays, reached, []);
@@ -1049,7 +1046,6 @@ export function reachability(
         chains: chainsOf(context, pockets),
         from,
         mech,
-        fromSky: pockets.fromSky,
         viaPads,
         dead,
         cols: reachColumns(reached, transitNotShown(walk, reached, levelCells)),

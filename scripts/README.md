@@ -75,6 +75,3 @@ streams in `world.json` and `progress.json` differ between zlib implementations,
   holds a short hash per field and the field's value; two runs on the same input give the same bytes. `node
   scripts/walk-fingerprint.ts --diff <a> <b>` names the fields that differ and where, and exits 1 when there are any.
   Write a fingerprint before and after a change to the walk that should alter no answer and diff them.
-  `tests/walk-exact.test.ts` does the same for the fresh campaign and two small changes of it against hashes in
-  `tests/walk-exact.expected.json`; regenerate them with `UPDATE_WALK_EXPECTED=1 npx vp test run
-  tests/walk-exact.test.ts` after an intended change of the walk or new game data.

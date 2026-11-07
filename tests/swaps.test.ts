@@ -937,6 +937,12 @@ describe('unlock plans through cycles', () => {
             signOk: () => true,
             signRead: () => true,
             rockSmashed: () => false,
+            needsView: {
+                levelSolved: () => false,
+                freezerOpen: () => false,
+                signRead: () => false,
+                rockSmashed: () => false,
+            },
         };
     };
     test('a plan does not run through the key it is the plan of', () => {

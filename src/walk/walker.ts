@@ -49,8 +49,6 @@ import {
 import type { LayeredCell } from './skills.ts';
 import { placeCharmStones, placeKicks, skipLanes } from './skipping-stones.ts';
 import type { Kick, SkipLane } from './skipping-stones.ts';
-import { skyEntrances } from './sky.ts';
-import type { SkyEntrances } from './sky.ts';
 import { gateShutNow, insideWall, land } from './support.ts';
 import { minorLanding, padCell, placePads } from './teleporters.ts';
 import type { TeleporterState } from './teleporters.ts';
@@ -239,7 +237,6 @@ export interface Walker {
         front?: Set<number> | null,
         options?: FloodOptions,
     ) => Set<number>;
-    skyEntrances: () => SkyEntrances;
     transitCells: (reached: Set<number>) => Set<number>;
     land: (cell: number, up?: boolean) => number;
     padCell: (padIndex: number) => number;
@@ -528,7 +525,6 @@ function placeTouchedRooms(walkGrid: WalkGrid): void {
 function walkerOf(walkGrid: WalkGrid): Walker {
     return {
         flood: (seeds, outside, front, options) => flood(walkGrid, seeds, outside, front, options),
-        skyEntrances: () => skyEntrances(walkGrid),
         transitCells: (reached) => transitCells(walkGrid, reached),
         land: (cell, up) => land(walkGrid, walkGrid.noFlood, cell, up),
         padCell: (padIndex) => padCell(walkGrid, walkGrid.noFlood, padIndex),

@@ -59,6 +59,7 @@ export function showGatePanel(context: PanelContext, freezerIndex: number, how?:
     const role = roleFor(context.goal, 'g', freezerIndex);
     const statusChip = `<span class="chip${statusTone}">${status}</span>`;
     html += `<div>${statusChip}${roleChipHtml(context, role)}</div>`;
+    html += `<div class="muted">ID ${freezer.pid}</div>`;
 
     let withMode = '';
     if (mode) withMode = ' ' + mode;

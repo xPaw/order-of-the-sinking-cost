@@ -1,9 +1,11 @@
 // The why text of a level the walk cannot reach, on a stub context
 import { expect, test, vi } from 'vitest';
+import { PROG } from '../src/data.ts';
 import type { PlanStep } from '../src/model/requirements.ts';
 import { whyText } from '../src/panels/why.ts';
 import type { WhyContext } from '../src/panels/why.ts';
 import type { Freezer } from '../src/types.ts';
+import { level } from './fixtures.ts';
 
 // one cage that level 0 unlocks
 const FREEZERS = vi.hoisted((): Freezer[] => [{ pid: 1, p: [0, 0, 0], l: 0, req: [0] }]);
@@ -23,14 +25,16 @@ interface Stub {
 
 // one blocked level with no way-in gate, no mechanic and no access mark
 function context({ fromSky, skyShown, bumped = [], gateShown = true }: Stub): WhyContext {
-    const fromSkyFlag = fromSky ? 1 : 0;
+    // the level data enters level 0 from the sky, or not
+    const entry = level('stub');
+    if (fromSky) entry.from = 'sky';
+    PROG.levels = [entry];
     return {
         progress: {
             wayIn: [[]],
             why: [{ gates: [], pad: [], via: [], viaTowers: [], mech: [] }],
             access: [null],
             behind: [bumped],
-            reach: { fromSky: Uint8Array.of(fromSkyFlag) },
         },
         model: { stepShown: (node: PlanStep) => node.t !== 'a' || node.id !== 'sky' || skyShown },
         status: { achievements: 0n },
@@ -42,7 +46,7 @@ function context({ fromSky, skyShown, bumped = [], gateShown = true }: Stub): Wh
     };
 }
 
-test('a pocket entered only by a drop from a sky ledge is "from High" once the sky shows', () => {
+test('a level the data enters from the sky is "from High" once the sky shows', () => {
     expect(whyText(context({ fromSky: true, skyShown: true }), 0)).toBe('from High');
 });
 test('under fog the sky is not named, and the level is not reachable from where the hero has been', () => {

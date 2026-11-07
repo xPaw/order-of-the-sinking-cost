@@ -13,7 +13,7 @@ import { findListShown } from '../sidebar/find.ts';
 import type { PanelContext } from './context.ts';
 import { cageItemOf, findItemOf } from './find-list.ts';
 import type { FindItem } from './find-list.ts';
-import { hashDone, markHashDone, panelKeep, setHash } from './hash.ts';
+import { addressedIndex, hashDone, markHashDone, panelKeep, setHash } from './hash.ts';
 import { applyFilters, markSelected, showLevelRow } from './list.ts';
 
 // the chips in a panel that open another panel: data attribute, node kind
@@ -309,12 +309,6 @@ function panelValid(context: PanelContext, [kind, id]: PanelKey): boolean {
     return context.model.signSet.has(id);
 }
 
-function addressedId(context: PanelContext, kind: PanelKind, value: string): number {
-    if (kind === 'level') return context.levels.findIndex((level) => level.n === value);
-    if (/^\d+$/.test(value)) return Number(value);
-    return -1;
-}
-
 // the target of the address, when it names something that exists and is not under fog
 function addressTarget(context: PanelContext): PanelKey | null {
     let found: RegExpExecArray | null = null;
@@ -327,7 +321,7 @@ function addressTarget(context: PanelContext): PanelKey | null {
     const [, kind, value] = found;
     if (!isPanelKind(kind)) return null;
 
-    const id = addressedId(context, kind, value);
+    const id = addressedIndex(kind, value, context);
     const counts: Record<PanelKind, number> = {
         level: context.levels.length,
         tower: context.progress.towers.length,

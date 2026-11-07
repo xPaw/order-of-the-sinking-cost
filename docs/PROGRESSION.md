@@ -223,7 +223,7 @@ leaves at stage 5.
    Way, The Mirror Way, The Skipping Way, The Beam Way). Second Endgame takes all four sky towers, each reached by its
    own Way. An active sky tower does not open its hub Freezer until its Sign is read. Reading a tower's Sign needs its
    quarter: south for High Heroes, west for High Mirrors, north for High Skipping Stones and east for High
-   Beamcasters. The levels each Way passes are the viewer's table of known routes ([Known routes](VIEWER.md#known-routes)).
+   Beamcasters. The levels each Way passes are the viewer's pad routes ([Level needs and pad routes](VIEWER.md#level-needs-and-pad-routes)).
 5. The elevator's top opens onto the end2 room (z 44). There `laser_pointer` needs 11 levels: `allocate_heroes_v2` →
    `end2_heroes_1_2` → `end2_heroes_1_5`; `end2_mirror_3` → `mirror_prelude_v2_fix` → `peak_toggle`;
    `place_slot_4x4_pushstyle` → `color_picker` → `place_promesst_rooms`; `stack_prelude_pushstyle`. The set's other

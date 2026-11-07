@@ -30,7 +30,7 @@ export interface EndingGoal extends GoalCore {
 
 /**
  * A stage of an ending that is no tower, named by an area (`area`), a level (`level`) or a sky Way (`route`, an index
- * into `known_routes`); `seen` lists the pads (indices into `teleporters`) whose discovery shows the stage by itself.
+ * into `pad_routes`); `seen` lists the pads (indices into `teleporters`) whose discovery shows the stage by itself.
  * `parts` counts the done ones of the rules a stage done by several holds.
  */
 export interface StageGoal extends GoalCore {

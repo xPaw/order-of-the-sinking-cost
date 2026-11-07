@@ -5,7 +5,7 @@ import { PROG, WORLD } from '../data.ts';
 import { latestFlag, latestOf } from '../save.ts';
 import type { History, LatestValues } from '../save.ts';
 import type { Status } from '../status-file.ts';
-import type { KnownRoute } from '../types.ts';
+import type { PadRoute } from '../types.ts';
 import { reachability } from '../walk/reachability.ts';
 import type { Reachability } from '../walk/reachability.ts';
 import { teleporterStatesOf } from '../walk/teleporters.ts';
@@ -13,12 +13,13 @@ import type { TeleporterState } from '../walk/teleporters.ts';
 import type { StoredRoles } from '../walk-data.ts';
 import { goalLadder } from './goals.ts';
 import type { LadderGoal } from './goals.ts';
-import { metRoutes } from './known-routes.ts';
 import { ROLE } from './level-roles.ts';
 import { nextSteps } from './next-steps.ts';
 import type { NextStep } from './next-steps.ts';
 import { planAll } from './plans.ts';
 import type { Plans } from './plans.ts';
+import { levelNeedsMet, metPadRoutes } from './route-needs.ts';
+import type { NeedsView } from './route-needs.ts';
 import { towerProgress } from './towers.ts';
 import type { TowerProgress } from './towers.ts';
 import { freezersOpen, isSolved, levelFlagsOf, levelStates, signRuleMet } from './unlocking.ts';
@@ -58,6 +59,8 @@ export interface BaseProgress {
     signRead: (pid: number) => boolean;
     /** Whether the save has smashed a Rock (by pid). */
     rockSmashed: (pid: number) => boolean;
+    /** What the save says about the things a level need or pad route can ask for. */
+    needsView: NeedsView;
     /** Per Sign, the layer the walk reaches nowhere that a hero must get onto to read it; null for the others. */
     signAccess: Array<string | null>;
     /** Per Sign the hero cannot face yet, the closed Freezers whose opening lets the walk face it. */
@@ -134,13 +137,14 @@ function reachOf(
     teleporterStates: TeleporterState[],
     gateOpen: boolean[],
     levelFlags: LevelFlags,
-    routes: KnownRoute[],
+    padRoutes: PadRoute[],
+    needsHold: Array<boolean | undefined>,
 ): Reachability | null {
     if (!history || !latest || !WORLD || !PROG.world || history.demo) return null;
 
     const closed = gateOpen.map((open) => !open);
     const entered = levelFlags.map((flags) => flags !== undefined);
-    return reachability(history, latest, teleporterStates, closed, entered, routes);
+    return reachability(history, latest, teleporterStates, closed, entered, padRoutes, needsHold);
 }
 
 /** The completion progress of a campaign from its status and history; the result is reused while both stay the same. */
@@ -173,8 +177,15 @@ export function computeProgress(status: ProgressStatus, history: History | null)
     const signRead = (pid: number) => latestFlag(latest, pid, 'rank_satisfied');
     const gateOpen = freezersOpen(status, levelFlags, signRead);
     const rockSmashed = (pid: number) => !!latest?.created.get(pid)?.destroyed;
-    const routes = metRoutes({ levelSolved: solved, freezerOpen: (index) => gateOpen[index], signRead, rockSmashed });
-    const reach = reachOf(history, latest, teleporterStates, gateOpen, levelFlags, routes);
+    const needsView: NeedsView = {
+        levelSolved: solved,
+        freezerOpen: (index: number) => gateOpen[index],
+        signRead,
+        rockSmashed,
+    };
+    const padRoutes = metPadRoutes(needsView);
+    const needsHold = levelNeedsMet(needsView);
+    const reach = reachOf(history, latest, teleporterStates, gateOpen, levelFlags, padRoutes, needsHold);
     const state = levelStates(levelFlags, reach);
     const unlocks = unlocksOf();
     const behind = gatesBehind(reach);
@@ -200,6 +211,7 @@ export function computeProgress(status: ProgressStatus, history: History | null)
         signOk,
         signRead,
         rockSmashed,
+        needsView,
         signAccess: signAccessOf(reach),
         signWayIn: signWayInOf(reach, gateOpen),
         reach,

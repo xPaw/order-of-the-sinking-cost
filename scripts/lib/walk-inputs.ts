@@ -1,6 +1,6 @@
-// What data/walk.json's `inputs` hashes, and what the stored room answers depend on. The walk's data files are hashed by
-// their bytes. The room search runs on the walk code, so its sources are hashed too: room-search.ts and every .ts file it
-// imports, directly or through other imports. A change to any of them makes the stored room answers stale.
+// What data/walk.json's `inputs` hashes, and what the stored room answers depend on: the walk's data files, without the
+// level table's fields. The room search runs on the walk code, so its sources are hashed too: room-search.ts and every .ts
+// file it imports, directly or through other imports. A change to any of them makes the stored room answers stale.
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -9,9 +9,12 @@ import * as paths from './paths.ts';
 
 const SRC = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', 'src');
 const ROOM_SEARCH = join(SRC, 'walk', 'room-search.ts');
-const DATA_INPUTS = ['progress.json', 'world.json'];
 const ROOM_SEARCH_KEY = 'room-search sources';
 const IMPORT_PATH = /from '(\.{1,2}\/[^']+)'/g;
+
+interface ProgressData {
+    levels: Array<{ needs?: unknown; from?: unknown }>;
+}
 
 function sha256(bytes: Uint8Array): string {
     return createHash('sha256').update(bytes).digest('hex');
@@ -50,11 +53,24 @@ function roomSearchHash(): string {
     return hash.digest('hex');
 }
 
+/** The SHA-256 of progress.json without the level table's fields, which no room answer depends on. */
+function progressHash(): string {
+    const progress: ProgressData = JSON.parse(readFileSync(paths.data('progress.json'), 'utf8'));
+
+    for (const level of progress.levels) {
+        delete level.needs;
+        delete level.from;
+    }
+
+    return sha256(new TextEncoder().encode(JSON.stringify(progress)));
+}
+
 /** The inputs of data/walk.json: the SHA-256 of each data file, and the SHA-256 of the room search's sources. */
 export function walkInputs(): Record<string, string> {
     const inputs: Record<string, string> = {};
 
-    for (const name of DATA_INPUTS) inputs[name] = sha256(readFileSync(paths.data(name)));
+    inputs['progress.json'] = progressHash();
+    inputs['world.json'] = sha256(readFileSync(paths.data('world.json')));
     inputs[ROOM_SEARCH_KEY] = roomSearchHash();
 
     return inputs;

@@ -1,27 +1,25 @@
 // Why the walk calls a level unreachable: the closed gates in front of it, the layer it is on, and the mechanics the
 // walk does not model near the way in, named while spoilers show or once the save has met them (their world's
 // achievement) (VIEWER.md "Pockets, leads and why", "The spoiler model (viewer)")
+import { PROG } from '../data.ts';
 import { hasAchievement } from '../model/achievements.ts';
 import { freezerNoun, freezersNoun } from '../model/freezer-names.ts';
 import { layerName, wayTo } from '../model/layers.ts';
 import type { ProgressModel } from '../model/progress-model.ts';
 import type { ShownProgress } from '../model/progress.ts';
-import type { Reachability } from '../walk/reachability.ts';
 import type { PanelContext } from './context.ts';
 
 /** The members of the panel context that the why text reads. */
 export interface WhyContext extends Pick<PanelContext, 'hide' | 'freezers' | 'iceOf' | 'gateShown' | 'gateArea'> {
     status: Pick<PanelContext['status'], 'achievements'>;
-    progress: Pick<ShownProgress, 'wayIn' | 'wayInAll' | 'why' | 'access' | 'behind'> & {
-        reach: Pick<Reachability, 'fromSky'> | null;
-    };
+    progress: Pick<ShownProgress, 'wayIn' | 'wayInAll' | 'why' | 'access' | 'behind'>;
     model: Pick<ProgressModel, 'stepShown'>;
 }
 
 /**
  * The pieces of why a level is not reachable: its gates, the mechanics and the layer it needs, whether nothing is known,
- * whether a drop from the sky leads into it (`skyEntry`) and whether that shows (`fromSky`), and the gates in front of
- * it that the level itself unlocks.
+ * whether the level data enters it from the sky (`skyEntry`) and whether that shows (`fromSky`), and the gates in front
+ * of it that the level itself unlocks.
  */
 export interface WhyParts {
     gate: string;
@@ -102,8 +100,8 @@ export function whyParts(context: WhyContext, levelIndex: number): WhyParts {
         layerText = `needs ${wayTo(layer)}`;
     }
 
-    // a drop from a sky ledge leads into the level's pocket; named once the sky shows
-    const skyEntry = !!progress.reach?.fromSky[levelIndex];
+    // the level is entered from the sky; named once the sky shows
+    const skyEntry = PROG.levels[levelIndex].from === 'sky';
     const fromSky = skyEntry && context.model.stepShown({ t: 'a', id: 'sky' });
     return {
         gate: gateText(context, levelIndex, wayIn(context, levelIndex)),

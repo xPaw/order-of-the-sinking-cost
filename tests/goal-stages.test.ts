@@ -130,9 +130,9 @@ function setup({
         ],
         teleporters: [pad({ pid: 1, major: 1 })],
         gold_rooms: [],
-        known_routes: [
-            { id: 'first_way', to: { level: 0 }, needs: [], area: FIRST_WAY_AREA, tower: 0 },
-            { id: 'second_way', to: { level: 1 }, needs: [], area: SECOND_WAY_AREA, tower: 1 },
+        pad_routes: [
+            { id: 'first_way', to: { pad: 0 }, needs: [], area: FIRST_WAY_AREA, tower: 0 },
+            { id: 'second_way', to: { pad: 1 }, needs: [], area: SECOND_WAY_AREA, tower: 1 },
         ],
         ending_stages: ENDING_STAGES,
     });
@@ -175,6 +175,12 @@ function setup({
         signOk,
         signRead: () => false,
         rockSmashed: () => false,
+        needsView: {
+            levelSolved: () => false,
+            freezerOpen: () => false,
+            signRead: () => false,
+            rockSmashed: () => false,
+        },
         solved: 0,
         hidden: state.map(() => false),
         towerHidden: towers.map(() => false),

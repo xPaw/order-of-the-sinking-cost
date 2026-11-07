@@ -127,7 +127,7 @@ describe('goals with spoilers hidden', () => {
         setSpoilersHidden(true);
     });
     test('a sky Way step follows its tower, not the tower Sign it leads to', () => {
-        const routes = (PROG.known_routes || []).filter((route) => route.area !== undefined);
+        const routes = (PROG.pad_routes || []).filter((route) => route.area !== undefined);
         expect(routes.length).toBeGreaterThan(0);
 
         for (const hide of [true, false]) {

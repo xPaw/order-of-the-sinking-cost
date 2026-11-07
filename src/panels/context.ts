@@ -11,7 +11,7 @@ import type { GoalLevel, GoalView } from '../model/goals-view.ts';
 import type { ProgressModel } from '../model/progress-model.ts';
 import type { ShownProgress } from '../model/progress.ts';
 import type { Area, Freezer, Position, ProgressLevel, Sign, Teleporter } from '../types.ts';
-import { panelKeep, setHash } from './hash.ts';
+import { panelHash, panelKeep, setHash } from './hash.ts';
 
 /** A level of the goal as the list shows it: the goal's levels by group, and the solved ones. */
 export interface ListedLevel {
@@ -242,10 +242,7 @@ export class PanelContext {
         panelKeep[this.camp] = key;
         this.current = key;
 
-        const [kind, id] = key;
-        let target = String(id);
-        if (kind === 'level') target = encodeURIComponent(this.levels[id].n);
-        setHash(kind + '=' + target);
+        setHash(panelHash(key, this));
     }
 
     open([kind, id]: PanelKey, how?: SelectHow): void {

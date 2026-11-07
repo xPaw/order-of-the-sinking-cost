@@ -1,4 +1,4 @@
-// The known routes onto the wrapping river: past wrap_music the Lily is ridden to the five levels along it
+// The needs of the levels onto the wrapping river: past wrap_music the Lily is ridden to the five levels along it
 import { beforeAll, describe, expect, test } from 'vitest';
 import { PROG, worldReady } from '../src/data.ts';
 import { computeProgress, setProgressCache } from '../src/model/progress.ts';
@@ -27,13 +27,12 @@ beforeAll(async () => {
 });
 
 describe('the Lily on the wrapping river', () => {
-    test('every level along the river has a route that needs wrap_music solved', () => {
+    test('every level along the river needs wrap_music solved', () => {
         const wrapMusic = PROG.levels.findIndex((level) => level.n === 'wrap_music');
 
         for (const name of RIVER_LEVELS) {
-            const target = PROG.levels.findIndex((level) => level.n === name);
-            const route = PROG.known_routes.find((row) => 'level' in row.to && row.to.level === target);
-            expect(route?.needs).toEqual([[{ level: wrapMusic }]]);
+            const level = PROG.levels.find((candidate) => candidate.n === name);
+            expect(level?.needs).toEqual([[{ level: wrapMusic }]]);
         }
     });
 

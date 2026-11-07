@@ -456,7 +456,7 @@ export function wayInModel({
 
 /**
  * Per level the walk cannot reach on a layer where it reaches nothing (sky, underworld), that layer; else the sky,
- * when the walk reaches nothing there and a fall from it lands in the level's pocket.
+ * when the walk reaches nothing there and the level data enters the level from the sky.
  */
 export function accessOf(state: LevelState[], reach: Reachability | null): Array<string | null> {
     const layers = PROG.map?.layers || [];
@@ -469,7 +469,7 @@ export function accessOf(state: LevelState[], reach: Reachability | null): Array
         const z = PROG.levels[i].p[2];
         const layer = layers.find((candidate) => z >= candidate.z[0] && z < candidate.z[1]);
         if (layer && layer.key !== 'ground' && !layerReached.get(layer.key)) return layer.key;
-        if (reach?.fromSky[i] && !layerReached.get('sky')) return 'sky';
+        if (PROG.levels[i].from === 'sky' && !layerReached.get('sky')) return 'sky';
         return null;
     });
 }

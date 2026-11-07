@@ -39,6 +39,12 @@ function totalsAtRank(rank: number, shownAt: ShownAt, known: string[] | null, re
         signOk: (rule: SignRule) => signRuleMet(rule, { rank }, [], 0),
         signRead: (pid: number) => readPids.includes(pid),
         rockSmashed: () => false,
+        needsView: {
+            levelSolved: () => false,
+            freezerOpen: () => false,
+            signRead: () => false,
+            rockSmashed: () => false,
+        },
         signAccess: [],
         signWayIn: [],
         reach: null,
