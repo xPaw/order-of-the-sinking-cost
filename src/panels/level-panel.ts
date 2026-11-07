@@ -13,7 +13,7 @@ import { stateLabel } from '../model/progress.ts';
 import { towerLevelCount, towerName } from '../model/towers.ts';
 import type { TowerProgress } from '../model/towers.ts';
 import type { LevelUnlocks } from '../model/way-in.ts';
-import type { Freezer, Position, ProgressLevel } from '../types.ts';
+import type { Freezer, Position, ProgressLevel, RouteNeed } from '../types.ts';
 import { wikiTacticsUrl } from '../wikitactics.ts';
 import type { PanelContext } from './context.ts';
 import { markSelected } from './list.ts';
@@ -32,6 +32,8 @@ import {
     pick,
     pointsOf,
     roleChipHtml,
+    signChip,
+    signOn,
     stepsOf,
     uniqueLinks,
     wrappable,
@@ -218,6 +220,34 @@ function requiresHtml(context: PanelContext, level: ProgressLevel): string {
     return `<div class="h">Requires${anyOf}</div><div>${pick(context, level.req)}</div>`;
 }
 
+// one chip for a need; a Sign under fog is not named
+function needChipHtml(context: PanelContext, need: RouteNeed): string {
+    if ('level' in need) return pick(context, [need.level]);
+
+    const sign = context.signs[need.sign];
+    if (!signOn(context, need.sign)) return '<span class="muted">A Sign under fog</span>';
+    return signChip(context, sign);
+}
+
+// the groups of the level's needs that the game data does not list, one line each
+function alsoNeedsHtml(context: PanelContext, level: ProgressLevel): string {
+    if (!level.needs) return '';
+
+    const inGameData = (need: RouteNeed): boolean => 'level' in need && level.req.includes(need.level);
+    const groups = level.needs.filter((group) => !group.every(inGameData));
+    if (groups.length === 0) return '';
+
+    const lines = groups.map((group) => {
+        let anyOf = '';
+        if (group.length > 1) anyOf = '<span class="muted">any of</span> ';
+        const chips = group.map((need) => needChipHtml(context, need)).join('');
+        return `<div>${anyOf}${chips}</div>`;
+    });
+
+    const heading = '<div class="h">Also needs <span class="muted">· from play, not game data</span></div>';
+    return heading + lines.join('');
+}
+
 // the shown Freezers that list the level among their requirements
 function gatesUnlockedBy(context: PanelContext, levelIndex: number): number[] {
     const unlockedGates: number[] = [];
@@ -344,6 +374,7 @@ export function showLevelPanel(context: PanelContext, levelIndex: number, how?: 
     if (blocked) html += whyHtml(context, levelIndex, behind, ice);
 
     html += requiresHtml(context, level);
+    html += alsoNeedsHtml(context, level);
 
     const unlockedGates = gatesUnlockedBy(context, levelIndex);
     html += unlocksHtml(context, progress.unlocks[levelIndex], unlockedGates);

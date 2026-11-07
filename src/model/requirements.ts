@@ -295,13 +295,18 @@ export function requirementGraph(progress: BaseProgress): Graph {
         }
 
         if (levelState === 'locked') {
-            const todo = level.req
-                .filter((required) => progress.state[required] !== 'solved')
-                .map((required) => levelId[required]);
-            let parts = todo;
-            if (level.or && level.req.length > 1) {
-                graph.node[id]!.alt = todo.length;
-                parts = [graph.add('o' + levelIndex, null, 'or', todo)];
+            let parts: number[];
+            if (level.needs !== undefined) {
+                parts = needsParts('l' + levelIndex, level.needs);
+            } else {
+                const todo = level.req
+                    .filter((required) => progress.state[required] !== 'solved')
+                    .map((required) => levelId[required]);
+                parts = todo;
+                if (level.or && level.req.length > 1) {
+                    graph.node[id]!.alt = todo.length;
+                    parts = [graph.add('o' + levelIndex, null, 'or', todo)];
+                }
             }
 
             const frozenIn = progress.ice?.[levelIndex];

@@ -834,11 +834,11 @@ Required needs it.
 
 Needs, from the goals:
 
-- a level needs its `unlocked_by` levels (none for a level enabled in the level data). With an OR gate of more than one option, every option is needed, but only as "one of", and so is everything they need in turn;
+- a level with table `needs` ([Level needs and pad routes](#level-needs-and-pad-routes)) needs the levels of its groups, a group of one level as that level and a group of several as "one of"; any other level needs its `unlocked_by` levels (none for a level enabled in the level data). With an OR gate of more than one option, every option is needed, but only as "one of", and so is everything they need in turn;
 - a level or Freezer needs the Freezers it sits behind. Behind several Freezers = any one of them, so they are needed as "one of". A level frozen in a Freezer sits behind that Freezer alone, even where the walk reaches the squares next to it;
 - a Freezer needs its `unlocked_by` levels (Sign rules are not levels), and a Freezer is needed by itself unless it is provably a shortcut (below).
 
-So a non-goal level is Optional when everything it opens is optional: every level that lists it in `unlocked_by` is
+So a non-goal level is Optional when everything it opens is optional: every level that needs it is
 Optional and every Freezer that lists it is a shortcut with nothing Required behind it. A level that opens nothing is
 Optional.
 
@@ -960,11 +960,12 @@ past a level or pad it lands on works as usual. Both are in `data/progress.json`
 the needs and the sky entry on each level, and `pad_routes`.
 
 Needs are all of the groups, one need of a group. A need is a level solved or a Sign read. A group with no need is one nobody knows yet; nothing meets it. No group needs
-nothing.
+nothing; a level with `needs` of no groups is reached from the start. A level enabled in the level data needs no unlock,
+so its row lists none.
 
 A level with `needs` is decided by them: it is reachable when they hold and not reachable otherwise, whatever the walk
 finds, except that a level the save solved or entered stays reached. A level frozen in a closed Freezer is reached only
-once it opens. A level with no `needs` is as the walk finds it. When a level's needs hold, the walk seeds its flood at
+once it opens. A level with no `needs`, because the table adds nothing to its unlocks, is as the walk finds it. When a level's needs hold, the walk seeds its flood at
 the level ([Seeds and the reached cells](#seeds-and-the-reached-cells)), so the levels, pads, Signs and leads beyond it
 are reached with it, in the same pass. `drop` marks a blocked level entered from the sky, worded as for the
 sky ([Pockets, leads and why](#pockets-leads-and-why)).
@@ -1001,14 +1002,17 @@ a met need or anything under fog. What a panel unlocks is dashed blue. A need of
 at the pad of the level's layer. A need of a ground level on another layer runs to the pad of its layer and on from the
 ground pad, and the panel links each other layer the route runs on.
 
-A table row's `requires` repeats the levels that unlock it in the game data, and the rows of a section read in that order;
-`needs` stays what reaches a level.
+A table row's `needs` lists the levels that unlock it in the game data (one group each, or one group of alternatives for
+a level any one unlocks) and then what play adds, and the rows of a section read in that order. A row whose needs are
+only the unlocks, or that has none, leaves the reach to the walk; `known` keeps the needs of a row that adds nothing.
+
+A level's panel lists the groups of its needs that the game data does not, under "Also needs", marked as from play.
 
 A table row with a `drop` is entered by a drop through that hole. The needs of such a level end at the hole,
 which carries an arrow on the map, and the panel links the layer of the hole.
 
-The chain follows each group's shown option the save meets, else the first one shown, and goes through the levels that
-unlock a level; a Freezer's panel starts it from the levels and Signs that open the Freezer. A tower Sign or the gold-room
+The chain follows each group's shown option the save meets, else the first one shown,
+and goes through the levels that unlock a level, except one the level data enables; a Freezer's panel starts it from the levels and Signs that open the Freezer. A tower Sign or the gold-room
 Sign goes on to its towers, all of them for the gold-room Sign and without their levels. It ends at an entry with no needs
 or a tower, which a line joins to the pad, or stops at a level the table leaves to the walk with nothing unlocking it, any
 other Sign, a Freezer nothing opens or a level already on the way back. The panel marks these stops in one broken

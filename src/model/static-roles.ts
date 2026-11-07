@@ -178,9 +178,17 @@ export function staticRoles(): StoredRoles | null {
         const sittingBehind = behind[kind][index];
         const many = node.or && optionCount(node) > 1;
 
-        // a level enabled in the level data is open whatever its requirements
+        // the table's needs of a level replace its requirements; a level enabled in the level data is otherwise open
+        // whatever its requirements
+        const tableNeeds = kind === 'l' ? levels[index].needs : undefined;
         const enabledLevel = kind === 'l' && !!levels[index].en;
-        if (!enabledLevel) {
+        if (tableNeeds) {
+            for (const group of tableNeeds) {
+                for (const option of group) {
+                    if ('level' in option) mark('l', option.level, strong && group.length === 1);
+                }
+            }
+        } else if (!enabledLevel) {
             for (const required of node.req) mark('l', required, strong && !many);
         }
         for (const gate of sittingBehind) mark('g', gate, strong && sittingBehind.length === 1);

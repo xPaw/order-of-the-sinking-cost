@@ -1,5 +1,6 @@
 // Level needs and pad routes: which ones a save meets, what a met pad route gives the walk, and how the needs of a
 // level decide whether it is reachable
+import { readFileSync } from 'node:fs';
 import { describe, expect, test, vi } from 'vitest';
 import type { History } from '../src/history-file.ts';
 import { levelNeedsMet, metPadRoutes, needsMet } from '../src/model/route-needs.ts';
@@ -171,5 +172,20 @@ describe('the needs of a route', () => {
         withNeeds(1, [], () => {
             expect(walk([], levelNeedsMet(view([]))).level).toEqual([true, true, true]);
         });
+    });
+});
+
+describe('the needs a level table row sets', () => {
+    const built: { levels: { n: string; needs?: unknown }[] } = JSON.parse(
+        readFileSync(new URL('../data/progress.json', import.meta.url), 'utf8'),
+    );
+    const needsOf = (name: string) => built.levels.find((level) => level.n === name)?.needs;
+
+    test('a row marked known keeps needs that are only the unlocks of its level', () => {
+        expect(needsOf('snipperclips_square')).toHaveLength(1);
+    });
+
+    test('a row that adds nothing to the unlocks leaves the needs to the walk', () => {
+        expect(needsOf('mirror_4')).toBeUndefined();
     });
 });

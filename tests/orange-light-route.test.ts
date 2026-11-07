@@ -26,7 +26,7 @@ describe('the row 77 walk to simultaneous_x and its Surprise', () => {
 
         for (const name of LEVELS) {
             const level = PROG.levels.find((candidate) => candidate.n === name);
-            expect(level?.needs).toEqual([[{ level: torusMirrors }]]);
+            expect(level?.needs).toContainEqual([{ level: torusMirrors }]);
         }
     });
 
@@ -34,8 +34,13 @@ describe('the row 77 walk to simultaneous_x and its Surprise', () => {
         expect(reachOf([], LEVELS)).toEqual([false, false]);
     });
 
-    test('with torus_mirrors solved the walk reaches both, and nothing beyond them', () => {
-        expect(reachOf(['torus_mirrors'], [...LEVELS, 'three_artifacts_v3'])).toEqual([true, true, false]);
+    test('with torus_mirrors and simultaneous_x solved the walk reaches both, and nothing beyond them', () => {
+        expect(reachOf(['torus_mirrors'], [...LEVELS, 'three_artifacts_v3'])).toEqual([true, false, false]);
+        expect(reachOf(['torus_mirrors', 'simultaneous_x'], [...LEVELS, 'three_artifacts_v3'])).toEqual([
+            true,
+            true,
+            false,
+        ]);
     });
 });
 

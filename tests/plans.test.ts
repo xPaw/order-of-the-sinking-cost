@@ -477,6 +477,39 @@ describe('a level with needs', () => {
     });
 });
 
+describe('a locked level with needs', () => {
+    // level 3 is unlocked by level 0 in the level data; the table adds one of levels 1 and 2
+    const setup = (needs: RouteNeed[][] | undefined, solved: number[] = []) => {
+        Object.assign(PROG, {
+            levels: [level('a'), level('b'), level('c'), level('target', { req: [0], needs })],
+            freezers: [],
+            signs: [],
+            pad_routes: [],
+            gold_rooms: [],
+        });
+        const state: LevelState[] = ['unlocked', 'unlocked', 'unlocked', 'locked'];
+        solved.forEach((levelIndex) => (state[levelIndex] = 'solved'));
+        return progress({ state });
+    };
+
+    test('asks for the needs, which can go beyond its unlocks', () => {
+        const plan = keys(setup([[{ level: 0 }], [{ level: 1 }, { level: 2 }]]), ['level', 3]);
+        expect(plan).toContain('l0');
+        expect(plan.filter((key) => key === 'l1' || key === 'l2')).toHaveLength(1);
+    });
+
+    test('leaves out a need that is met', () => {
+        const plan = keys(setup([[{ level: 0 }], [{ level: 1 }]], [0]), ['level', 3]);
+        expect(plan).not.toContain('l0');
+        expect(plan).toContain('l1');
+    });
+
+    test('a level with no needs asks for its unlocks', () => {
+        const plan = keys(setup(undefined), ['level', 3]);
+        expect(plan).toEqual(['l0', 'l3']);
+    });
+});
+
 describe('a level that asks for the endgame table gates', () => {
     // level 4 is not reachable; it needs gates 0 to 2 together (each opened by a playable level), and gate 3 (level 3)
     // is a way in the walk found

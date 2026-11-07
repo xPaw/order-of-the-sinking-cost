@@ -113,8 +113,8 @@ describe('needChain', () => {
         expect(chain.stops).toEqual([]);
     });
 
-    test('goes through the levels that unlock a level before the hub', () => {
-        const unlocked = { ...level('b', []), req: [0] };
+    test('draws the unlocks a level holds in its needs once', () => {
+        const unlocked = { ...level('b', [[{ level: 0 }]]), req: [0] };
         const chain = needChain(worldOf([level('a', []), unlocked]), viewOf(), { level: 1 });
 
         expect(chain.edges.map((edge) => [edge.from, edge.to])).toEqual([
@@ -124,13 +124,20 @@ describe('needChain', () => {
     });
 
     test('follows one of the levels that unlock a level when any one does', () => {
-        const unlocked = { ...level('c', []), req: [0, 1], or: 1 };
+        const unlocked = { ...level('c', undefined), req: [0, 1], or: 1 };
         const chain = needChain(worldOf([level('a', []), level('b', []), unlocked]), viewOf([1]), { level: 2 });
 
         expect(chain.edges).toEqual([{ from: 1, to: 2, met: true }]);
     });
 
-    test('stops at a level the table leaves to the walk', () => {
+    test('joins a level with no needs and no unlocks to the hub', () => {
+        const chain = needChain(worldOf([level('a', [])]), viewOf(), { level: 0 });
+
+        expect(chain.stops).toEqual([]);
+        expect(chain.edges).toEqual([{ from: START, to: 0, met: true }]);
+    });
+
+    test('stops at a level the table leaves to the walk with nothing unlocking it', () => {
         const world = worldOf([level('a', undefined), level('b', [[{ level: 0 }]])]);
         const chain = needChain(world, viewOf(), { level: 1 });
 
@@ -245,6 +252,16 @@ describe('needChain', () => {
         const chain = needChain(world, viewOf(), { level: 0 });
 
         expect(chain.stops).toEqual([{ reason: 'cycle', level: 0 }]);
+    });
+
+    test('treats a level the level data enables as having no unlocks', () => {
+        const enabled = { ...level('b', undefined), req: [2], en: 1 };
+        const unlocker = { ...level('c', undefined), req: [1] };
+        const world = worldOf([level('a', [[{ level: 1 }]]), enabled, unlocker]);
+        const chain = needChain(world, viewOf(), { level: 0 });
+
+        expect(chain.stops).toEqual([{ reason: 'unknown', level: 1 }]);
+        expect(chain.levels).toEqual([0, 1]);
     });
 
     test('marks met needs', () => {

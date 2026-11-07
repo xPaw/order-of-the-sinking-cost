@@ -170,15 +170,18 @@ function followLevel(follow: Follow, levelIndex: number): void {
         chain.drops.push(level.drop);
     }
 
-    // the levels that unlock a level stand in for a way in the table leaves out
-    const hasUnlockers = level.req.length > 0;
-
     follow.path.add(levelIndex);
     if (level.needs === undefined) {
-        if (!hasUnlockers) chain.stops.push({ reason: 'unknown', level: levelIndex });
+        // the table leaves the reach to the walk: the levels that unlock the level are all that is known
+        if (level.req.length === 0 || level.en) {
+            chain.stops.push({ reason: 'unknown', level: levelIndex });
+        } else {
+            const unlockers = level.req.map((required): RouteNeed => ({ level: required }));
+            followAll(follow, unlockers, Boolean(level.or), levelIndex);
+        }
     } else if (level.needs.length === 0) {
         const hub = world.hubs.get(endLayer(world, levelIndex));
-        if (hub && !hasUnlockers) chain.edges.push({ from: hub, to: levelIndex, met: true });
+        if (hub) chain.edges.push({ from: hub, to: levelIndex, met: true });
     } else {
         for (const group of level.needs) {
             if (group.length === 0) {
@@ -189,10 +192,6 @@ function followLevel(follow: Follow, levelIndex: number): void {
             followNeed(follow, optionOf(follow, group), levelIndex);
         }
     }
-
-    // reaching a level is not playing it: the levels that unlock it come on top of the table's needs
-    const unlockers = level.req.map((required): RouteNeed => ({ level: required }));
-    followAll(follow, unlockers, Boolean(level.or), levelIndex);
 
     follow.path.delete(levelIndex);
 }
@@ -223,10 +222,11 @@ function followFreezer(follow: Follow, freezerIndex: number): void {
 
 /**
  * Follows the needs of a level back, level by level and through a Freezer's openers, until an entry with no needs,
- * which a line joins to its layer's hub. In a group of alternatives it follows the shown one the save meets, else the
- * first one shown. It goes through a Sign that counts towers to those towers, which a line joins to the hub. It stops at
- * a level with no entry, any other Sign, a Freezer nothing opens and a level
- * already on the way back.
+ * which a line joins to its layer's hub. A level the table leaves to the walk is followed through the levels that unlock
+ * it, unless the level data enables it without them. In a group of alternatives it follows the shown one the save
+ * meets, else the first one shown. It goes through a Sign that counts towers to
+ * those towers, which a line joins to the hub. It stops at a level with no needs and no unlocks, any other Sign, a
+ * Freezer nothing opens and a level already on the way back.
  */
 export function needChain(world: ChainWorld, view: NeedsView, ...targets: ChainTarget[]): NeedChain {
     const chain: NeedChain = {

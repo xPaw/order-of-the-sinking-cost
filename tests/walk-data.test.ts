@@ -38,6 +38,26 @@ test('the stored static roles are the ones the walk works out', () => {
     expect(STATIC_ROLES.bg).toEqual(live.bg);
 });
 
+test('a level the table needs is Required, as one of several when its group has several options', () => {
+    const need = STATIC_ROLES.need.l;
+    const missing: string[] = [];
+
+    PROG.levels.forEach((row, index) => {
+        if (need[index] === 0) return;
+
+        for (const group of row.needs ?? []) {
+            for (const option of group) {
+                if (!('level' in option)) continue;
+
+                const wanted = 1 + Number(need[index] === 2 && group.length === 1);
+                if (need[option.level] < wanted) missing.push(`${row.n} -> ${PROG.levels[option.level].n}`);
+            }
+        }
+    });
+
+    expect(missing).toEqual([]);
+});
+
 test('the stored floor heights are the ones the walk works out', () => {
     const live = floorHeights()!;
     const storedFloors: Record<string, Float32Array> = FLOOR_HEIGHTS!;
