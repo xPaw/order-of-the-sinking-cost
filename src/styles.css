@@ -1022,6 +1022,10 @@ summary {
     border-radius: var(--r3);
     margin: var(--s2) 0;
 }
+.routebtn {
+    width: 100%;
+    margin: var(--s3) 0 var(--s2);
+}
 /* a save file read only in part */
 .fwarn {
     background: var(--panel2);

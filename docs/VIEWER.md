@@ -995,6 +995,14 @@ The page words a Way, as a plan step and as a stage of Endgame High ([Goals (vie
 name (the plan step with a link that frames the area on the map) and, while the area is not named, "Way to the High
 Mirrors sign" with the tower's name ([The spoiler model (viewer)](#the-spoiler-model-viewer)).
 
+Every level has a Debug route button at the foot of its panel, whatever the No spoilers switch says. It marks a broken
+route in the panel, links the level table file for pull requests and, in place of the panel's other map lines, draws the
+chain of the level's needs back to the hero's start, as straight lines between its stops and not a walked path: solid
+for a need not met, dashed for one met. The chain follows each group's option the save meets, else the first, and goes
+through the levels and Signs that open a Freezer. It ends at an entry with no needs, which a line joins to the start, or
+stops at a level the table leaves to the walk, a Sign, a Rock, a Freezer nothing opens or a level already on the way
+back; each stop has a numbered badge, and the panel says where the chain ends when it does not reach the start.
+
 ### Next steps
 
 Next steps (`nextSteps`, `P.needed`) say what each unsolved level opens; the goals' lists are sorted by them

@@ -84,6 +84,9 @@ export class PanelContext {
     back: PanelKey[] = [];
     chainPoints: Position[] = [];
 
+    // the level whose table route the map shows, if any
+    routeLevel: number | null = null;
+
     // the map's overlays, and the panel of each node kind (both set with the map)
     overlays: () => MapOverlay[] = () => [];
 

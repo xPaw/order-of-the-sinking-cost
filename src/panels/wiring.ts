@@ -48,6 +48,16 @@ export function wireMapPanels(context: PanelContext): void {
             return;
         }
 
+        if (target.closest('[data-route]')) {
+            const current = context.current;
+            if (current === null || current[0] !== 'level') return;
+
+            if (context.routeLevel === current[1]) context.routeLevel = null;
+            else context.routeLevel = current[1];
+            context.open(current, { still: true });
+            return;
+        }
+
         const areaChip = target.closest<HTMLElement>('[data-parea]');
         if (areaChip) {
             map.fitPoints([PROG.areas[Number(areaChip.dataset.parea)].p]);
