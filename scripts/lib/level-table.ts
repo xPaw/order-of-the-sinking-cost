@@ -655,30 +655,13 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['stone_economy'],
         needs: [
-            [
-                { level: 'end2_heroes_1_5' },
-                { level: 'end2_river_place' },
-                { level: 'stones_prelude' },
-            ],
-            [
-                { level: 'end2_heroes_1_5' },
-                { level: 'end2_river_place' },
-                { level: 'place_promesst_rooms' },
-            ],
-            [
-                { level: 'end2_heroes_1_5' },
-                { level: 'peak_toggle' },
-                { level: 'place_promesst_rooms' },
-            ],
+            [{ level: 'end2_heroes_1_5' }],
         ],
     },
     {
         levels: ['place_lily_pushstyle_v6'],
         needs: [
-            [
-                { level: 'end2_heroes_1_5' },
-                { level: 'stone_economy' },
-            ],
+            [{ level: 'end2_heroes_1_5' }],
         ],
     },
     {
@@ -1770,10 +1753,7 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['bard_stack_intro'],
         needs: [
-            [
-                { level: 'clone_maze' },
-                { level: 'flamethrower' },
-            ],
+            [{ level: 'flamethrower' }],
         ],
         drop: [130, 131, 36],
     },
@@ -1991,10 +1971,7 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['shunt2_alt'],
         needs: [
-            [
-                { level: 'friendly_nudges' },
-                { level: 'plus_signs_v3' },
-            ],
+            [{ level: 'plus_signs_v3' }],
         ],
     },
     {
@@ -2796,13 +2773,7 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['magicians_assistant_v2'],
         needs: [
-            [
-                { level: 'archways_2_v2' },
-                { level: 'going_up_v4' },
-                { level: 'jenga_shortstack_v2' },
-                { level: 'mountain_music' },
-                { level: 'tippy_intro' },
-            ],
+            [{ level: 'jenga_shortstack_v2' }],
         ],
     },
     {
@@ -2988,7 +2959,6 @@ export const LEVEL_TABLE: LevelRow[] = [
                 { level: '3d_intro_promesst_v5' },
                 { level: 'dragons_layer' },
                 { level: 'strong_monsters_v2' },
-                { level: 'thin_ice_rooms' },
                 { level: 'under_pressure' },
                 { sign: 115389567 },
             ],
@@ -4595,7 +4565,6 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: [
             [
                 { level: 'floating_gardens' },
-                { level: 'monster_gate_in_water' },
                 { level: 'one_of_each' },
                 { level: 'sprint_skip0' },
                 { level: 'stone_stopper5' },
@@ -4768,10 +4737,7 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['automatic_door_v5'],
         needs: [
-            [
-                { level: 'archways_2_v2' },
-                { level: 'going_up_v4' },
-            ],
+            [{ level: 'archways_2_v2' }],
         ],
     },
     {
@@ -5131,17 +5097,7 @@ export const LEVEL_TABLE: LevelRow[] = [
                 { level: 'boot_cycle_warrior' },
                 { level: 'endpoint_maze' },
                 { level: 'endpoint_wrap_druid_alt' },
-                { level: 'nowhere_to_smash_combo' },
                 { level: 'push_down_chain' },
-            ],
-            [
-                { level: 'boot_cycle_warrior' },
-                { level: 'do_not_want' },
-                { level: 'endpoint_maze' },
-                { level: 'endpoint_wrap_druid_alt' },
-                { level: 'push_down_chain' },
-                { level: 'rubble_chain' },
-                { level: 'save_for_later' },
             ],
         ],
     },
@@ -5198,17 +5154,7 @@ export const LEVEL_TABLE: LevelRow[] = [
                 { level: 'boot_cycle_warrior' },
                 { level: 'endpoint_maze' },
                 { level: 'endpoint_wrap_druid_alt' },
-                { level: 'nowhere_to_smash_combo' },
                 { level: 'push_down_chain' },
-            ],
-            [
-                { level: 'boot_cycle_warrior' },
-                { level: 'do_not_want' },
-                { level: 'endpoint_maze' },
-                { level: 'endpoint_wrap_druid_alt' },
-                { level: 'push_down_chain' },
-                { level: 'rubble_chain' },
-                { level: 'save_for_later' },
             ],
         ],
     },
@@ -5242,17 +5188,8 @@ export const LEVEL_TABLE: LevelRow[] = [
         levels: ['orange_gem_instant'],
         needs: [
             [
-                { level: 'do_not_want' },
                 { level: 'endpoint_maze' },
                 { level: 'endpoint_wrap_druid_alt' },
-                { level: 'push_down_chain' },
-                { level: 'rubble_chain' },
-                { level: 'save_for_later' },
-            ],
-            [
-                { level: 'endpoint_maze' },
-                { level: 'endpoint_wrap_druid_alt' },
-                { level: 'nowhere_to_smash_combo' },
                 { level: 'push_down_chain' },
             ],
         ],
@@ -5306,12 +5243,6 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['button_and_beam_v3'],
         needs: [
-            [
-                { level: 'en_root_alt' },
-                { level: 'green_goblins' },
-                { level: 'open_monster' },
-                { level: 'thief_dragger_v2' },
-            ],
             [
                 { level: 'open_monster' },
                 { level: 'thief_dragger_v2' },
