@@ -218,9 +218,11 @@ function gateOverlay(context: PanelContext, freezerIndex: number): MapOverlay {
 
     let kind: OverlayKind = 'pods';
     let icon: IconName = 'ice-cage';
+    let holds = freezer.holds;
     if (isDoorway(freezerIndex)) {
         kind = 'doorways';
         icon = 'ice-gate';
+        holds = undefined;
     }
 
     return {
@@ -237,6 +239,7 @@ function gateOverlay(context: PanelContext, freezerIndex: number): MapOverlay {
         y: freezer.p[1],
         position: freezer.p,
         icon,
+        holds,
         tip,
     };
 }

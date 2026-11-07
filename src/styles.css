@@ -1812,6 +1812,21 @@ main > .mapbox {
 .mw .area.off {
     display: none;
 }
+/* the image of an object in the world lies under the marks and takes no pointer */
+.mw .ho {
+    pointer-events: none;
+}
+/* the image of what a cage holds sits on its mark; it is hidden while the map is zoomed out (.far) */
+.mw .cl {
+    pointer-events: none;
+}
+.mw .far .cl {
+    display: none;
+}
+/* while the map is zoomed in, an open cage's mark gives way to the image of what it held and still takes the pointer */
+.mw .ov:not(.far) .gv:not(.chosen) {
+    opacity: 0;
+}
 /* every mark is a dark disc with a thin light rim and its icon on it (a level pad's rim is neutral); an overlay mark's rim
    is in its kind's colour, and a used one's is grey */
 .mw .ovk {

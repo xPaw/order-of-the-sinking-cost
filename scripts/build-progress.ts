@@ -14,18 +14,23 @@ import type {
     Freezer,
     FreezerSign,
     LevelSet,
+    MapObjects,
+    ObjectRow,
     Position,
     Progress,
     ProgressFog,
     ProgressLevel,
     ProgressMap,
+    Schema,
     Sign,
     Teleporter,
     Tower,
     ViewGiver,
+    World,
     WorldFile,
 } from '../src/types.ts';
 import type { FogFile, LevelAreasFile, LevelEntry, LevelsFile, PlacedEntity } from './lib/data-files.ts';
+import { allHeldObjects, cellKey, heldByCages } from './lib/cage-contents.ts';
 import { buildEndingStages } from './lib/ending-stages.ts';
 import { flagsOf, get, positionOf, refOf, vectorOf, type Fields } from './lib/fields.ts';
 import { resolveLevelTable } from './lib/level-needs.ts';
@@ -553,6 +558,34 @@ function addMainBoxes(pkg: Package, raw: RawEntities, worldMap: ProgressMap): vo
     }
 }
 
+// Sets `holds` on each Freezer whose cell holds exactly one kind of existing object: the name of its icon
+function addFreezerContents(freezers: Freezer[], world: World, schema: Schema): void {
+    const held = heldByCages(freezers, world, schema);
+    for (const freezer of freezers) {
+        const object = held.get(freezer.pid);
+        if (object) freezer.holds = object.name;
+    }
+}
+
+// The objects the map draws as images: every object with an icon that does not share a cell with a Freezer, whose own
+// mark draws it. The icon names are listed once, in order of first use.
+function buildObjects(freezers: Freezer[], world: World, schema: Schema): MapObjects {
+    const freezerCells = new Set(freezers.map((freezer) => cellKey(freezer.p, world)));
+    const icons: string[] = [];
+    const rows: ObjectRow[] = [];
+    for (const object of allHeldObjects(world, schema)) {
+        if (freezerCells.has(cellKey(object.p, world))) continue;
+
+        let icon = icons.indexOf(object.name);
+        if (icon < 0) {
+            icon = icons.length;
+            icons.push(object.name);
+        }
+        rows.push([object.p[0], object.p[1], object.p[2], icon]);
+    }
+    return { icons, rows };
+}
+
 function main(): void {
     paths.parseCommandLine();
     const levelData: LevelsFile = JSON.parse(readFileSync(paths.data('levels.json'), 'utf8'));
@@ -622,6 +655,8 @@ function main(): void {
         for (const room of world.gold_rooms) room.tower = towers.findIndex((tower) => tower.pid === room.tower);
         addTowerPads(overworld, towers, world.teleporters);
         Object.assign(out, world);
+        addFreezerContents(freezers, world.world, pkg.schema);
+        out.objects = buildObjects(freezers, world.world, pkg.schema);
     }
     if (out.areas && out.teleporters) {
         // the hand-written table (scripts/lib/level-table.ts): sets the needs of `levels` and returns the pad routes

@@ -108,6 +108,8 @@ export interface MapOverlay {
     panel?: PanelKey;
     merge?: number;
     req?: boolean;
+    /** The icon of the object a closed cage holds, drawn on the mark while the map is zoomed in. */
+    holds?: string;
 }
 
 /** An end of a link: a marker index, or the position of a tower. */
@@ -205,6 +207,20 @@ interface PlacedLabel {
     width: number;
 }
 
+/** An object drawn as an image on the map: the centre of its square on the map and its image. */
+interface ObjectImage {
+    x: number;
+    y: number;
+    url: string;
+}
+
+/** The marks of the overlays: the discs, the icons on them and the images of what the cages hold. */
+interface OverlayParts {
+    discs: MarkAttributes[];
+    icons: MarkAttributes[];
+    cageLabels: MarkAttributes[];
+}
+
 /** A level marker of the last draw. */
 interface DrawnMarker {
     x: number;
@@ -259,6 +275,13 @@ const MARK_MIN_PIXELS = 0.7;
 // scale by it through --mk
 const markScale = (squaresPerPixel: number): number => Math.max(MARK_SCALE, MARK_MIN_PIXELS * squaresPerPixel);
 
+// the squares per screen pixel above which the images of what the cages hold and of the objects are hidden: a square
+// is then under 20 px wide and they would crowd the map
+const CAGE_LABEL_MAX_SCALE = 0.05;
+
+// how far the image of an object reaches past its square's centre, in squares: the image is one square wide
+const OBJECT_REACH = 0.5;
+
 // an area label keeps a constant screen size until a square is wider than 11 px
 const labelScale = (squaresPerPixel: number): number => Math.max(MARK_SCALE, squaresPerPixel);
 
@@ -276,6 +299,9 @@ const TOWER_RADIUS = 8.5;
 
 // the radius of the icon on a disc
 const iconRadiusOn = (discRadius: number): number => discRadius - ICON_MARGIN;
+
+// the radius of the image of what a closed cage holds, drawn on the cage's mark: 60% of the disc
+const CAGE_HELD_RADIUS = DISC_RADIUS * 0.6;
 
 // the diamond of a tower without a pad
 const TOWER_DIAMOND = `M0 ${-TOWER_RADIUS}L${TOWER_RADIUS} 0L0 ${TOWER_RADIUS}L${-TOWER_RADIUS} 0Z`;
@@ -429,6 +455,12 @@ export class MapView {
     private labelsLayer: string | null = null;
     private labels: PlacedLabel[] = [];
     private labelsOn = new Set<SVGTextElement>();
+
+    // The images of the objects the layer shown has and the fog leaves, made the first time the map is zoomed in on the
+    // layer (objectsLayer); drawnObjects: the ones in the view the pool shows, null when the pool's content is unknown
+    private layerObjects: ObjectImage[] = [];
+    private objectsLayer: string | null = null;
+    private drawnObjects: ObjectImage[] | null = null;
     private fogGroup: SVGGElement;
     private fogCore: SVGGElement;
     private blur: SVGFEGaussianBlurElement;
@@ -505,6 +537,7 @@ export class MapView {
             scaled: [this.overlayGroup, this.labelsGroup],
             onPixelScale: (scale) => {
                 this.overlayGroup.style.setProperty('--mk', String(markScale(scale)));
+                this.overlayGroup.classList.toggle('far', scale > CAGE_LABEL_MAX_SCALE);
                 this.labelsGroup.style.setProperty('--mk', String(labelScale(scale)));
             },
             reach: (group, scale) => this.copyReach(group, scale),
@@ -537,6 +570,7 @@ export class MapView {
 
         this.overlayGroup.replaceChildren(marks.root);
         this.marks = marks;
+        this.drawnObjects = null;
     }
 
     // the marks of the layer shown, which every draw makes first
@@ -678,6 +712,7 @@ export class MapView {
 
         this.placeLinks(view);
         this.cullLabels(view);
+        this.drawObjects(view);
         this.softenFog(view);
         this.sharpenImages(view);
     }
@@ -759,6 +794,79 @@ export class MapView {
 
         for (const text of shownTexts) text.classList.remove('off');
         this.labelsOn = shownTexts;
+    }
+
+    // the objects of the layer shown that the fog does not hide, with their images
+    private objectImages(layer: string): ObjectImage[] {
+        const { icons, rows } = PROG.objects;
+        const fog = this.options.fog;
+        const images: ObjectImage[] = [];
+
+        for (const [worldX, worldY, z, icon] of rows) {
+            if (mapLayerOf(z) !== layer) continue;
+            if (fog?.at(layer, worldX, worldY, z)) continue;
+
+            const url = ICON_URLS[icons[icon]];
+            if (url === undefined) continue;
+
+            const [x, y] = mapXY(worldX, worldY);
+            images.push({ x, y, url });
+        }
+
+        return images;
+    }
+
+    // While the map is zoomed in, each object in the view is an image one square wide on its square. The pool holds only
+    // the objects in the view, so a view change that brings in or drops none leaves the elements alone, and a map zoomed
+    // out holds none. An object is in the view when any copy of the map puts it there.
+    private drawObjects({ x0, y0, scale, rect }: ViewCorner): void {
+        const pool = this.shownMarks.objectIcons;
+        if (scale > CAGE_LABEL_MAX_SCALE) {
+            if (this.drawnObjects?.length === 0) return;
+
+            pool.fit([]);
+            this.drawnObjects = [];
+            return;
+        }
+
+        if (this.objectsLayer !== this.currentLayer) {
+            this.objectsLayer = this.currentLayer;
+            this.layerObjects = this.objectImages(this.currentLayer);
+        }
+
+        const [width, height] = PROG.map.size;
+        const left = x0 - OBJECT_REACH;
+        const top = y0 - OBJECT_REACH;
+        const right = x0 + rect.width * scale + OBJECT_REACH;
+        const bottom = y0 + rect.height * scale + OBJECT_REACH;
+
+        const inView: ObjectImage[] = [];
+        for (const image of this.layerObjects) {
+            const firstCopyX = Math.ceil((left - image.x) / width);
+            const lastCopyX = Math.floor((right - image.x) / width);
+            if (firstCopyX > lastCopyX) continue;
+
+            const firstCopyY = Math.ceil((top - image.y) / height);
+            const lastCopyY = Math.floor((bottom - image.y) / height);
+            if (firstCopyY > lastCopyY) continue;
+
+            inView.push(image);
+        }
+
+        const drawn = this.drawnObjects;
+        if (drawn && drawn.length === inView.length && drawn.every((image, index) => image === inView[index])) return;
+
+        this.drawnObjects = inView;
+        pool.draw(
+            inView.map((image): MarkAttributes => ({
+                class: 'ho',
+                href: image.url,
+                x: image.x - OBJECT_REACH,
+                y: image.y - OBJECT_REACH,
+                width: 2 * OBJECT_REACH,
+                height: 2 * OBJECT_REACH,
+            })),
+        );
     }
 
     // the text element of one copy of a label, made the first time it is shown
@@ -991,6 +1099,7 @@ export class MapView {
         marks.levelIcons.fit(baseIcons);
         marks.raisedMarks.draw(raisedRings);
         marks.raisedIcons.draw(raisedIcons);
+        marks.cageLabels.draw(overlays.cageLabels);
 
         this.drawHero();
         this.drawRing(levels.find((level) => level.style.current && isDrawn(level)));
@@ -1022,9 +1131,10 @@ export class MapView {
     // tooltip and, for gates, signs and gold rooms (overlay.panel), the data attribute that makes it clickable, and the
     // icon on it. A gate on a level's entrance (overlay.merge) is left out while that level's marker is drawn, since
     // the marker shows it. The ones not drawn stay in their places, hidden.
-    private overlayMarkAttributes(drawnLevels: Set<number>): { discs: MarkAttributes[]; icons: MarkAttributes[] } {
+    private overlayMarkAttributes(drawnLevels: Set<number>): OverlayParts {
         const discs: MarkAttributes[] = [];
         const icons: MarkAttributes[] = [];
+        const cageLabels: MarkAttributes[] = [];
 
         for (const overlay of this.options.overlays || []) {
             if (overlay.layer !== this.currentLayer) continue;
@@ -1033,7 +1143,12 @@ export class MapView {
             const overlaySwitch = switchOf(overlay);
             if (overlaySwitch !== null && !overlayOn[overlaySwitch] && !this.isChosen(overlay)) hidden = true;
             if (!this.kept(overlay)) hidden = true;
-            if (overlay.merge != null && drawnLevels.has(overlay.merge)) hidden = true;
+            const merged = overlay.merge != null && drawnLevels.has(overlay.merge);
+            if (merged) hidden = true;
+
+            // an open cage's mark gives way to the image of what it held
+            const heldUrl = overlay.holds ? ICON_URLS[overlay.holds] : undefined;
+            const opened = heldUrl !== undefined && overlay.done;
 
             let dim = overlay.done;
             if (overlay.dimUntilDone) dim = !overlay.done;
@@ -1041,6 +1156,7 @@ export class MapView {
             const [x, y] = mapXY(overlay.x, overlay.y);
             let classes = `k ovk o-${overlay.kind}`;
             if (dim) classes += ' dn';
+            if (opened) classes += ' gv';
             if (overlay.accent) classes += ' ' + overlay.accent;
             if (this.isChosen(overlay)) classes += ' chosen';
 
@@ -1058,6 +1174,7 @@ export class MapView {
 
             let iconClasses = 'k mi';
             if (dim) iconClasses += ' dn';
+            if (opened) iconClasses += ' gv';
             iconClasses += this.overFog(overlay.x, overlay.y);
             discs.push(hiddenWhen(hidden, disc));
             icons.push(
@@ -1066,9 +1183,17 @@ export class MapView {
                     ...iconAttributes(ICON_URLS[overlay.icon], iconRadiusOn(DISC_RADIUS), position),
                 }),
             );
+
+            if (heldUrl && !merged) {
+                let radius = CAGE_HELD_RADIUS;
+                if (hidden || opened) radius = iconRadiusOn(DISC_RADIUS);
+                const held = iconAttributes(heldUrl, radius, position);
+                held.class = 'k cl' + this.overFog(overlay.x, overlay.y);
+                cageLabels.push(held);
+            }
         }
 
-        return { discs, icons };
+        return { discs, icons, cageLabels };
     }
 
     // a marker's [x, y, z], or undefined for a level marker that is not drawn

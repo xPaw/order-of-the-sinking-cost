@@ -43,12 +43,15 @@ export type IconName = (typeof ICON_NAMES)[number];
 
 const ICON_FILE_URLS = import.meta.glob('../assets/icons/*.avif', { query: '?url', import: 'default', eager: true });
 
-/** The URL of each icon's image, relative to the page, by icon name. */
+/** The URL of each image in src/assets/icons/, relative to the page, by file name without the extension. */
 export const ICON_URLS: Record<string, string> = {};
+for (const [path, url] of Object.entries(ICON_FILE_URLS)) {
+    const name = path.slice(path.lastIndexOf('/') + 1, -'.avif'.length);
+    if (typeof url === 'string') ICON_URLS[name] = url;
+}
+
 for (const name of ICON_NAMES) {
-    const url = ICON_FILE_URLS[`../assets/icons/${name}.avif`];
-    if (typeof url !== 'string') throw new Error(`no image for the icon ${name}`);
-    ICON_URLS[name] = url;
+    if (!(name in ICON_URLS)) throw new Error(`no image for the icon ${name}`);
 }
 
 /** Role shapes: SVG paths around (0, 0) at a radius. */

@@ -91,7 +91,18 @@ export interface Freezer {
     judge?: number;
     /** 1 for a model B Freezer (base.mesh GAME_OVER_Freezer_B), a doorway. */
     doorway?: 1;
+    /** The icon name (src/assets/icons) of the one kind of object in its cell, when there is exactly one. */
+    holds?: string;
     signs?: FreezerSign[];
+}
+
+/** One object of data/progress.json `objects`: the world position of its cell and an index into `icons`. */
+export type ObjectRow = [x: number, y: number, z: number, icon: number];
+
+/** data/progress.json `objects`: the objects the map draws as images, and the icon names (src/assets/icons) they index. */
+export interface MapObjects {
+    icons: string[];
+    rows: ObjectRow[];
 }
 
 /** One row of data/progress.json `signs`: a Sign that opens gates, or a tower status Sign. */
@@ -550,6 +561,7 @@ export interface Progress extends WorldFile {
     sets: LevelSet[];
     towers: Tower[];
     freezers: Freezer[];
+    objects: MapObjects;
     signs: Sign[];
     treasures: number;
     voice_logs: VoiceLog[];

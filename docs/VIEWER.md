@@ -1173,7 +1173,12 @@ A list for a goal without roles uses the static roles ([Level roles (viewer)](#l
 The page names a Freezer by its model: model A (`GAME_OVER_Freezer_A`, the pod) is a cage, model B
 (`GAME_OVER_Freezer_B`, the doorway, `doorway` in `progress.json`) a gate. Panel titles, chips, map tooltips and
 the why and leads-to lines use the Freezer's own word. A list of Freezers says "cages" or "gates" when they are
-all one model, and "cages and gates" when they mix ("behind one of 3 cages and gates").
+all one model, and "cages and gates" when they mix ("behind one of 3 cages and gates"). A closed cage whose cell holds
+exactly one kind of object (`holds` in `progress.json`) shows a small icon of it on its mark once the map is zoomed
+in. An open cage shows only that icon there and still takes clicks. One the list filter or the Cages switch hides
+shows the icon alone and takes none. Once the map is zoomed in, every other object of the
+shown layer in the view (`objects` in `progress.json`) is drawn as an image one square wide under the marks, at its
+start position; an object under fog with spoilers hidden draws nothing.
 
 The page has three columns: the sidebar (300 px), the map and the results list. It needs a window 1024 px wide; a
 narrower one scrolls sideways. Panels (the sidebar, the list and the map) share the game's sign border: a gold ring
