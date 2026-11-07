@@ -548,14 +548,12 @@ export const LEVEL_TABLE: LevelRow[] = [
         ],
     },
     {
-        // unsure
         levels: ['torus_mirrors'],
         needs: [
             [{ level: 'crystal_island' }],
         ],
     },
     {
-        // unsure
         levels: ['stasis_v2'],
         needs: [
             [{ level: 'crystal_island' }],
@@ -575,7 +573,7 @@ export const LEVEL_TABLE: LevelRow[] = [
         ],
     },
     {
-        // the Rock in the Freezer heroes1_19_jail opens unlocks a blue block; unsure
+        // the Rock in the Freezer heroes1_19_jail opens unlocks a blue block
         levels: [
             'heroes2_10',
             'heroes2_10.5',
@@ -651,7 +649,7 @@ export const LEVEL_TABLE: LevelRow[] = [
         needs: 'unknown',
     },
     {
-        // the Rocks in the Freezers thief_wand and flame_wand open; unsure
+        // the Rocks in the Freezers thief_wand and flame_wand open
         levels: [
             'plus_signs_v3',
             'swap_and_spin',
@@ -822,7 +820,6 @@ export const LEVEL_TABLE: LevelRow[] = [
         ],
     },
     {
-        // unsure
         levels: ['pull_skip_twins_v3'],
         needs: [
             [{ level: 'walk_into_fire' }],
@@ -1724,12 +1721,22 @@ export const LEVEL_TABLE: LevelRow[] = [
     },
     {
         levels: [
-            'corner_trick_easier',
             'drop_sokoban',
+            'taking_the_lift',
+        ],
+        needs: [
+            [
+                { freezer: 111153040 },
+                { sign: 115389567 },
+            ],
+        ],
+    },
+    {
+        levels: [
+            'corner_trick_easier',
             'its_a_tall_order',
             'landmines_v3',
             'shower',
-            'taking_the_lift',
             'trick_landing',
         ],
         needs: 'unknown',
@@ -2127,8 +2134,13 @@ export const LEVEL_TABLE: LevelRow[] = [
         ],
     },
     {
+        levels: ['catching_fire_v2'],
+        needs: [
+            [{ level: 'priest_two_warriors_v3' }],
+        ],
+    },
+    {
         levels: [
-            'catching_fire_v2',
             'fire_stairs_v2',
             'frame_advance_v5',
             'priest_3d_intro_dragon_v4',
@@ -2153,12 +2165,17 @@ export const LEVEL_TABLE: LevelRow[] = [
     },
     // Bard and Water
     {
-        levels: [
-            'drop_off',
-            'front_side_bus3',
-        ],
+        levels: ['drop_off'],
         needs: [
             [{ level: 'limited_offsets' }],
+        ],
+    },
+    {
+        levels: ['front_side_bus3'],
+        needs: [
+            [{ level: 'rowboat_wizard_v2' }],
+            [{ level: 'boat_priest_v3' }],
+            [{ level: 'rowboat' }],
         ],
     },
     {
@@ -2208,9 +2225,19 @@ export const LEVEL_TABLE: LevelRow[] = [
         ],
     },
     {
+        levels: ['bard_movable_island'],
+        needs: [
+            [{ freezer: 115380334 }],
+        ],
+    },
+    {
+        levels: ['bard_movable_island2'],
+        needs: [
+            [{ level: 'bard_movable_island' }],
+        ],
+    },
+    {
         levels: [
-            'bard_movable_island',
-            'bard_movable_island2',
             'limited_offsets',
             'pole_vault',
             'rowboat',
@@ -2306,6 +2333,34 @@ export const LEVEL_TABLE: LevelRow[] = [
         ],
     },
     {
+        levels: ['stone_rescue_v3'],
+        needs: [
+            [{ freezer: 111195724 }],
+        ],
+    },
+    {
+        levels: [
+            'retvrn0',
+            'tricky_endpoint',
+            'wrap_music',
+        ],
+        needs: [
+            [{ level: 'stone_rescue_v3' }],
+        ],
+    },
+    {
+        levels: ['wrap_music_2'],
+        needs: [
+            [{ level: 'wrap_music' }],
+        ],
+    },
+    {
+        levels: ['skip_purple_drop_alt'],
+        needs: [
+            [{ freezer: 115470447 }],
+        ],
+    },
+    {
         levels: [
             'defender',
             'drop_operation_v3',
@@ -2315,12 +2370,6 @@ export const LEVEL_TABLE: LevelRow[] = [
             'hover_corner_4',
             'juggalos',
             'mobile_cover_2',
-            'retvrn0',
-            'skip_purple_drop_alt',
-            'stone_rescue_v3',
-            'tricky_endpoint',
-            'wrap_music',
-            'wrap_music_2',
         ],
         needs: 'unknown',
     },
