@@ -1393,7 +1393,7 @@ main > .mapbox {
     font-size: 18px;
     line-height: 1;
 }
-/* a segmented toggle (the map's layers, the list's To do | Solved): one glass pill, the current segment filled gold */
+/* a segmented toggle (the map's layers, the list's To do | Solved | All): one glass pill, the current segment filled gold */
 .mapbox .keys,
 .rlist .keys {
     display: inline-flex;

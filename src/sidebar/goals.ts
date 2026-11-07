@@ -221,8 +221,8 @@ export function pickArea(model: ProgressModel, area: string): void {
 }
 
 /**
- * Picks a goal for the list and the map; the list of the goal shows in place of a kind of mark's. A tower (one under an
- * ending too, or a tower's achievement) also adds its chip and is framed on the map.
+ * Picks a goal for the list and the map; the list of the goal shows in place of a kind of mark's or of every level. A
+ * tower (one under an ending too, or a tower's achievement) also adds its chip and is framed on the map.
  */
 export function pickGoal(model: ProgressModel, key: string): void {
     const goal = model.goalByKey(key);
@@ -230,6 +230,7 @@ export function pickGoal(model: ProgressModel, key: string): void {
 
     const filters = model.F;
     selectGoal(model, goal);
+    if (filters.show === 'all') filters.show = 'todo';
 
     const towerIndex = goal.tower;
     showGoalList(filters);

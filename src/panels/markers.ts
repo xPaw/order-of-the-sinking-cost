@@ -24,7 +24,7 @@ import { FOG_TEXT, gateMode, levelPadHtml, levelPadOf, signNeed, signText, tower
 
 // Which overlay markers the map draws: what is left to do for the goal. Freezers that are open or that the goal does
 // not need, signs satisfied, and teleporters, gold rooms, logs, map scrolls and treasures found are left out, unless
-// the Solved toggle asks for what is done. Under Completionist every closed Freezer is drawn, whether or not it is needed.
+// the Solved or All toggle asks for what is done. Under Completionist every closed Freezer is drawn, whether or not it is needed.
 export function markerShown(overlay: MapOverlay, solvedShown: boolean, completionist: boolean): boolean {
     if (solvedShown) return true;
     if (overlay.done) return false;

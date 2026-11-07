@@ -1290,15 +1290,18 @@ fog and counts none.
 The list shows the picked goal's levels (`goalLevels`, plus `goalSolved` while the Solved toggle is on), on every
 layer; a row names its layer only when it is not the one the map shows.
 
-- Heading: "`goal` · N left", with a "To do | Solved" toggle (a segmented pill like the map's layer switch) at the right.
-  To do lists the unsolved levels, Solved the solved ones ("· N solved"); the state shows in each row's pad icon.
+- Heading: "`goal` · N left", with a "To do | Solved | All" toggle (a segmented pill like the map's layer switch) at the
+  right. To do lists the unsolved levels, Solved the solved ones ("· N solved"); the state shows in each row's pad icon.
+- All: the list holds every level not under fog, on every layer, in any state, whatever the goal says, by name, in rows
+  like a search's; the heading reads "N levels". The chips still narrow it, and the map shows those levels alone with
+  every overlay. Picking a goal returns to To do.
 - Chips: the tower and area chips, each removable.
 - Search: while the search box has text, the list holds every level not under fog, on every layer, in any state,
   whatever the goal, toggle and chips say, by name. A row is the pad icon, name, area and its layer when it is not the
   map's; the heading reads "N levels" and has no toggle. The map shows those levels alone. Clearing the box returns to
   the goal's list as it was.
 - "More levels under fog" closes the list while fog hides an unsolved level that serves the goal
-  (`goalLevelsFogged`), or, in a search, any level; never under Solved.
+  (`goalLevelsFogged`), or, in a search or under All, any level; never under Solved.
 - Groups (To do), each with its count: Play now, Not reachable yet, Locked; Solved lists the solved. Within a group the
   levels Required as one of several and off the goal's cheapest plans go last.
 - Cages your rank opens (To do, below the level groups, for the ending being worked toward only): the closed
@@ -1306,7 +1309,7 @@ layer; a row names its layer only when it is not the one the map shows.
   Promesst_Light or a Mirror in them come first, then the others, each by layer and place. A row is a row of the
   Cages list, and clicking it shows the cage on the map; one whose Sign is not read yet adds "read its Sign" and the
   Sign's place when it differs from the cage's. A cage leaves the group when it opens. The group is not counted in "N left" or in the sidebar's steps,
-  does not change the active goal, and is left out with a search, a chip or the Solved toggle on.
+  does not change the active goal, and is left out with a search, a chip or the Solved or All toggle on.
 - A row: the level's pad icon (see [The map's marks](#the-maps-marks)), role dot, name, then what it leads to and its
   area. The tooltip adds the state, role and why.
 - Empty list: "No levels match" (a search or a chip); "No solved levels yet."; "`goal` is done."; "Nothing to show
@@ -1316,7 +1319,7 @@ layer; a row names its layer only when it is not the one the map shows.
 
 The map draws the list's levels. Playable levels on the goal's cheapest plans are drawn above the others, and the level
 the save is in on top. Overlays show what is left for the goal: open Freezers, Freezers Optional for the goal, read
-signs and found pads, gold rooms, voice logs, map scrolls and treasures are left out unless the Solved toggle is on. Under
+signs and found pads, gold rooms, voice logs, map scrolls and treasures are left out unless the Solved or All toggle is on. Under
 Completionist every closed Freezer outside the fog is drawn, needed or not. The map has no key. A level's or gate's
 panel names its role for the goal ("One of several for Endgame"), none for a solved level. The floor heights the changed
 water is compared with come from `data/walk.json` ([data/walk.json](DATAFILES.md#datawalkjson)).

@@ -221,7 +221,7 @@ const CLICK_TARGET_ATTRIBUTES = [
     'data-sel',
     'data-clear-area',
     'data-clear-tower',
-    'data-solved',
+    'data-show',
 ];
 const CLICK_TARGETS = CLICK_TARGET_ATTRIBUTES.map((attribute) => `[${attribute}]`).join(',');
 
@@ -256,8 +256,8 @@ function onPageClick(context: PanelContext, event: Event): void {
         applyFilters(context, false);
     } else if (data.sel != null) {
         showOnMap(context, 'level', Number(data.sel), { keepFocus: true });
-    } else if (data.solved != null) {
-        filters.solved = data.solved === 'true';
+    } else if (data.show === 'todo' || data.show === 'solved' || data.show === 'all') {
+        filters.show = data.show;
         applyFilters(context);
     } else if (data.clearArea != null) {
         filters.area = '';

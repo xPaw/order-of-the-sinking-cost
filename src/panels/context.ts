@@ -165,23 +165,34 @@ export class PanelContext {
         return !!this.filters.q;
     }
 
+    // the All toggle lists every level not under fog, whatever the goal and state say; the chips still narrow it
+    showsAll(): boolean {
+        return this.filters.show === 'all';
+    }
+
+    // a search and the All toggle list levels by name, not in the goal's groups
+    listsByName(): boolean {
+        return this.searching() || this.showsAll();
+    }
+
     // whether the tower or area chip is on
     narrowed(): boolean {
         return this.filters.tower !== '' || this.filters.area !== '';
     }
 
     // a level is listed when it is one of the goal's, the tower and area chips keep it and it is unsolved (or solved, with
-    // the Solved toggle on); a search lists by name alone
+    // the Solved toggle on); the All toggle lists by the chips alone, a search by name alone
     matchNow(levelIndex: number): boolean {
         if (this.progress.hidden[levelIndex]) return false;
         if (this.filters.q) return this.lowNames[levelIndex].includes(this.filters.q);
-        if (!this.entries.has(levelIndex)) return false;
+        if (!this.showsAll() && !this.entries.has(levelIndex)) return false;
 
         const level = this.levels[levelIndex];
         const filters = this.filters;
         if (filters.tower !== '' && level.t !== this.progress.towers[Number(filters.tower)]?.t) return false;
         if (filters.area !== '' && String(this.model.levelArea[levelIndex] ?? '') !== filters.area) return false;
-        return (this.progress.state[levelIndex] === 'solved') === filters.solved;
+        if (this.showsAll()) return true;
+        return (this.progress.state[levelIndex] === 'solved') === (filters.show === 'solved');
     }
 
     computeMatches(): void {
@@ -192,9 +203,9 @@ export class PanelContext {
         return this.matches[levelIndex] === 1;
     }
 
-    // the levels the filter keeps, on every layer: a goal's in the model's order, a search's by name
+    // the levels the filter keeps, on every layer: a goal's in the model's order, the others by name
     listedLevels(): number[] {
-        if (!this.searching()) return this.goalIds.filter((levelIndex) => this.match(levelIndex));
+        if (!this.listsByName()) return this.goalIds.filter((levelIndex) => this.match(levelIndex));
 
         const found: number[] = [];
         this.levels.forEach((_level, levelIndex) => {
@@ -214,7 +225,7 @@ export class PanelContext {
     loadGoal(): void {
         this.goal = this.model.goalFor(this.filters.goal);
         this.entries = new Map();
-        if (this.goal) {
+        if (this.goal && !this.showsAll()) {
             for (const entry of this.model.goalLevels(this.goal)) this.entries.set(entry.i, entry);
             for (const solved of this.model.goalSolved(this.goal)) {
                 this.entries.set(solved, { i: solved, group: 'solved', role: null, leadsTo: '', onPlan: true });

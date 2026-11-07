@@ -47,15 +47,15 @@ export const state: PageState = { files: new Map(), camp: null, rendered: null, 
 
 /**
  * The narrowing of the list and the map of one campaign. goal: the key of the goal the list and the map show, '' for the
- * active one; q: the search text, which lists every level not under fog; solved: whether the list shows the solved levels
- * in place of the ones left to do; tower and area: the chips of a tower and an area; find: the kind of mark whose items
- * the list shows in place of the goal's levels ('' for the goal's); findDone: whether that list also shows the items
- * already done.
+ * active one; q: the search text, which lists every level not under fog; show: whether the list shows the goal's levels
+ * left to do, its solved levels, or every level not under fog; tower and area: the chips of a tower and an area; find: the
+ * kind of mark whose items the list shows in place of the goal's levels ('' for the goal's); findDone: whether that list
+ * also shows the items already done.
  */
 export interface ProgressFilters {
     q: string;
     goal: string;
-    solved: boolean;
+    show: 'todo' | 'solved' | 'all';
     tower: string;
     area: string;
     find: FindKind | '';
@@ -89,14 +89,14 @@ export function revealedOf(camp: string): Set<number> {
 export function filtersOf(camp: string): ProgressFilters {
     let filters = progressFilters[camp];
     if (!filters) {
-        filters = { q: '', goal: '', solved: false, tower: '', area: '', find: '', findDone: false };
+        filters = { q: '', goal: '', show: 'todo', tower: '', area: '', find: '', findDone: false };
         progressFilters[camp] = filters;
     }
 
     return filters;
 }
 
-/** Drops the search text and the tower and area chips; the goal and the Solved toggle stay. */
+/** Drops the search text and the tower and area chips; the goal and the list's toggle stay. */
 export function clearNarrowing(filters: ProgressFilters): void {
     Object.assign(filters, { q: '', tower: '', area: '' });
 }

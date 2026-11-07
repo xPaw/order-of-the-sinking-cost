@@ -62,7 +62,10 @@ function startMap(context: PanelContext): void {
         fog,
         reach: progress.reach?.cols,
         overlays: context.overlays(),
-        keep: (overlay) => markerShown(overlay, context.filters.solved, context.goal?.kind === 'completionist'),
+        keep: (overlay) => {
+            const doneShown = context.filters.show !== 'todo';
+            return markerShown(overlay, doneShown, context.goal?.kind === 'completionist');
+        },
         water: oceanWater(progress.lt),
         onLayer: (layerKey) => layerChanged(context, layerKey),
         onOpen: () => {

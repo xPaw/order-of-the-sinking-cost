@@ -2,6 +2,7 @@
 // level in it (VIEWER.md "The page (viewer)")
 import { $, escapeHtml } from '../util.ts';
 import { clearNarrowing } from '../shared.ts';
+import type { ProgressFilters } from '../shared.ts';
 import { areaEmblemHtml, roleDot, ROLES, towerEmblemHtml } from '../map/icons.ts';
 import { areaName } from '../model/areas.ts';
 import { stateLabel } from '../model/progress.ts';
@@ -134,7 +135,7 @@ function emptyHtml(context: PanelContext): string {
     if (!goal) return '<div class="none muted">Working out the goals…</div>';
 
     if (context.searching() || context.narrowed()) return '<div class="none muted">No levels match</div>';
-    if (context.filters.solved) return '<div class="none muted">No solved levels yet.</div>';
+    if (context.filters.show === 'solved') return '<div class="none muted">No solved levels yet.</div>';
     if (goal.done) return `<div class="none muted">${escapeHtml(goal.label)} is done.</div>`;
     if (goal.fogged) return '<div class="none muted">Nothing to show yet; more is under fog.</div>';
     return `<div class="none muted">No levels left for ${escapeHtml(goal.label)}.</div>`;
@@ -168,42 +169,45 @@ function chipsHtml(context: PanelContext): string {
     return html;
 }
 
-// the heading above the list: the search's count, or the goal with what is left of it or solved, and the To do | Solved
-// toggle (a search lists every level, so it has no toggle)
+// the heading above the list: the count of levels, or the goal with what is left of it or solved, and the
+// To do | Solved | All toggle (a search lists every level, so it has no toggle)
 function countHtml(context: PanelContext): string {
     const goal = context.goal;
     if (!goal) return '';
 
     const count = context.list.length;
-    if (context.searching()) {
-        let noun = 'levels';
-        if (count === 1) noun = 'level';
-        return `<span>${count} ${noun}</span>`;
-    }
+    let noun = 'levels';
+    if (count === 1) noun = 'level';
 
-    const solvedShown = context.filters.solved;
-    let quantity = `${count} left`;
-    if (solvedShown) quantity = `${count} solved`;
+    const levelCount = `<span>${count} ${noun}</span>`;
+    if (context.searching()) return levelCount;
 
-    const toggle = (id: string, solved: boolean, label: string): string => {
+    const shown = context.filters.show;
+    const toggle = (id: string, show: ProgressFilters['show'], label: string): string => {
         let onClass = '';
-        if (solved === solvedShown) onClass = ' class="on"';
-        const attributes = `id="${id}" data-solved="${solved}" aria-pressed="${solved === solvedShown}"`;
+        if (show === shown) onClass = ' class="on"';
+        const attributes = `id="${id}" data-show="${show}" aria-pressed="${show === shown}"`;
         return `<button${onClass} ${attributes}>${label}</button>`;
     };
 
-    const todoButton = toggle('pgTodo', false, 'To do');
-    const solvedButton = toggle('pgSolved', true, 'Solved');
-    const keys = `<span class="keys">${todoButton}${solvedButton}</span>`;
+    const todoButton = toggle('pgTodo', 'todo', 'To do');
+    const solvedButton = toggle('pgSolved', 'solved', 'Solved');
+    const allButton = toggle('pgAll', 'all', 'All');
+    const keys = `<span class="keys">${todoButton}${solvedButton}${allButton}</span>`;
+    if (shown === 'all') return levelCount + keys;
+
+    let quantity = `${count} left`;
+    if (shown === 'solved') quantity = `${count} solved`;
+
     return `<span><b>${escapeHtml(goal.label)}</b> · ${quantity}</span>${keys}`;
 }
 
-// the levels in the rows, with the count and the chips that narrow them: a search lists the matches by name, the goal
-// lists its levels by group
+// the levels in the rows, with the count and the chips that narrow them: a search and the All toggle list by name, the
+// goal lists its levels by group
 function drawGoalList(context: PanelContext): void {
     let blocks: RowBlock[] = [];
     let visible = context.list;
-    if (!context.searching()) {
+    if (!context.listsByName()) {
         blocks = layoutRows(context);
         visible = blocks.flatMap((block) => block.shown);
     }
@@ -212,7 +216,7 @@ function drawGoalList(context: PanelContext): void {
     if (context.selected !== null && visible.includes(context.selected)) tab = context.selected;
 
     let rows = '';
-    if (context.searching()) {
+    if (context.listsByName()) {
         const matchRows = visible.map((levelIndex) => rowHtml(context, levelIndex, levelIndex === tab));
         rows = matchRows.join('');
     } else {
@@ -221,15 +225,15 @@ function drawGoalList(context: PanelContext): void {
 
     // the cages the rank opens follow the goal's levels in the list of what is to do
     let cages = '';
-    if (!context.searching() && !context.narrowed() && !context.filters.solved) {
+    if (!context.searching() && !context.narrowed() && context.filters.show === 'todo') {
         cages = rankCageGroupHtml(context, !rows);
     }
 
-    // a search lists every level, so any level under fog is more; the goal's list counts its own levels only
+    // a list by name holds every level, so any level under fog is more; the goal's list counts its own levels only
     let moreFogged = false;
-    if (context.searching()) {
+    if (context.listsByName()) {
         moreFogged = context.model.hiddenLevelCount > 0;
-    } else if (context.goal && !context.filters.solved) {
+    } else if (context.goal && context.filters.show === 'todo') {
         moreFogged = context.model.goalLevelsFogged(context.goal);
     }
 
@@ -315,11 +319,15 @@ export function layerChanged(context: PanelContext, layerKey: string): void {
     if (context.selected !== null) markSelected(context, context.selected);
 }
 
-// shows a level the list does not keep: the search and the chips go, the toggle follows the level's being solved, and a
-// level the goal has no use for brings in Completionist, which lists every level
+// shows a level the list does not keep: the search and the chips go, the toggle follows the level's being solved unless
+// it is on All, and a level the goal has no use for brings in Completionist, which lists every level
 function showInList(context: PanelContext, levelIndex: number): void {
     clearNarrowing(context.filters);
-    context.filters.solved = context.progress.state[levelIndex] === 'solved';
+    if (!context.showsAll()) {
+        context.filters.show = 'todo';
+        if (context.progress.state[levelIndex] === 'solved') context.filters.show = 'solved';
+    }
+
     applyFilters(context);
     if (context.match(levelIndex)) return;
 
