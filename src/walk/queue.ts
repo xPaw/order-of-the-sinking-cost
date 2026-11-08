@@ -68,14 +68,15 @@ export function settle(walkGrid: WalkGrid, floodState: FloodState, cell: number,
         if (!fallStaysIn(walkGrid, floodState, startLayer, z, fallZ)) return;
         if (drop > 0 && blocked(walkGrid, floodState, fallCell)) return;
 
+        // PROTECTION does not stop drowning
+        const waterZ = waterAt(walkGrid, fallCell % layerCells, fallZ);
+        if (waterZ != null && fallZ < waterZ - 0.1) return;
+
         // fire and goblin attacks kill a hero without PROTECTION
         if (cellFlags[fallCell] & FIRE) {
             if (layer === PROTECTED) push(walkGrid, floodState, fallCell, layer);
             return;
         }
-
-        const waterZ = waterAt(walkGrid, fallCell % layerCells, fallZ);
-        if (waterZ != null && fallZ < waterZ - 0.1) return;
 
         if (standable(walkGrid, floodState, fallCell) || (drop > 0 && heldByTop(walkGrid, floodState, fallCell))) {
             push(walkGrid, floodState, fallCell, layer);
