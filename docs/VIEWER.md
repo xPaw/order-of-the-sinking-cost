@@ -1368,7 +1368,8 @@ marker and 22 for the selected level.
   name (the tower goal rows, chips, the tower panel and the tower tooltip) carries the game's badge for its worlds,
   the gold one once all its dropdowns are solved (the Gold chip of the tower panel); a tower of three or more worlds
   gets the empty diamond. The Gold HxM ... SxB achievements carry the gold badge of their pair. In a list where one row
-  has an emblem, the rows without one get the empty slot. The map's area labels are plain text.
+  has an emblem, the rows without one get the empty slot. The map's area labels are plain text and fade out at the
+  closest zoom and two steps out from it.
 
 ### The page's words
 

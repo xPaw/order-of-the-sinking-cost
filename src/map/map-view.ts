@@ -285,6 +285,9 @@ const OBJECT_REACH = 0.5;
 // an area label keeps a constant screen size until a square is wider than 11 px
 const labelScale = (squaresPerPixel: number): number => Math.max(MARK_SCALE, squaresPerPixel);
 
+// the area labels fade out when the view is within this factor of the closest zoom: the closest zoom and two steps out
+const AREA_LABEL_FADE_ZOOM = 2.5;
+
 // how far a mark reaches from its position, in mark units: the largest, a selected tower with its stroke and glow, and
 // a step badge stay within it
 const MARK_REACH = 32;
@@ -535,10 +538,11 @@ export class MapView {
             onView: (view) => this.viewChanged(view),
             onIdle: () => gestureEndListener?.(),
             scaled: [this.overlayGroup, this.labelsGroup],
-            onPixelScale: (scale) => {
+            onPixelScale: (scale, closest) => {
                 this.overlayGroup.style.setProperty('--mk', String(markScale(scale)));
                 this.overlayGroup.classList.toggle('far', scale > CAGE_LABEL_MAX_SCALE);
                 this.labelsGroup.style.setProperty('--mk', String(labelScale(scale)));
+                this.labelsGroup.classList.toggle('close', scale < closest * AREA_LABEL_FADE_ZOOM);
             },
             reach: (group, scale) => this.copyReach(group, scale),
         });

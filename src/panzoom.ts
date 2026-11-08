@@ -31,8 +31,8 @@ export interface PanZoomKeep {
  * cap(): the cap box (default: the whole content). pick(event): the element a pointer event is on (default: its target;
  * a marker under a double click does not zoom). onView(view): after every view change, with the view as view() gives it.
  * onIdle(): when a drag, pinch or eased
- * zoom ends. scaled: the elements whose --px follows the zoom (default: the svg). onPixelScale(scale): after --px is set
- * to the squares per pixel `scale`. reach(group, scale): how far past the
+ * zoom ends. scaled: the elements whose --px follows the zoom (default: the svg). onPixelScale(scale, closest): after --px
+ * is set to the squares per pixel `scale`; `closest` is that value at the closest zoom. reach(group, scale): how far past the
  * content box the drawn content of a repeated group (the href of its copies) reaches, in content units at `scale` per
  * pixel (default: 130 pixels and 2 units).
  */
@@ -44,7 +44,7 @@ export interface PanZoomOptions {
     onView?: (view: ViewCorner | null) => void;
     onIdle?: () => void;
     scaled?: ElementCSSInlineStyle[];
-    onPixelScale?: (scale: number) => void;
+    onPixelScale?: (scale: number, closest: number) => void;
     reach?: (group: string | null, scale: number) => number;
 }
 
@@ -126,6 +126,14 @@ type WheelKind = 'wheel' | 'pinch' | 'pan';
 
 // the closest zoom shows one game screen (the fog grid's cell, 19 x 13 squares), whichever side binds
 const minView = (): XY => PROG.fog?.grid.screen || [19, 13];
+
+// the squares per pixel at the closest zoom, in an svg of this size
+function closestScale(svgRect: DOMRect): number {
+    const [minWidth, minHeight] = minView();
+    const widthScale = svgRect.width > 0 ? minWidth / svgRect.width : 0;
+    const heightScale = svgRect.height > 0 ? minHeight / svgRect.height : 0;
+    return Math.max(widthScale, heightScale);
+}
 
 export const ZOOM_STEP = 1.5;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -288,7 +296,7 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
         if (viewScale > 0 && isFinite(viewScale) && !(Math.abs(viewScale - pixelScale) <= pixelScale * 0.02)) {
             pixelScale = viewScale;
             for (const element of scaled) element.style.setProperty('--px', String(viewScale));
-            options.onPixelScale?.(viewScale);
+            options.onPixelScale?.(viewScale, closestScale(rect()));
         }
         options.onView?.(currentView());
     };
@@ -308,11 +316,9 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
         const margin = insets.m || 0;
         const freeWidth = Math.max(40, svgRect.width - (insets.right || 0) - 2 * margin);
         const freeHeight = Math.max(40, svgRect.height - top - (insets.bottom || 0) - 2 * margin);
-        const [minWidth, minHeight] = minView();
         const viewScale = Math.max(
             fixedScale || Math.max(box.w / freeWidth, box.h / freeHeight),
-            svgRect.width > 0 ? minWidth / svgRect.width : 0,
-            svgRect.height > 0 ? minHeight / svgRect.height : 0,
+            closestScale(svgRect),
         );
         return {
             x: box.x + box.w / 2 - (margin + freeWidth / 2) * viewScale,

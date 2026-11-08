@@ -1808,6 +1808,10 @@ main > .mapbox {
     stroke-width: calc(var(--mk) * 3.5px);
     text-anchor: middle;
     pointer-events: none;
+    transition: opacity 0.25s;
+}
+.mw.close .area {
+    opacity: 0;
 }
 .mw .area.off {
     display: none;
