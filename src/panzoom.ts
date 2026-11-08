@@ -88,6 +88,8 @@ export interface PanZoom {
     /** Brings the box into the free area: pans when it fits at the current zoom, zooms out when it does not. */
     fit: (box: Box, insets?: Insets) => void;
     reveal: (box: Box, insets: Insets) => void;
+    /** Whether the box fits the free area at the current zoom. */
+    fits: (box: Box, insets: Insets) => boolean;
 }
 
 /** A zoom that eases towards `width` with `point` held under the client position. */
@@ -341,6 +343,14 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
         x: box.x + nearestCopy(viewBox.x + viewBox.w / 2 - box.x - box.w / 2, content.w),
         y: box.y + nearestCopy(viewBox.y + viewBox.h / 2 - box.y - box.h / 2, content.h),
     });
+
+    const fits = (box: Box, insets: Insets): boolean => {
+        const { rect: svgRect, scale: viewScale } = scale();
+        const margin = insets.m || 0;
+        const fitsWide = box.w / viewScale <= svgRect.width - (insets.right || 0) - 2 * margin;
+        const fitsTall = box.h / viewScale <= svgRect.height - (insets.top || 0) - (insets.bottom || 0) - 2 * margin;
+        return fitsWide && fitsTall;
+    };
 
     const animTo = (target: Box): void => {
         stop();
@@ -739,11 +749,10 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
 
             touch();
 
-            const fitsWide = right - left <= svgRect.width - (insets.right || 0) - 2 * margin;
-            const fitsTall = bottom - top <= svgRect.height - (insets.top || 0) - (insets.bottom || 0) - 2 * margin;
             let fixedScale = 0;
-            if (fitsWide && fitsTall) fixedScale = viewScale;
+            if (fits(target, insets)) fixedScale = viewScale;
             animTo(place(target, insets, fixedScale));
         },
+        fits,
     };
 }

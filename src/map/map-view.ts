@@ -1546,20 +1546,30 @@ export class MapView {
     }
 
     // frames the selection's points on the current layer: a level selection zooms in when the map is far out, so
-    // neighbouring requirements and their lines separate
+    // neighbouring requirements and their lines separate. It never zooms out: when its points do not fit, the view keeps
+    // this zoom and only brings the level, the first point, into view.
     private frameSelection(selection: MapSelection): void {
         const points = (selection.points || [])
             .filter((point) => mapLayerOf(point[2]) === this.currentLayer)
             .map((point) => mapXY(point[0], point[1]));
         if (!points.length) return;
 
-        const box = boxOf(points);
         const { rect: viewRect, scale } = this.viewport.scale();
         const frame: Insets = { ...this.insets(), m: FRAME_MARGIN };
-        if (selection.links && (selection.exact || viewRect.width * scale > MIN_BOX * 2.5)) {
+        const zoomsToBox = selection.links && (selection.exact || viewRect.width * scale > MIN_BOX * 2.5);
+
+        let box = boxOf(points);
+        if (zoomsToBox) {
             let min = MIN_BOX;
             if (selection.steps?.length && !selection.exact) min = MIN_CHAIN_BOX;
-            this.viewport.fit(padBox(box, min), frame);
+            box = padBox(box, min);
+        }
+
+        const isLevel = selection.focus !== undefined;
+        if (isLevel && !this.viewport.fits(box, frame)) {
+            this.viewport.reveal(boxOf([points[0]]), frame);
+        } else if (zoomsToBox) {
+            this.viewport.fit(box, frame);
         } else {
             this.viewport.reveal(box, frame);
         }
