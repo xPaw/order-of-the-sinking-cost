@@ -208,9 +208,12 @@ export const LEVEL_TABLE: LevelRow[] = [
         ],
     },
     {
-        levels: [
-            'red_handed',
-            'smash_grid_kill',
+        levels: ['smash_grid_kill'],
+    },
+    {
+        levels: ['red_handed'],
+        needs: [
+            [{ level: 'worlds_collide_heroes_and_promesst_v4' }],
         ],
     },
     {
@@ -1306,7 +1309,6 @@ export const LEVEL_TABLE: LevelRow[] = [
         levels: ['wizard_finesse_1'],
         needs: [
             [{ level: 'endpoint_object' }],
-            [{ level: 'dragon_on_the_wall' }],
         ],
     },
     {
@@ -1517,8 +1519,6 @@ export const LEVEL_TABLE: LevelRow[] = [
         // through the Freezers clone_goblin and the_swappers open to fuse, then through the Freezer fuse opens
         levels: ['trick_kills'],
         needs: [
-            [{ level: 'clone_goblin' }],
-            [{ level: 'the_swappers' }],
             [{ level: 'fuse' }],
         ],
     },
@@ -2762,7 +2762,6 @@ export const LEVEL_TABLE: LevelRow[] = [
         // through the Freezer rover_impulse_v2 opens into the submarine pocket, then through the Freezer submarine opens
         levels: ['skip_or_sink_r'],
         needs: [
-            [{ level: 'rover_impulse_v2' }],
             [{ level: 'submarine' }],
         ],
     },
@@ -4899,7 +4898,22 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['worlds_collide_heroes_and_stones'],
         needs: [
-            [{ level: 'skipping_shores_v3' }],
+            [
+                { level: 'skipping_shores_v3' },
+                { level: 'heroes3_21_condensed' },
+            ],
+            [
+                { level: 'skipping_shores_v3' },
+                { level: 'heroes3_14_v3' },
+            ],
+            [
+                { level: 'skipping_shores_v3' },
+                { level: 'heroes3_7_v4' },
+            ],
+            [
+                { level: 'skipping_shores_v3' },
+                { level: 'heroes3_druid_b_v2' },
+            ],
         ],
     },
     // Cart, Rod
