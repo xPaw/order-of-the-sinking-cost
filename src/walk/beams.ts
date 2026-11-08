@@ -73,7 +73,7 @@ export interface CastBeam {
 export type Undo = Array<() => void>;
 
 /** Sets `bits` in `array[index]`; with `undo` (in a flood) the old value comes back when the flood ends. */
-export function setBits(array: Uint8Array, index: number, bits: number, undo: Undo | null): void {
+export function setBits(array: Uint8Array | Uint16Array, index: number, bits: number, undo: Undo | null): void {
     const old = array[index];
     if ((old & bits) === bits) return;
     array[index] = old | bits;
@@ -83,7 +83,7 @@ export function setBits(array: Uint8Array, index: number, bits: number, undo: Un
 }
 
 /** Clears `bits` in `array[index]`; with `undo` (in a flood) the old value comes back when the flood ends. */
-export function clearBits(array: Uint8Array, index: number, bits: number, undo: Undo | null): void {
+export function clearBits(array: Uint8Array | Uint16Array, index: number, bits: number, undo: Undo | null): void {
     const old = array[index];
     if ((old & bits) === 0) return;
     array[index] = old & ~bits;

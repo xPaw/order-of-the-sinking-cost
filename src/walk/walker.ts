@@ -84,7 +84,7 @@ export interface WalkGrid extends GridShape {
     grid: Uint8Array;
     cellFlags: Uint8Array;
     // per cell, the lookups that hold it (POWER_MARK, WARDROBE_MARK, TRAVEL_MARK, DRIFT_MARK)
-    marks: Uint8Array;
+    marks: Uint16Array;
     // the TELEPORT line's targets: the cells of the existing Rocks, living Monsters and movables other than Mirrors
     // (a Gem, Promesst_Light, Rover or Friendly_Dragon); `mirrorSides`: per cell of an existing Mirror, a bit per
     // side (1 << side) it is open on, where the line turns instead of swapping. Both are filled only by noteTarget and
@@ -310,7 +310,7 @@ function newWalkGrid(
         groupsMade: null,
         grid: geometry.solidGrid.slice(),
         cellFlags: new Uint8Array(volume),
-        marks: new Uint8Array(volume),
+        marks: new Uint16Array(volume),
         swapTargets: new Set(),
         mirrorSides: new Map(),
         flatMirrors: new Set(),

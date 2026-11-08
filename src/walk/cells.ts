@@ -95,8 +95,8 @@ export const DRIFT_MARK = 8;
 export const FROZEN_MARK = 16;
 export const BRIDGE_MARK = 32;
 export const KICK_MARK = 64;
-export const OPTION_MARK = 64;
 export const RIDE_MARK = 128;
+export const OPTION_MARK = 256;
 
 /** Appends `value` to the list of `key` in `map`. */
 export function addTo<Key, Value>(map: Map<Key, Value[]>, key: Key, value: Value): void {
