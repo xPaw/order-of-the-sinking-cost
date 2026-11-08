@@ -5,6 +5,7 @@ import { capitalized, freezerNoun } from '../model/freezer-names.ts';
 import { layerName, mapLayerOf } from '../model/layers.ts';
 import { needChain } from '../model/need-chain.ts';
 import type { ChainEnd, ChainStop, ChainTarget, ChainWorld, NeedChain } from '../model/need-chain.ts';
+import type { NeedsView } from '../model/route-needs.ts';
 import type { Position, RouteNeed } from '../types.ts';
 import { escapeHtml } from '../util.ts';
 import type { PanelContext } from './context.ts';
@@ -19,6 +20,10 @@ export interface RouteSection {
     levels: number[];
     overlays: string[];
     steps: MapStep[];
+    /** The levels where the chain ends without reaching the hub. */
+    frontier: Set<number>;
+    /** The points the chain's lines and holes run through. */
+    points: Position[];
 }
 
 // the Crossroads pad in the middle of each map layer
@@ -89,10 +94,36 @@ function otherLayersHtml(context: PanelContext, chain: NeedChain, points: Positi
     return html;
 }
 
+// the debug view of a chain: nothing is met, nothing is under fog and every option of a group is followed, so the chain
+// runs all the way back
+function fullChainWorld(context: PanelContext): ChainWorld {
+    return {
+        ...chainWorld(context),
+        shown: () => true,
+        towerShown: () => true,
+        dropShown: () => true,
+        allOptions: true,
+    };
+}
+
+const NOTHING_MET: NeedsView = {
+    levelSolved: () => false,
+    signRead: () => false,
+};
+
 /** The route section of what a panel at height `z` asks for. */
 export function routeSection(context: PanelContext, z: number, ...targets: ChainTarget[]): RouteSection {
     const chain = needChain(chainWorld(context), context.progress.needsView, ...targets);
+    return sectionOf(context, z, chain);
+}
 
+/** The route section with the whole chain behind the targets, whatever the save has met or hides. */
+export function fullChainSection(context: PanelContext, z: number, ...targets: ChainTarget[]): RouteSection {
+    const chain = needChain(fullChainWorld(context), NOTHING_MET, ...targets);
+    return sectionOf(context, z, chain);
+}
+
+function sectionOf(context: PanelContext, z: number, chain: NeedChain): RouteSection {
     let html = '';
     if (chain.stops.length > 0) {
         const stops = chain.stops.map((stop) => `<div>${stopText(context, stop)}</div>`).join('');
@@ -115,5 +146,10 @@ export function routeSection(context: PanelContext, z: number, ...targets: Chain
 
     const overlays = [...chain.freezers.map((freezer) => 'g' + freezer), ...chain.signs.map((sign) => 's' + sign)];
     const steps = chain.drops.map((at): MapStep => [at, '↓']);
-    return { html, links, levels: chain.levels, overlays, steps };
+    const frontier = new Set<number>();
+    for (const stop of chain.stops) {
+        if (stop.reason === 'unknown' || stop.reason === 'cycle') frontier.add(stop.level);
+    }
+
+    return { html, links, levels: chain.levels, overlays, steps, frontier, points };
 }

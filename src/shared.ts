@@ -108,6 +108,16 @@ export const setSpoilersHidden = (value: boolean): void => {
     spoilersHidden = value;
 };
 
+/** Whether the debug controls exist: on the dev server only. */
+export const debugTools = import.meta.env?.DEV === true;
+
+/** Whether a selected level draws its whole need chain in place of its direct links (a debug view). */
+export let fullChain = debugTools && readPreference('fullChain') === '1';
+
+export const setFullChain = (value: boolean): void => {
+    fullChain = value;
+};
+
 /**
  * Hooks into the last drawn progress view, which sets the ones it has: apply (the list filter changed), open(level),
  * tower(i) and area() frame them on the map, hero() frames the hero, overlay(kind) shows or hides a kind of mark,

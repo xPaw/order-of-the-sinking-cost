@@ -17,6 +17,8 @@ declare module '*/walk.json' {
 
 // Vite's import.meta.glob, as the page uses it: the default exports of the matched files, loaded with the page
 interface ImportMeta {
+    /** Vite's build mode flags; absent when a script runs the page's modules outside Vite. */
+    readonly env?: { readonly DEV: boolean };
     glob(pattern: string, options: { query: string; import: 'default'; eager: true }): Record<string, string>;
 }
 

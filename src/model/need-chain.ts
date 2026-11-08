@@ -22,6 +22,8 @@ export interface ChainWorld {
     shown: (need: RouteNeed) => boolean;
     towerShown: (tower: number) => boolean;
     dropShown: (at: Position) => boolean;
+    /** Follows every option of a group of alternatives, not the one the save meets. */
+    allOptions?: boolean;
 }
 
 /** One need of the chain: a line from where it stands to what it opens. */
@@ -63,6 +65,12 @@ interface Follow {
 function optionOf(follow: Follow, options: RouteNeed[]): RouteNeed {
     const shown = options.filter((need) => follow.world.shown(need));
     return shown.find((need) => needMet(need, follow.view)) ?? shown[0] ?? options[0];
+}
+
+// the options of a group of alternatives to follow: all of them, or the one that holds
+function optionsOf(follow: Follow, options: RouteNeed[]): RouteNeed[] {
+    if (follow.world.allOptions) return options;
+    return [optionOf(follow, options)];
 }
 
 function endLayer(world: ChainWorld, end: ChainEnd): string {
@@ -122,7 +130,7 @@ function followNeed(follow: Follow, need: RouteNeed, to: ChainEnd): void {
 // all the needs, or the one that holds when any one is enough
 function followAll(follow: Follow, needs: RouteNeed[], anyOne: boolean, to: ChainEnd): void {
     let followed = needs;
-    if (anyOne && needs.length > 1) followed = [optionOf(follow, needs)];
+    if (anyOne && needs.length > 1) followed = optionsOf(follow, needs);
     for (const need of followed) followNeed(follow, need, to);
 }
 
@@ -189,7 +197,7 @@ function followLevel(follow: Follow, levelIndex: number): void {
                 continue;
             }
 
-            followNeed(follow, optionOf(follow, group), levelIndex);
+            for (const need of optionsOf(follow, group)) followNeed(follow, need, levelIndex);
         }
     }
 

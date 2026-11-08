@@ -2,7 +2,17 @@
 // Completionist, the kinds of mark to find on the map and the save's stats (VIEWER.md "The page (viewer)")
 import { PROG } from './data.ts';
 import { $, apolloDate, apolloSeconds, duration, escapeHtml, setButtonPressed } from './util.ts';
-import { hooks, revealedOf, setPreference, setSpoilersHidden, spoilersHidden, state } from './shared.ts';
+import {
+    debugTools,
+    fullChain,
+    hooks,
+    revealedOf,
+    setFullChain,
+    setPreference,
+    setSpoilersHidden,
+    spoilersHidden,
+    state,
+} from './shared.ts';
 import type { ProgressFilters } from './shared.ts';
 import { baseName, campaignOf, campaigns, campaignLabel, realFiles, statusEntry } from './files.ts';
 import { isFindKind } from './model/find-kinds.ts';
@@ -78,7 +88,14 @@ function progressHtml(model: ProgressModel | null | undefined): string {
         fogNote = `<div class="muted">${message}${onlyEntered}</div>`;
     }
 
-    return `${solvedHtml(model)}${spoilSwitch}${fogNote}`;
+    let chainSwitch = '';
+    if (debugTools) {
+        const chainTitle = 'Debug: a selected level draws its whole need chain to the hub, not its direct links';
+        const chainAttributes = `class="spoil" id="pgChain" title="${chainTitle}"`;
+        chainSwitch = `<button ${chainAttributes}><span class="knob"></span>Full chain</button>`;
+    }
+
+    return `${solvedHtml(model)}${spoilSwitch}${chainSwitch}${fogNote}`;
 }
 
 // the campaign block: the example's note, or the campaign list with the refresh button and the save's summary
@@ -326,6 +343,15 @@ export function renderSide(model?: ProgressModel | null): void {
         setPreference('hideSpoilers', spoilersHidden ? '1' : '0');
         show();
     });
+
+    if (debugTools) {
+        setButtonPressed($('#pgChain'), fullChain);
+        $('#pgChain').addEventListener('click', () => {
+            setFullChain(!fullChain);
+            setPreference('fullChain', fullChain ? '1' : '0');
+            show();
+        });
+    }
 
     $('#statsTog')?.addEventListener('click', onStatsToggle);
     $('#sideGoals').addEventListener('click', (event) => onGoalsClick(event, model));

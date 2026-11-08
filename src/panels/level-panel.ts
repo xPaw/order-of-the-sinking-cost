@@ -1,6 +1,7 @@
 // A level's panel on the map: its area, state and role, the Freezer it is in, the path to unlock it, the gates in front
 // of it and why it is not reachable, what it requires and unlocks, its tower (VIEWER.md "The page (viewer)")
 import { escapeHtml } from '../util.ts';
+import { fullChain } from '../shared.ts';
 import { towerEmblemHtml } from '../map/icons.ts';
 import type { Role } from '../map/icons.ts';
 import type { MapLink, MapSelection } from '../map/map-view.ts';
@@ -39,7 +40,7 @@ import {
     wrappable,
 } from './plan-chips.ts';
 import type { Chain } from './plan-chips.ts';
-import { routeSection } from './route.ts';
+import { fullChainSection, routeSection } from './route.ts';
 import type { RouteSection } from './route.ts';
 import { approxTip, wayIn, whyParts, whyText } from './why.ts';
 
@@ -343,6 +344,24 @@ function levelSelection(context: PanelContext, parts: LevelPanelParts): MapSelec
     };
 }
 
+// the debug view of a level: its whole need chain back to the hub, in place of its direct links
+function fullChainSelection(context: PanelContext, parts: LevelPanelParts): MapSelection {
+    const { levelIndex, html, route } = parts;
+    const level = context.levels[levelIndex];
+
+    return {
+        levels: new Set([levelIndex, ...route.levels]),
+        focus: levelIndex,
+        frontier: route.frontier,
+        overlays: new Set(route.overlays),
+        html,
+        z: level.p[2],
+        points: [level.p, ...route.points],
+        links: uniqueLinks(route.links),
+        steps: route.steps,
+    };
+}
+
 /** Opens a level's panel and selects the level, what it requires and unlocks and its unlock chain on the map. */
 export function showLevelPanel(context: PanelContext, levelIndex: number, how?: SelectHow): void {
     const progress = context.progress;
@@ -383,7 +402,9 @@ export function showLevelPanel(context: PanelContext, levelIndex: number, how?: 
     html += tower.html;
     html += wikiTacticsHtml(level);
 
-    const route = routeSection(context, level.p[2], { level: levelIndex });
+    const route = fullChain
+        ? fullChainSection(context, level.p[2], { level: levelIndex })
+        : routeSection(context, level.p[2], { level: levelIndex });
     html += route.html;
 
     const parts: LevelPanelParts = {
@@ -395,5 +416,6 @@ export function showLevelPanel(context: PanelContext, levelIndex: number, how?: 
         towerInfo: tower,
         route,
     };
-    context.map?.select(levelSelection(context, parts), how);
+    const selection = fullChain ? fullChainSelection(context, parts) : levelSelection(context, parts);
+    context.map?.select(selection, how);
 }
