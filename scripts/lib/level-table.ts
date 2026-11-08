@@ -3922,6 +3922,9 @@ export const LEVEL_TABLE: LevelRow[] = [
     // Doubling Beams
     {
         levels: ['3wcn_purple_mirror_skip'],
+        needs: [
+            [{ level: 'three_artifacts_v3' }],
+        ],
     },
     {
         levels: ['duality_condensed'],
@@ -3947,6 +3950,9 @@ export const LEVEL_TABLE: LevelRow[] = [
         levels: [
             'orange_mirror_walk_button',
             'orange_water_button_vslow',
+        ],
+        needs: [
+            [{ level: 'three_artifacts_v3' }],
         ],
     },
     {
@@ -3986,7 +3992,7 @@ export const LEVEL_TABLE: LevelRow[] = [
     {
         levels: ['toggler00'],
         needs: [
-            [{ level: 'crystal_rover_bridge' }],
+            [{ level: 'beam_me_up_v3' }],
         ],
     },
     {
@@ -3997,6 +4003,9 @@ export const LEVEL_TABLE: LevelRow[] = [
     },
     {
         levels: ['purple_heart'],
+        needs: [
+            [{ level: 'two_half_togglers' }],
+        ],
     },
     // Endpoint Skipping
     {
@@ -4372,6 +4381,10 @@ export const LEVEL_TABLE: LevelRow[] = [
     },
     {
         levels: ['fail_to_mirror_sequence_v2'],
+        needs: [
+            [{ level: 'three_artifacts_v3' }],
+            [{ level: 'torus_mirrors' }],
+        ],
     },
     {
         levels: ['mega_clone_v2'],
