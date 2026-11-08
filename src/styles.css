@@ -285,7 +285,8 @@ select:focus {
    (corner-shape where the browser has it, plain rounded corners otherwise) */
 .side,
 .rlist,
-.mapbox {
+.mapbox,
+.about {
     position: relative;
     background: var(--panel);
     border: 3px solid var(--frame);
@@ -293,7 +294,8 @@ select:focus {
 }
 .side::before,
 .rlist::before,
-.mapbox::before {
+.mapbox::before,
+.about::before {
     content: '';
     position: absolute;
     inset: 5px;
@@ -306,7 +308,8 @@ select:focus {
 @supports (corner-shape: scoop) {
     .side::before,
     .rlist::before,
-    .mapbox::before {
+    .mapbox::before,
+    .about::before {
         border-radius: 16px;
         corner-shape: scoop;
     }
@@ -377,6 +380,54 @@ select:focus {
     width: 16px;
     height: 16px;
     fill: currentColor;
+}
+.about {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    width: min(620px, calc(100vw - 48px));
+    height: fit-content;
+    max-height: calc(100vh - 48px);
+    padding: 0;
+    color: var(--text);
+    overflow: hidden;
+}
+.about::backdrop {
+    background: rgba(0, 0, 0, 0.6);
+}
+.about[open] {
+    display: flex;
+}
+.aboutin {
+    overflow-y: auto;
+    padding: var(--s6);
+}
+.about h1,
+.about h2 {
+    font-family: var(--serif);
+    font-variant-caps: small-caps;
+    color: var(--title);
+}
+.about h1 {
+    margin: 0 0 var(--s3);
+    font-size: 22px;
+}
+.about h2 {
+    margin: var(--s6) 0 var(--s2);
+    font-size: 17px;
+}
+.about p,
+.about ul {
+    margin: 0 0 var(--s2);
+}
+.about ul {
+    padding-left: var(--s6);
+}
+.about code {
+    overflow-wrap: anywhere;
+}
+.about button {
+    margin-top: var(--s6);
 }
 .side .brand .mark {
     color: var(--hi);

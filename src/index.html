@@ -3,22 +3,22 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Order of the Sinking Star · Save Viewer</title>
+        <title>Order of the Sinking Star Overworld Map &amp; Save Viewer</title>
         <meta
             name="description"
-            content="Progress viewer for Order of the Sinking Star saves that runs locally in your browser, with a spoiler-free map."
+            content="Explore the Order of the Sinking Star overworld map. Open your save folder to see your progress. Spoiler-free, runs locally in your browser."
         />
         <meta name="theme-color" content="#0a2234" />
         <meta name="color-scheme" content="dark" />
         <link rel="canonical" href="https://sinkingstar.xpaw.me/" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://sinkingstar.xpaw.me/" />
-        <meta property="og:title" content="Order of the Sinking Star · Save Viewer" />
+        <meta property="og:title" content="Order of the Sinking Star Overworld Map &amp; Save Viewer" />
         <meta
             property="og:description"
-            content="Progress viewer for Order of the Sinking Star saves that runs locally in your browser, with a spoiler-free map."
+            content="Explore the Order of the Sinking Star overworld map. Open your save folder to see your progress. Spoiler-free, runs locally in your browser."
         />
-        <meta property="og:site_name" content="Order of the Sinking Star · Save Viewer" />
+        <meta property="og:site_name" content="Order of the Sinking Star Overworld Map" />
         <meta name="twitter:card" content="summary" />
         <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/favicon-32.png" />
         <link rel="icon" type="image/png" sizes="64x64" href="./assets/icons/favicon-64.png" />
@@ -49,6 +49,7 @@
                                 /></svg
                             >Source on GitHub</a
                         >
+                        <button class="plain gh" commandfor="about" command="show-modal">About</button>
                     </div>
                 </div>
             </aside>
@@ -58,6 +59,34 @@
             <div id="working" role="status" hidden></div>
         </div>
         <div id="dropOverlay">Drop to open</div>
+        <dialog id="about" class="about" closedby="any" aria-labelledby="aboutTitle">
+            <div class="aboutin">
+                <h1 id="aboutTitle">Order of the Sinking Star Overworld Map and Save Viewer</h1>
+                <p>
+                    An unofficial, interactive overworld map and save viewer for Order of the Sinking Star. Open your
+                    save folder to see your progress on the map: which levels you have solved, which you can play now
+                    and what is left to find. Places you have not explored stay under fog, so the map is spoiler-free.
+                </p>
+                <h2>Track your progress</h2>
+                <ul>
+                    <li>Pan and zoom around the overworld map, which wraps around just like in the game.</li>
+                    <li>See the levels left for your next goal, with the ones you can play now listed first.</li>
+                    <li>Follow your goals from the game's endings through to achievements and full completion.</li>
+                    <li>In supported browsers the map updates by itself each time the game saves.</li>
+                </ul>
+                <h2>Where to find your save files</h2>
+                <p>
+                    On Windows, Order of the Sinking Star keeps its save files in
+                    <code>%USERPROFILE%\Saved Games\Order of the Sinking Star</code>. On Linux with Proton, the same
+                    folder is inside the game's Steam compatibility data. Pick that folder or drag it onto the page.
+                </p>
+                <h2>Private by design</h2>
+                <p>
+                    Your save is read locally in your browser and is never uploaded. The viewer is free and open source.
+                </p>
+                <button class="primary" commandfor="about" command="close">Close</button>
+            </div>
+        </dialog>
         <script type="module" src="./main.ts"></script>
     </body>
 </html>

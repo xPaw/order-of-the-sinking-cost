@@ -28,6 +28,9 @@ document.addEventListener(
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && event.defaultPrevented) return;
 
+    // Escape closes the About dialog and leaves the map as it is
+    if (event.key === 'Escape' && document.querySelector('#about[open]')) return;
+
     if (event.key === 'Escape' && activeMap?.open) {
         activeMap.select(null);
         return;
