@@ -17,22 +17,27 @@
 //   type, in an orthographic three-quarter view (camera south of the object, turned 25 degrees east, 42 degrees up; the
 //   Level_Entry and Teleporter pads straight from above, the sign and the gate face-on) with smooth shading from
 //   the vertex normals, a key light from the top left, a fill light and a rim light, a dark outline and a drop shadow.
+// - The held-<object> icons show each kind of object in the world, e.g. what a closed Cage holds (names from lib/cage-contents.ts): each is a placed entity of
+//   that kind with its own mesh and tints, a Mirror or Light seen from above so its facing shows.
 // - The Teleporters' glowing parts take the entity's color_discovered. The level pads use the viewer's own stone and
 //   glow colours (STONE_COLORS, GLOW_GROUPS), stronger than the game's, so the states tell apart at a glance.
 // - An area emblem is the game's OverworldIcon_<emblem> texture, a tower badge its tower_status_<worlds>[_gold]
 //   texture, the voice log its UI_Voice_Log_Activate and the hero its wheel_queen portrait (mip 0), scaled to the icon size with an area filter on premultiplied colours, fitted into the square
 //   keeping its aspect.
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { get, refOf, type Fields } from './lib/fields.ts';
 import { Materials, normalized, type Color, type Shading, type ShadingEntity } from './lib/materials.ts';
-import type { Vector4 } from './lib/math.ts';
+import { rotateByQuaternion, type Quaternion, type Vector, type Vector4 } from './lib/math.ts';
+import { allHeldObjects, type HeldObject } from './lib/cage-contents.ts';
+import { readFirstFrame, skinMesh, worldMatrices } from './lib/animation.ts';
 import { readMesh, type Mesh, type TriangleList } from './lib/mesh.ts';
 import { PaintData } from './lib/paint.ts';
 import { fitSquare } from './lib/image.ts';
 import { Package, type Entity, type EntityPositions } from './lib/package.ts';
+import type { Schema, WorldFile } from '../src/types.ts';
 import * as paths from './lib/paths.ts';
 import { encodePng } from './lib/png.ts';
 import { renderMesh } from './lib/rasterizer.ts';
@@ -62,6 +67,8 @@ interface IconSpec {
     outline?: number;
     shadow?: boolean;
     withTreasure?: boolean;
+    pid?: number;
+    oriented?: boolean;
 }
 
 // The options of IconSpec that decide how one mesh is shaded
@@ -98,6 +105,7 @@ const OVERWORLD = 'overworld';
 const DEFAULT_VIEW: View = { azimuth: 25, elevation: 42 };
 const FACE_VIEW: View = { azimuth: 90, elevation: 24 };
 const TOP_VIEW: View = { azimuth: 0, elevation: 90 };
+const FACING_VIEW: View = { azimuth: 0, elevation: 70 };
 const WHITE: Color = [1, 1, 1];
 
 // The area emblems of the game (`local_area_image` of an Area_Pin): one per world and one per pair of worlds. Soko is
@@ -130,6 +138,16 @@ const ENTITY_TYPES = new Set([
     'Tower',
     'Treasure_Display',
     'Area_Pin',
+    'Rock',
+    'Gem',
+    'Mirror',
+    'Promesst_Light',
+    'Rover',
+    'Monster',
+    'Wardrobe',
+    'Lily',
+    'Tree',
+    'Friendly_Dragon',
 ]);
 
 // The glow colours of the Level_Entry groups (`glow` in data/progress.json), each near the median of its group's
@@ -277,6 +295,7 @@ function pickEntity(entities: Entity[], spec: IconSpec): Entity {
     for (const entity of entities) {
         if (entity.type !== spec.type) continue;
         if (entity.fields['base.mesh'] !== spec.mesh) continue;
+        if (spec.pid !== undefined && entity.pid !== spec.pid) continue;
         if (spec.where && !spec.where(entity.fields)) continue;
         return entity;
     }
@@ -290,6 +309,13 @@ function materialOverrides(fields: Fields): string[] {
     return [];
 }
 
+// Skinned meshes drawn in the first frame of the animation a sleeping monster plays instead of the bind pose
+const IDLE_CLIPS = new Map([
+    ['soko1_goblin', 'goblin_inactive_idle_02'],
+    ['soko1_dragon', 'sokodragon_inactive_idle_02'],
+    ['CHAR_Dragon_Adult_A', 'promAdultDragon_inactive_idle_01'],
+]);
+
 // A mesh placed at `offset`, its triangles' materials shaded for `entity`
 function loadPart(meshName: string, entity: Pick<Entity, 'pid' | 'fields'>, context: Context, spec: PartOptions): Part {
     const mesh = readMesh(meshName);
@@ -300,7 +326,10 @@ function loadPart(meshName: string, entity: Pick<Entity, 'pid' | 'fields'>, cont
         tintB: tintField(entity.fields, 'base.tint_color_b'),
         effectColor: null,
         noGlow: false,
+        accessoryMask: null,
     };
+    const accessoryMask = entity.fields['accessory_mask'];
+    if (typeof accessoryMask === 'number') shadingEntity.accessoryMask = accessoryMask;
     if (spec.effect) shadingEntity.effectColor = glowColor(vectorField(entity.fields, spec.effect)!);
     if (spec.viewerColors) {
         const stone = hexToLinear(spec.viewerColors.stone);
@@ -318,7 +347,10 @@ function loadPart(meshName: string, entity: Pick<Entity, 'pid' | 'fields'>, cont
         return context.materials.shading(materialName, shadingEntity);
     });
     const paint = context.paint.forMesh(entity.pid, mesh);
-    return { mesh, positions: mesh.positions, normals: mesh.normals, paint, shadings };
+    const idleClip = IDLE_CLIPS.get(meshName);
+    if (idleClip === undefined) return { mesh, positions: mesh.positions, normals: mesh.normals, paint, shadings };
+    const { positions, normals } = skinMesh(mesh, worldMatrices(readFirstFrame(idleClip)));
+    return { mesh, positions, normals, paint, shadings };
 }
 
 function boundsOf(part: Part): { low: number[]; high: number[] } {
@@ -344,6 +376,25 @@ function placed(part: Part, offset: number[], scale: number): Part {
     const positions = new Float32Array(part.positions.length);
     for (let k = 0; k < positions.length; k++) positions[k] = part.positions[k] * scale + offset[k % 3];
     return { ...part, positions };
+}
+
+// One part turned by the entity's orientation quaternion, as a copy
+function oriented(part: Part, entity: Entity): Part {
+    const quaternion: Quaternion = [
+        get(entity.fields, 'base.orientation.x', 0),
+        get(entity.fields, 'base.orientation.y', 0),
+        get(entity.fields, 'base.orientation.z', 0),
+        get(entity.fields, 'base.orientation.w', 1),
+    ];
+    const positions = new Float32Array(part.positions.length);
+    const normals = new Float32Array(part.normals.length);
+    for (let k = 0; k < positions.length; k += 3) {
+        const position: Vector = [part.positions[k], part.positions[k + 1], part.positions[k + 2]];
+        const normal: Vector = [part.normals[k], part.normals[k + 1], part.normals[k + 2]];
+        positions.set(rotateByQuaternion(quaternion, position), k);
+        normals.set(rotateByQuaternion(quaternion, normal), k);
+    }
+    return { ...part, positions, normals };
 }
 
 // Several parts as one mesh: vertices, paint and triangle lists appended, the material indices made unique
@@ -404,6 +455,7 @@ function buildScene(spec: IconSpec, context: Context): Part {
     const entity = pickEntity(context.entities, spec);
     const meshNames = spec.parts ?? [spec.mesh];
     const parts = meshNames.map((name) => loadPart(name, entity, context, spec));
+    if (spec.oriented) return merge(parts.map((part) => oriented(part, entity)));
     if (spec.withTreasure) {
         const treasurePid = refOf(entity.fields.treasure_mesh_id);
         const treasure = context.positions.entities.find((candidate) => candidate[0] === treasurePid);
@@ -413,6 +465,46 @@ function buildScene(spec: IconSpec, context: Context): Part {
         return plinthWithTreasure(parts[0], item);
     }
     return merge(parts);
+}
+
+// The Mirrors and Promesst_Lights show which way they face; the other objects look the same turned any way
+const ORIENTED_TYPES = new Set(['Mirror', 'Promesst_Light']);
+
+// One icon per kind of object in the world (cage-contents.ts), drawn from a placed entity of that kind with its own
+// mesh, tints and, for a Mirror or Light, its facing
+function heldSpecs(entities: Entity[], schema: Schema): IconSpec[] {
+    const worldFile: WorldFile = JSON.parse(readFileSync(paths.data('world.json'), 'utf8'));
+    const entityByPid = new Map(entities.map((entity) => [entity.pid, entity]));
+    const meshOf = (pid: number): string => {
+        const mesh = entityByPid.get(pid)?.fields['base.mesh'];
+        if (typeof mesh !== 'string') throw new Error(`${pid} has no mesh`);
+        return mesh;
+    };
+
+    // The first object of each kind, except that a kind drawn in several meshes (the Rocks) takes the most common one
+    const held = allHeldObjects(worldFile.world, schema);
+    const meshCounts = new Map<string, number>();
+    for (const object of held) {
+        const key = `${object.name} ${meshOf(object.pid)}`;
+        meshCounts.set(key, (meshCounts.get(key) ?? 0) + 1);
+    }
+    const kinds = new Map<string, HeldObject>();
+    for (const object of held) {
+        const best = kinds.get(object.name);
+        const count = meshCounts.get(`${object.name} ${meshOf(object.pid)}`)!;
+        if (!best || count > meshCounts.get(`${best.name} ${meshOf(best.pid)}`)!) kinds.set(object.name, object);
+    }
+
+    const specs: IconSpec[] = [];
+    for (const object of kinds.values()) {
+        const mesh = meshOf(object.pid);
+        const spec: IconSpec = { name: object.name, type: object.type, mesh, pid: object.pid };
+        if (ORIENTED_TYPES.has(object.type)) spec.oriented = true;
+        if (object.type === 'Mirror') spec.view = FACING_VIEW;
+        if (object.type === 'Promesst_Light' || object.type === 'Lily') spec.view = TOP_VIEW;
+        specs.push(spec);
+    }
+    return specs.toSorted((a, b) => a.name.localeCompare(b.name));
 }
 
 function renderIcon(spec: IconSpec, context: Context, size: number, margin: number): Uint8Array {
@@ -495,7 +587,7 @@ function main(): void {
         console.log(`${name}.avif ${bytes} bytes`);
     };
 
-    for (const spec of ICONS) {
+    for (const spec of [...ICONS, ...heldSpecs(context.entities, pkg.schema)]) {
         if (wanted && !wanted.has(spec.name)) continue;
         writeIcon(spec.name, renderIcon(spec, context, iconSize, ICON_MARGIN));
     }

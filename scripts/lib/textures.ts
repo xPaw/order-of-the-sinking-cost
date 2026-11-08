@@ -180,13 +180,14 @@ export class Texture {
     }
 
     // The texel at (u, v), wrapping, from the mip whose texels are about `footprint` (in uv units) wide; writes
-    // [r, g, b, a] bytes into `out`
+    // [r, g, b, a] bytes into `out`. v = 0 is the last row of the image.
     texel(u: number, v: number, footprint: number, out: number[]): void {
         const texelsAcross = footprint * Math.max(this.width, this.height);
         const lod = Math.floor(Math.log2(Math.max(texelsAcross, 1)));
         const level = this.level(lod);
         const x = Math.min(level.width - 1, Math.floor((u - Math.floor(u)) * level.width));
-        const y = Math.min(level.height - 1, Math.floor((v - Math.floor(v)) * level.height));
+        const row = Math.floor((1 - (v - Math.floor(v))) * level.height);
+        const y = Math.min(level.height - 1, row);
         const at = (y * level.width + x) * 4;
         out[0] = level.pixels[at];
         out[1] = level.pixels[at + 1];

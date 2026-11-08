@@ -69,6 +69,12 @@ export interface Lod {
     indices: Uint16Array | Uint32Array;
 }
 
+// A skeleton node of a skinned mesh: the matrix is row-major with the translation in the last row, scaled so that its last element is 0.01
+export interface MeshNode {
+    name: string;
+    inverseBind: Float32Array;
+}
+
 export interface Mesh {
     name: string;
     checksum: number;
@@ -82,6 +88,7 @@ export interface Mesh {
     colors: Uint8Array;
     lods: Lod[];
     materials: string[];
+    nodes: MeshNode[];
 }
 
 // A mesh: positions, uvs, vertex colours (default paint), the first LOD's triangle lists and the material names
@@ -138,8 +145,9 @@ export function readMesh(name: string): Mesh {
             indices = new Uint16Array(indexCount);
             for (let k = 0; k < indexCount; k++) indices[k] = view.getUint16(pos + k * 2, true);
         } else {
-            indices = new Uint32Array(indexCount);
-            for (let k = 0; k < indexCount; k++) indices[k] = view.getUint32(pos + k * 4, true);
+            // the index count of a u32 buffer counts u16 halves
+            indices = new Uint32Array(byteSize / 4);
+            for (let k = 0; k < indices.length; k++) indices[k] = view.getUint32(pos + k * 4, true);
         }
         pos += byteSize;
         lods.push({ lists, indices });
@@ -151,8 +159,36 @@ export function readMesh(name: string): Mesh {
         materials.push(UTF8.decode(body.subarray(pos, pos + length)));
         pos += length;
     }
+    const nodes: MeshNode[] = [];
+    if (skinned) {
+        const nodeCount = readU32();
+        for (let node = 0; node < nodeCount; node++) {
+            const length = view.getUint16(pos, true);
+            pos += 2;
+            const nodeName = UTF8.decode(body.subarray(pos, pos + length));
+            pos += length;
+            const inverseBind = new Float32Array(16);
+            for (let k = 0; k < 16; k++) inverseBind[k] = view.getFloat32(pos + 4 * k, true);
+            pos += 64;
+            nodes.push({ name: nodeName, inverseBind });
+        }
+    }
     const normals = decodeNormals(attributes, vertexCount);
-    return { name, checksum, vertexCount, skinned, skin, positions, uvs, attributes, normals, colors, lods, materials };
+    return {
+        name,
+        checksum,
+        vertexCount,
+        skinned,
+        skin,
+        positions,
+        uvs,
+        attributes,
+        normals,
+        colors,
+        lods,
+        materials,
+        nodes,
+    };
 }
 
 // The vertex normals: 10-10-10-2 unsigned normalised in the 4 bytes after each vertex's two texture coordinates

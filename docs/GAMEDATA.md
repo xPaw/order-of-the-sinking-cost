@@ -137,17 +137,33 @@ nl × str16 material name
 ```
 
 A LOD's index buffer holds each list twice, the second copy with reversed winding (for mirrored placements). A front
-face winds counter-clockwise seen from outside (inferred). Texture row 0 is v = 0 (inferred).
+face winds counter-clockwise seen from outside (inferred). A texture's last row is v = 0.
 Positions are in metres in the entity's space: world = rotate(quaternion) · (scale × p) + position.
 `base.materials[i]`, when non-empty, overrides material `i`.
 
 A normal and a tangent are each 10-10-10-2 unsigned normalised: x in bits 0..9, y in 10..19, z in 20..29, component
 = value / 511.5 − 1 (inferred: floor tiles give the unit vectors of their faces, side faces give ±y).
 
-A skinned mesh's bone indices point into the skeleton of the model's `data-common/<name>.anim` in
-`data/animation.package`: `Anim`, u16, u16, u16, u16 bone count (byte 10), the file's offsets, a rest transform, then at
-byte 74 one u16 parent bone index per bone (0xffff for the root). Everything after the parents (the bind pose and the
-curves) is not decoded.
+A skinned mesh ends with its skeleton: u32 node count, then per node `str16 name` and 16 f32, the inverse bind matrix
+(row-vector convention, translation in the last row, last element 0.01: divide by it to take a position in metres to
+the node's space in centimetres). Its bone indices are node indices, in the order of the bones of the model's
+`data-common/<name>.anim` in `data/animation.package`; the idle clips are `<model>_inactive_idle_02` (what a Monster
+plays while asleep, from `data/animations/<name>.animation_names`) and `<model>_active_idle_01`.
+
+```
+"Anim"   u16 version (12)   u32 (30)   u32 bone count   u32 frame count   u32 first-frame bytes   u32 later-frame bytes
+48 bytes (a transform)   u16 parent × bones (0xffff for the root)
+44-byte record × bones, 4-aligned   str8 name + 0 × bones
+curve data, 4-aligned: first-frame bytes, then (frame count − 1) × later-frame bytes
+record: u32 flags   u32 offset in the first frame   u32 offset in the later frames
+        f32 × 3 position maximum   f32 × 3 position minimum (the position when it is constant)   f32 × 2 scale range
+```
+
+A bone's data in a frame, in this order, positions in centimetres relative to the parent: position when flag 1 is clear
+(u16 × 3, t / 65535 between the minimum and the maximum); rotation unless flags 2 and 16 are both set (identity then;
+s16 × 4 / 32767 as x, y, z, w; later frames carry it only when flag 2 is clear); scale unless flags 4 and 32 are both
+set (u16 × 9, a 3x3 matrix between the two scale values; always identity in the idle clips). A bone's world transform is
+its parent's world transform times its own rotation and translation.
 
 ### `data-pc/<name>.texture`
 

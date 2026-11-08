@@ -27,6 +27,9 @@ interface MaterialKeys {
     relative_to_ec?: boolean;
     color_modulate?: MaterialValue;
     color_core?: MaterialValue;
+    COLOR_tex?: string;
+    base_color?: MaterialValue;
+    mask?: number;
 }
 
 // The entity a material is drawn on: its tint colours and runtime colour, and whether glowing materials are left out
@@ -35,6 +38,7 @@ export interface ShadingEntity {
     tintB: Color;
     effectColor: Color | null;
     noGlow: boolean;
+    accessoryMask: number | null;
 }
 
 // How one triangle list is drawn
@@ -149,9 +153,14 @@ export class Materials {
         const shader = material.shader ?? '';
         const glows = ADDITIVE_SHADERS.has(shader) || shader === 'crystal_general';
         if (glows && entity.noGlow) return null;
+        if (material.mask !== undefined && entity.accessoryMask !== null) {
+            if ((material.mask & entity.accessoryMask) === 0) return null;
+        }
         if (ADDITIVE_SHADERS.has(shader)) return this.glowShading(material, entity);
         if (shader === 'crystal_general') return this.glassShading(material, entity);
         if (shader === 'guy') return this.characterShading(material);
+        if (shader === 'dragon_iridescent_scales') return this.dragonScalesShading(material);
+        if (shader === 'dragon_iridescent_solid') return this.dragonSolidShading(material);
 
         let ownA = entity.tintA;
         let ownB = entity.tintB;
@@ -210,6 +219,22 @@ export class Materials {
             kind: 'solid',
             color: (u, v, paint, footprint) => multiply(this.colorAt(palette, u, v, footprint), modulate),
         };
+    }
+
+    // The scales of an iridescent dragon: the COLOR_tex texture. The sheen (cell_color, division_color, hue shift) is not
+    // modelled.
+    dragonScalesShading(material: MaterialKeys): Shading {
+        const texture = material.COLOR_tex ?? 'white';
+        return {
+            kind: 'solid',
+            color: (u, v, paint, footprint) => this.colorAt(texture, u, v, footprint),
+        };
+    }
+
+    // The untextured parts of an iridescent dragon: the hue of base_color, whose brightness is an intensity
+    dragonSolidShading(material: MaterialKeys): Shading {
+        const hue = normalized(rgbOf(material.base_color, WHITE));
+        return { kind: 'solid', color: () => hue };
     }
 
     glowShading(material: MaterialKeys, entity: ShadingEntity): Shading {

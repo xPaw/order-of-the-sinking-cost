@@ -22,6 +22,21 @@ export function roundVector4(vector: Vector4, places: number): Vector4 {
     ];
 }
 
+// A vector turned by the unit quaternion (x, y, z, w)
+export function rotateByQuaternion(quaternion: Quaternion, vector: Vector): Vector {
+    const [x, y, z, w] = quaternion;
+    const [vectorX, vectorY, vectorZ] = vector;
+    // twice = 2 * cross(quaternion.xyz, vector); rotated = vector + w * twice + cross(quaternion.xyz, twice)
+    const twiceX = 2 * (y * vectorZ - z * vectorY);
+    const twiceY = 2 * (z * vectorX - x * vectorZ);
+    const twiceZ = 2 * (x * vectorY - y * vectorX);
+    return [
+        vectorX + w * twiceX + (y * twiceZ - z * twiceY),
+        vectorY + w * twiceY + (z * twiceX - x * twiceZ),
+        vectorZ + w * twiceZ + (x * twiceY - y * twiceX),
+    ];
+}
+
 // Lists of numbers by their first element, then their second, and so on
 export function compareNumberLists(first: number[], second: number[]): number {
     for (let i = 0; i < first.length; i++) {
