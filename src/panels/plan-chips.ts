@@ -165,10 +165,16 @@ export function signChip(context: PanelContext, sign: FreezerSign): string {
     if (opens) attributes = ` data-psign="${signIndex}" tabindex="0" role="button"`;
 
     let tone = '';
+    let text = signText(context, sign);
     const state = signStateOf(context.progress, sign);
-    if (state === 'read') tone = ' good';
+    if (state === 'read') {
+        // the good tone draws the check
+        tone = ' good';
+        text = signNeed(context, sign);
+    }
     if (state === 'ready') tone = ' warn';
-    return `<span class="chip${tone}"${attributes}>${signText(context, sign)}</span>`;
+    if (state === 'unmet') tone = ' locked';
+    return `<span class="chip${tone}"${attributes}>${text}</span>`;
 }
 
 /** What opens a Freezer: its levels and sign rules. */

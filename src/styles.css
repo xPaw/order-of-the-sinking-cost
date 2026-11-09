@@ -263,7 +263,8 @@ select:focus {
     opacity: 0.45;
     transform: rotate(45deg);
 }
-.ico.dn {
+.ico.dn,
+.chip.locked .ico {
     filter: grayscale(1);
     opacity: 0.55;
 }
