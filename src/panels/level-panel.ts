@@ -213,12 +213,18 @@ function towerSection(context: PanelContext, levelIndex: number): TowerSection {
     return { html, towerIndex, tower };
 }
 
+// the levels the game checks before opening the level: one enabled in the level data is open whatever unlocks it lists
+function gatingLevels(level: ProgressLevel): number[] {
+    return level.en ? [] : level.req;
+}
+
 function requiresHtml(context: PanelContext, level: ProgressLevel): string {
-    if (!level.req.length) return '';
+    const required = gatingLevels(level);
+    if (!required.length) return '';
 
     let anyOf = '';
-    if (level.or && level.req.length > 1) anyOf = ' any of';
-    return `<div class="h">Requires${anyOf}</div><div>${pick(context, level.req)}</div>`;
+    if (level.or && required.length > 1) anyOf = ' any of';
+    return `<div class="h">Requires${anyOf}</div><div>${pick(context, required)}</div>`;
 }
 
 // one chip for a need; a Sign under fog is not named
@@ -234,7 +240,8 @@ function needChipHtml(context: PanelContext, need: RouteNeed): string {
 function alsoNeedsHtml(context: PanelContext, level: ProgressLevel): string {
     if (!level.needs) return '';
 
-    const inGameData = (need: RouteNeed): boolean => 'level' in need && level.req.includes(need.level);
+    const required = gatingLevels(level);
+    const inGameData = (need: RouteNeed): boolean => 'level' in need && required.includes(need.level);
     const groups = level.needs.filter((group) => !group.every(inGameData));
     if (groups.length === 0) return '';
 
@@ -278,7 +285,7 @@ function levelLinks(context: PanelContext, parts: LevelPanelParts): MapLink[] {
     const level = context.levels[levelIndex];
     const unlocks = context.progress.unlocks[levelIndex];
 
-    const requirementLinks = level.req.map((requirement): MapLink => [requirement, levelIndex, 'req']);
+    const requirementLinks = gatingLevels(level).map((requirement): MapLink => [requirement, levelIndex, 'req']);
     const unlockLinks = unlocks.levels.map((unlocked): MapLink => [levelIndex, unlocked, 'unl']);
     const towerLinks: MapLink[] = [];
     if (towerInfo.tower) towerLinks.push([levelIndex, towerInfo.tower.p, 'unl']);
@@ -313,6 +320,7 @@ function levelSelection(context: PanelContext, parts: LevelPanelParts): MapSelec
     const { tower, towerIndex } = towerInfo;
 
     const gateLevels = gates.flatMap((freezer) => freezer.req);
+    const required = gatingLevels(level);
     let selectedTower: number | undefined;
     if (tower) selectedTower = towerIndex;
 
@@ -320,7 +328,7 @@ function levelSelection(context: PanelContext, parts: LevelPanelParts): MapSelec
     if (tower) towerPoints.push(tower.p);
 
     return {
-        levels: new Set([levelIndex, ...level.req, ...unlocks.levels, ...gateLevels, ...chain.levels, ...route.levels]),
+        levels: new Set([levelIndex, ...required, ...unlocks.levels, ...gateLevels, ...chain.levels, ...route.levels]),
         focus: levelIndex,
         frontier: chain.frontier,
         overlays: new Set([
@@ -333,7 +341,7 @@ function levelSelection(context: PanelContext, parts: LevelPanelParts): MapSelec
         z: level.p[2],
         points: [
             level.p,
-            ...pointsOf(context, [...level.req, ...unlocks.levels]),
+            ...pointsOf(context, [...required, ...unlocks.levels]),
             ...towerPoints,
             ...gates.map((freezer) => freezer.p),
             ...unlockedGates.map((freezerIndex) => context.freezers[freezerIndex].p),

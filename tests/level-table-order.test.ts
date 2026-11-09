@@ -28,31 +28,30 @@ const PROGRESS: { levels: ProgressLevel[] } = JSON.parse(
 );
 const SOURCE = readFileSync(new URL('../scripts/lib/level-table.ts', import.meta.url), 'utf8');
 
-// The section heading above each row of LEVEL_TABLE: a comment at the indent of the rows
-function rowSections(): string[] {
-    const sections: string[] = [];
+// The section heading above each level of LEVEL_TABLE: a comment at the indent of the levels
+function levelSections(): Map<string, string> {
+    const sections = new Map<string, string>();
     let section = '';
     let inTable = false;
     for (const line of SOURCE.split('\n')) {
         if (line.startsWith('export const LEVEL_TABLE')) inTable = true;
-        else if (line === '];') inTable = false;
+        else if (line === '};') inTable = false;
         if (!inTable) continue;
         const heading = /^ {4}\/\/ (.+)$/.exec(line);
         if (heading) section = heading[1];
-        if (line === '    {') sections.push(section);
+        const entry = /^ {4}'?([^':\s]+)'?: \{/.exec(line);
+        if (entry) sections.set(entry[1], section);
     }
     return sections;
 }
 
 function placements(): Map<string, Placement> {
-    const sections = rowSections();
+    const sections = levelSections();
     const placed = new Map<string, Placement>();
     let position = 0;
-    for (const [rowIndex, row] of LEVEL_TABLE.entries()) {
-        for (const name of row.levels) {
-            placed.set(name, { section: sections[rowIndex], position, row });
-            position += 1;
-        }
+    for (const [name, row] of Object.entries(LEVEL_TABLE)) {
+        placed.set(name, { section: sections.get(name)!, position, row });
+        position += 1;
     }
     return placed;
 }
@@ -81,9 +80,10 @@ function prerequisites(level: ProgressLevel, row: LevelRow): Prerequisite[] {
     return result;
 }
 
-// The groups a level asks for: its table needs, or its game unlocks when the table has none
+// The groups a level asks for: its table needs, or its game unlocks when the table has none and they gate it
 function needGroups(level: ProgressLevel, row: LevelRow): Need[][] {
     if (row.needs !== undefined) return row.needs;
+    if (level.en) return [];
     const reqs = requiredNames(level).map((name): Need => ({ level: name }));
     if (level.or) return [reqs];
     return reqs.map((req) => [req]);
@@ -108,8 +108,8 @@ function unsolvable(placed: Map<string, Placement>): string[] {
 }
 
 describe('Level table order', () => {
-    test('every row has a section', () => {
-        expect(rowSections().length).toBe(LEVEL_TABLE.length);
+    test('every level has a section', () => {
+        expect(levelSections().size).toBe(Object.keys(LEVEL_TABLE).length);
     });
 
     test('a level follows what it requires and needs in its section', () => {

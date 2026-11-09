@@ -93,25 +93,18 @@ function onlyUnlocks(needs: RouteNeed[][], level: ProgressLevel): boolean {
 }
 
 // Sets `needs` and `drop` on the levels the table lists. A level whose needs are only its game unlocks, unless the row is
-// `known`, or that has none, keeps no `needs` and is left to the walk. Every level has to appear exactly once.
+// `known`, or that has none, keeps no `needs` and is left to the walk. Every level has to appear.
 function applyLevelTable(data: TableData): void {
-    const listed = new Set<string>();
-
-    for (const row of LEVEL_TABLE) {
-        for (const name of row.levels) {
-            if (listed.has(name)) throw new Error(`${PREFIX}: level ${name} is listed twice`);
-            listed.add(name);
-
-            const level = data.levels[levelByName(data.levels, name, PREFIX)];
-            if (row.needs !== undefined) {
-                const needs = resolveNeeds(row.needs, data);
-                if (row.known || !onlyUnlocks(needs, level)) level.needs = needs;
-            }
-            if (row.drop !== undefined) level.drop = row.drop;
+    for (const [name, row] of Object.entries(LEVEL_TABLE)) {
+        const level = data.levels[levelByName(data.levels, name, PREFIX)];
+        if (row.needs !== undefined) {
+            const needs = resolveNeeds(row.needs, data);
+            if (row.known || !onlyUnlocks(needs, level)) level.needs = needs;
         }
+        if (row.drop !== undefined) level.drop = row.drop;
     }
 
-    const missing = data.levels.filter((level) => !listed.has(level.n)).map((level) => level.n);
+    const missing = data.levels.filter((level) => !Object.hasOwn(LEVEL_TABLE, level.n)).map((level) => level.n);
     if (missing.length > 0) throw new Error(`${PREFIX}: no entry for ${missing.join(', ')}`);
 }
 

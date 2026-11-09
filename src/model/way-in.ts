@@ -241,11 +241,14 @@ export function gatesBehindThemselves({
     return behind;
 }
 
-/** Per level, the levels requiring it. */
+/** Per level, the levels requiring it; a level enabled in the level data requires none. */
 export function unlocksOf(): LevelUnlocks[] {
     const levels = PROG.levels;
     const unlocks = levels.map((): LevelUnlocks => ({ levels: [] }));
-    levels.forEach((level, i) => level.req.forEach((j) => unlocks[j].levels.push(i)));
+    levels.forEach((level, i) => {
+        if (level.en) return;
+        level.req.forEach((j) => unlocks[j].levels.push(i));
+    });
     return unlocks;
 }
 
