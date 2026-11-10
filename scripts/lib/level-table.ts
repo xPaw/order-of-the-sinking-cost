@@ -11,8 +11,121 @@ export interface LevelRow {
 }
 
 export const LEVEL_TABLE: Record<string, LevelRow> = {
-    // The Antipode
-    end1: { needs: [[{ sign: 115344129 }]] },
+    // Alter Beam
+    'promesst2.5_deeper': { needs: [[{ level: 'promesst2_streamlined' }]] },
+    half_tutorial: { needs: [[{ level: 'promesst2.5_deeper' }]] },
+    monkey_in_the_midpoint: { needs: [[{ level: 'promesst2.5_deeper' }]] },
+    promesst3_streamlined: { needs: [[{ level: 'promesst2.5_deeper' }]] },
+    gem_beam_placement: { needs: [[{ level: 'promesst3_streamlined' }]] },
+
+    // Beams Reflected
+    purple_corner_gem: { needs: [[{ level: 'promesst3_streamlined' }]] },
+    gem_clg_v4: { needs: [[{ level: 'purple_corner_gem' }]] },
+    shunt2_alt: { needs: [[{ level: 'plus_signs_v3' }]] },
+    orange_doubleback: { needs: [[{ level: 'dual_screen' }]] },
+    orange_doubledoubleback: { needs: [[{ level: 'orange_doubleback' }]] },
+    sidetrack: { needs: [[{ level: 'orange_doubledoubleback' }]] },
+    purple_wall_around_easier_vp: { needs: [[{ level: 'sidetrack' }]] },
+    purple_clm_v4: { needs: [[{ level: 'sidetrack' }]] },
+    orange_clm_s: { needs: [[{ level: 'purple_clm_v4' }]] },
+
+    // Beams, Mirrorably
+    floating_orange_purple: { needs: [[{ level: 'double_sideways' }]] },
+    top_green_purple_v3: { needs: [[{ level: 'break_through_focused' }]] },
+    fun_house: { needs: [[{ level: 'top_green_purple_v3' }]] },
+    cyan_torc_maze_vs: { needs: [[{ level: 'fun_house' }]] },
+    cyan_counter_med3: { needs: [[{ level: 'cyan_torc_maze_vs' }]] },
+    green_metamirror: { needs: [[{ level: 'cyan_torc_maze_vs' }]] },
+    orange_floaty_reflect_v3: { needs: [[{ level: 'cyan_torc_maze_vs' }]] },
+    meta_orange_purple: { needs: [[{ level: 'orange_floaty_reflect_v3' }]] },
+    meta_orange_purple_2: { needs: [[{ level: 'meta_orange_purple' }]] },
+    the_spiral: { needs: [[{ level: 'cyan_torc_maze_vs' }]] },
+
+    // Cart, Rod
+    pushy: { needs: [[{ level: 'promesst2_streamlined' }]] },
+    worlds_collide_heroes_and_promesst_v4: {
+        needs: [
+            [{ level: 'dragon_on_the_wall' }],
+            [{ level: 'multipush_for_me2' }],
+            [{ level: 'side_kick' }],
+        ],
+    },
+    gem_pushers: { needs: [[{ level: 'worlds_collide_heroes_and_promesst_v4' }]] },
+    forbidden_room: { needs: [[{ level: 'pushy' }]] },
+    right_hand_man: { needs: [[{ level: 'pushy' }]] },
+    target_practice_gem: { needs: [[{ level: 'right_hand_man' }], [{ level: 'forbidden_room' }]] },
+    beam_rooms: { needs: [[{ level: 'right_hand_man' }], [{ level: 'forbidden_room' }]] },
+
+    // Heroes 2: Monsters
+    side_slide_intro_v2: { needs: [[{ level: 'compactor_v2' }]] },
+    heroes2_2b: { needs: [[{ level: 'heroes1_19_jail' }]] },
+    heroes2_2: { needs: [[{ level: 'heroes2_2b' }]] },
+    heroes2_thief_goblin: { needs: [[{ level: 'heroes2_2' }]] },
+    heroes2_3_v2: { needs: [[{ level: 'heroes2_thief_goblin' }]] },
+    heroes2_5_altE: { needs: [[{ level: 'heroes2_3_v2' }]] },
+    heroes2_5_no_crystal: { needs: [[{ level: 'heroes2_5_altE' }]] },
+    'heroes2_5.5v5': { needs: [[{ level: 'heroes2_5_no_crystal' }]] },
+    heroes2_6_v3: { needs: [[{ level: 'heroes2_5.5v5' }]] },
+    heroes2_9: { needs: [[{ level: 'heroes2_6_v3' }]] },
+    heroes2_10a_intro: { needs: [[{ level: 'heroes2_9' }]] },
+    heroes2_10: { needs: [[{ level: 'heroes2_10a_intro' }]] },
+    heroes2_11_v2_easier: { needs: [[{ level: 'heroes2_10' }]] },
+    heroes2_12_v2: { needs: [[{ level: 'heroes2_11_v2_easier' }]] },
+    heroes2_11_v2: { needs: [[{ level: 'heroes2_12_v2' }]] },
+    'heroes2_10.5': { needs: [[{ level: 'heroes2_11_v2' }]] },
+    one_fire_v2: { needs: [[{ level: 'heroes2_10.5' }]] },
+    heroes2_13: { needs: [[{ level: 'heroes2_12_v2' }]] },
+    heroes2_14: { needs: [[{ level: 'heroes2_13' }]] },
+    heroes2_15: { needs: [[{ level: 'heroes2_14' }]] },
+    heroes2_16v4: { needs: [[{ level: 'heroes2_15' }]] },
+    heroes2_18: { needs: [[{ level: 'heroes2_16v4' }]] },
+    heroes2_21b: { needs: [[{ level: 'heroes2_16v4' }]] },
+    heroes2_22_v2: { needs: [[{ level: 'heroes2_21b' }]] },
+    mosh_pit_small: { needs: [[{ level: 'heroes2_16v4' }]] },
+    heroes2_17_intro: { needs: [[{ level: 'mosh_pit_small' }]] },
+    heroes2_17: { needs: [[{ level: 'heroes2_17_intro' }]] },
+    heroes2_20: { needs: [[{ level: 'heroes2_17_intro' }]] },
+    heroes2_reprise: { needs: [[{ level: 'heroes2_15' }]] },
+    heroes2_10a: { needs: [[{ level: 'heroes2_10a_intro' }]] },
+    heroes2_3monster: { needs: [[{ level: 'heroes2_10a' }]] },
+
+    // Heroes 3: Bard, Druid
+    heroes3_10: { needs: [[{ level: 'heroes2_22_v2' }]] },
+    heroes3_11_v2: { needs: [[{ level: 'heroes3_10' }]] },
+    druid_and_dragon: { needs: [[{ level: 'heroes3_11_v2' }]] },
+    wizard_and_druid_alt_5: { needs: [[{ level: 'druid_and_dragon' }]] },
+    heroes3_15_v4: { needs: [[{ level: 'wizard_and_druid_alt_5' }]] },
+    heroes3_13_v2: { needs: [[{ level: 'heroes3_15_v4' }]] },
+    heroes3_druid_b_v2: { needs: [[{ level: 'heroes3_13_v2' }]] },
+    heroes3_druid_a: { needs: [[{ level: 'heroes3_druid_b_v2' }]] },
+    wizard_and_druid_alt: { needs: [[{ level: 'wizard_and_druid_alt_5' }]] },
+    heroes3_1_v3: { needs: [[{ level: 'heroes2_22_v2' }]] },
+    heroes3_2_v4: { needs: [[{ level: 'heroes3_1_v3' }]] },
+    heroes3_3_v2: { needs: [[{ level: 'heroes3_2_v4' }]] },
+    heroes3_4: { needs: [[{ level: 'heroes3_3_v2' }]] },
+    heroes3_5: { needs: [[{ level: 'heroes3_3_v2' }]] },
+    heroes3_8_thief: { needs: [[{ level: 'heroes3_5' }]] },
+    heroes3_6_v3: { needs: [[{ level: 'heroes3_8_thief' }]] },
+    heroes3_7_v4: { needs: [[{ level: 'heroes3_6_v3' }]] },
+    heroes3_8_v4_alt: { needs: [[{ level: 'heroes3_7_v4' }]] },
+    heroes3_8_v3_alt3: { needs: [[{ level: 'heroes3_8_v4_alt' }]] },
+    heroes3_14_v3: { needs: [[{ level: 'heroes3_druid_b_v2' }], [{ level: 'heroes3_7_v4' }]] },
+    compactor_v2: { needs: [[{ level: 'heroes3_14_v3' }]] },
+    gatekeeping_v3: { needs: [[{ level: 'compactor_v2' }]] },
+    heroes3_21_condensed: { needs: [[{ level: 'compactor_v2' }]] },
+    heroes3_16_v4_alt: { needs: [[{ level: 'heroes3_14_v3' }]] },
+
+    // Heroes and Artifacts
+    cleric_isles: { needs: [[{ level: 'flamethrower' }]] },
+    thief_wand: { needs: [[{ level: 'worlds_collide_heroes_and_promesst_v4' }]] },
+    flame_wand: { needs: [[{ level: 'thief_wand' }]] },
+    plus_signs_v3: { needs: [[{ level: 'flame_wand' }]] },
+    friendly_nudges: { needs: [[{ level: 'plus_signs_v3' }]] },
+    gem_transport: { needs: [[{ level: 'plus_signs_v3' }]] },
+    gem_transport_2: { needs: [[{ level: 'gem_transport' }]] },
+    swap_and_spin: { needs: [[{ level: 'flame_wand' }]] },
+    wizard_with_a_gun: { needs: [[{ level: 'swap_and_spin' }]] },
+    bug_spray: { needs: [[{ level: 'thief_wand' }]] },
 
     // Heroes and Light
     snipperclips_0_square: { needs: [[{ level: 'promesst3_streamlined' }]] },
@@ -62,189 +175,6 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     through_push: { needs: [[{ level: 'through_intro' }]] },
     binary_maze: { needs: [[{ level: 'through_push' }]] },
     help_drop: { needs: [[{ level: 'plus_signs_v3' }]] },
-
-    // Heroes of Hauling
-    heroes1_1: { needs: [] },
-    heroes1_2_v2: { needs: [[{ level: 'heroes1_1' }]] },
-    heroes1_3: { needs: [[{ level: 'heroes1_2_v2' }]] },
-    heroes1_4: { needs: [[{ level: 'heroes1_3' }]] },
-    'heroes1_4.5': { needs: [[{ level: 'heroes1_4' }]] },
-    heroes1_5_v2: { needs: [[{ level: 'heroes1_4.5' }]] },
-    heroes1_7_v2: { needs: [[{ level: 'heroes1_5_v2' }]] },
-    heroes1_6: { needs: [[{ level: 'heroes1_7_v2' }]] },
-    'heroes1_7.5': { needs: [[{ level: 'heroes1_4.5' }]] },
-    heroes1_8_v2: { needs: [[{ level: 'heroes1_7.5' }]] },
-    heroes1_10_inv_v4_b: { needs: [[{ level: 'heroes1_8_v2' }]] },
-    heroes1_9: { needs: [[{ level: 'heroes1_10_inv_v4_b' }]] },
-    heroes1_11_v2: { needs: [[{ level: 'heroes1_10_inv_v4_b' }], [{ level: 'heroes1_7_v2' }]] },
-    heroes1_13_v2: { needs: [[{ level: 'heroes1_11_v2' }]] },
-    heroes1_12_v2_alt: { needs: [[{ level: 'heroes1_13_v2' }]] },
-    heroes1_15: { needs: [[{ level: 'heroes1_12_v2_alt' }]] },
-    heroes1_16_v3: { needs: [[{ level: 'heroes1_15' }]] },
-    heroes1_17: { needs: [[{ level: 'heroes1_15' }]] },
-    heroes1_18: { needs: [[{ level: 'heroes1_17' }]] },
-    heroes1_19_jail: { needs: [[{ level: 'heroes1_18' }]] },
-    heroes1_21_v3: { needs: [[{ level: 'heroes1_19_jail' }]] },
-    victory_lap: { needs: [[{ level: 'heroes3_21_condensed' }]] },
-
-    // The Mirror Isles
-    mirror_1: { needs: [] },
-    mirror_2: { needs: [[{ level: 'mirror_1' }]] },
-    mirror_3: { needs: [[{ level: 'mirror_2' }]] },
-    mirror_4: { needs: [[{ level: 'mirror_3' }]] },
-    mirror_5: { needs: [[{ level: 'mirror_3' }]] },
-    mirror_6_alt: { needs: [[{ level: 'mirror_5' }]] },
-    mirror_7: { needs: [[{ level: 'mirror_3' }]] },
-    mirror_8_v5: { needs: [[{ level: 'mirror_7' }]] },
-    mirror_11: { needs: [[{ level: 'skipping_stones' }]] },
-    mirror_12: { needs: [[{ level: 'mirror_11' }]] },
-    mirror_15: { needs: [[{ level: 'mirror_12' }]] },
-    mirror_19: { needs: [[{ level: 'mirror_15' }]] },
-    mirror_17: { needs: [[{ level: 'mirror_19' }], [{ level: 'mirror_8_v5' }]] },
-    mirror_sink: { needs: [[{ level: 'mirror_17' }]] },
-    mirror_20: { needs: [[{ level: 'mirror_sink' }]] },
-    mirror_18: { needs: [[{ level: 'mirror_20' }]] },
-    mirror_10_alt2: { needs: [[{ level: 'mirror_18' }]] },
-    mirror_21: { needs: [[{ level: 'skipping_stones' }]] },
-    mirror_22_v2: { needs: [[{ level: 'mirror_21' }]] },
-    mirror_factory_v2: { needs: [[{ level: 'skipping_stones' }]] },
-    mirror_13: { needs: [[{ level: 'mirror_factory_v2' }]] },
-    mirror_14: { needs: [[{ level: 'mirror_13' }]] },
-    mirror_pals: { needs: [[{ level: 'skipping_stones' }]] },
-    walk_it_over: { needs: [[{ level: 'mirror_pals' }]] },
-    two_step: { needs: [[{ level: 'already_dropped_v2' }]] },
-    use_and_remove: { needs: [[{ level: 'two_step' }]] },
-    infinite_crystal_hack_v5: { needs: [[{ level: 'use_and_remove' }]] },
-    mundane_mirror: { needs: [[{ level: 'mirror_10_alt2' }]] },
-    mirror_10_b_v2: { needs: [[{ level: 'mundane_mirror' }]] },
-    mirror_10_d: { needs: [[{ level: 'mirror_10_b_v2' }]] },
-
-    // Vault of the Beamcasters
-    promesst1_streamlined: { needs: [] },
-    promesst2_streamlined: { needs: [[{ level: 'promesst1_streamlined' }]] },
-    orange_cross: { needs: [[{ level: 'double_trouble' }]] },
-
-    // Skipping Stones
-    skipping_stones: { needs: [] },
-    time_tutorial: { needs: [[{ level: 'skipping_stones' }]] },
-    skipping_pals: { needs: [[{ level: 'time_tutorial' }]] },
-
-    // Antipode High
-    allocate_heroes_v2: {
-        needs: [
-            [{ sign: 115348482 }],
-            [{ sign: 115348478 }],
-            [{ sign: 115348468 }],
-            [{ sign: 115348474 }],
-        ],
-    },
-    end2_heroes_1_2: { needs: [[{ level: 'allocate_heroes_v2' }]] },
-    end2_heroes_1_5: { needs: [[{ level: 'end2_heroes_1_2' }]] },
-    prelude_priest_water_goblins_only: { needs: [[{ level: 'end2_heroes_1_5' }]] },
-    see_no_evil: { needs: [[{ level: 'end2_heroes_1_5' }]] },
-    end2_mirror_3: { needs: [[{ level: 'end2_heroes_1_5' }]] },
-    mirror_prelude_v2_fix: { needs: [[{ level: 'end2_mirror_3' }]] },
-    peak_toggle: { needs: [[{ level: 'mirror_prelude_v2_fix' }]] },
-    floor_plan_v3: { needs: [[{ level: 'peak_toggle' }], [{ level: 'prelude_priest_water_goblins_only' }]] },
-    stone_economy: { needs: [[{ level: 'end2_heroes_1_5' }]] },
-    place_lily_pushstyle_v6: { needs: [[{ level: 'end2_heroes_1_5' }]] },
-    three_birds_push: { needs: [[{ level: 'place_lily_pushstyle_v6' }]] },
-    stones_prelude: { needs: [[{ level: 'three_birds_push' }]] },
-    end2_river_place: { needs: [[{ level: 'stones_prelude' }]] },
-    chart_a_course: { needs: [[{ level: 'end2_river_place' }], [{ level: 'peak_toggle' }]] },
-    sidestone_zach_2_end2: { needs: [[{ level: 'chart_a_course' }]] },
-    who_you_gonna_call: { needs: [[{ level: 'stones_prelude' }]] },
-    end2_monster_connect: { needs: [[{ level: 'who_you_gonna_call' }]] },
-    place_slot_4x4_pushstyle: { needs: [[{ level: 'end2_heroes_1_5' }]] },
-    color_picker: { needs: [[{ level: 'place_slot_4x4_pushstyle' }]] },
-    place_promesst_rooms: { needs: [[{ level: 'color_picker' }]] },
-    promesst_prelude_pushstyle: { needs: [[{ level: 'place_promesst_rooms' }]] },
-    elevator_mechanic: { needs: [[{ level: 'promesst_prelude_pushstyle' }]] },
-    end2_prism_hp: { needs: [[{ level: 'place_promesst_rooms' }], [{ level: 'see_no_evil' }]] },
-    stack_prelude_pushstyle: { needs: [[{ level: 'peak_toggle' }], [{ level: 'place_promesst_rooms' }]] },
-
-    // Three at Once
-    '3wcn_shm_dragon_lily': { needs: [[{ level: 'magnitudes_v3' }]] },
-    '3wcn_purple_goblin': { needs: [[{ level: 'half_journey_vh' }]] },
-    '3wcn_stonehenge': { needs: [[{ level: 'triple_skip' }]] },
-    '3wc_into_forest_v7': { needs: [[{ level: '3wcn_stonehenge' }]] },
-
-    // Heterogeneous Stacks
-    jenga_assorted: { needs: [[{ level: 'torus_goblins' }]] },
-    how_to_train_your_dragon: { needs: [[{ level: 'jenga_assorted' }]] },
-
-    // Mirrorable Mirror Medley
-    bard_metamirror: { needs: [[{ level: 'metamirror_different_dir_2_alt' }]] },
-    druid_metamirror: { needs: [[{ level: 'metamirror_different_dir_2_alt' }]] },
-    mirror_the_unmirrorable_mirror: { needs: [[{ level: 'druid_metamirror' }]] },
-    druid_vertical_mirror: { needs: [[{ level: 'busy_beaver' }]] },
-    special_move: { needs: [[{ level: 'druid_vertical_mirror' }]] },
-    self_teleporting: { needs: [[{ level: 'druid_metamirror' }]] },
-    wrapping_mirror0: { needs: [[{ level: 'self_teleporting' }]] },
-    wrapping_mirror0_relatively_prime: { needs: [[{ level: 'wrapping_mirror0' }]] },
-    the_line_must_be_drawn_HERE: { needs: [[{ level: 'wrapping_mirror0_relatively_prime' }]] },
-    lemonade: { needs: [[{ level: 'wrapping_mirror0_relatively_prime' }]] },
-    lemonade_tng_stages_towers_no_float: { needs: [[{ level: 'wrapping_mirror0_relatively_prime' }]] },
-    wrapping_mirror_alt: { needs: [[{ level: 'druid_vertical_mirror' }]] },
-    base_jump: { needs: [[{ level: 'wrapping_mirror_alt' }]] },
-    hyper_jump_2c: { needs: [[{ level: 'base_jump' }]] },
-    hyper_jump: { needs: [[{ level: 'hyper_jump_2c' }]] },
-
-    // Skipping, Misc Beams
-    smash_midskip_simpler4: { needs: [[{ level: 'skip_purple_drop_alt' }]] },
-    bon_voyage: { needs: [[{ level: 'smash_midskip_simpler4' }]] },
-    breaking_bread: { needs: [[{ level: 'get_through_alt' }]] },
-
-    // Wrapping Mirrors
-    torus_mirrors: { needs: [[{ level: 'crystal_island' }]] },
-    wrapping_magic_mirror_2: { needs: [[{ level: 'torus_mirrors' }]] },
-    double_sided_skip: { needs: [[{ level: 'wrapping_magic_mirror_2' }]] },
-    stasis_v2: { needs: [[{ level: 'crystal_island' }]] },
-
-    // Heroes 2: Monsters
-    side_slide_intro_v2: { needs: [[{ level: 'compactor_v2' }]] },
-    heroes2_2b: { needs: [[{ level: 'heroes1_19_jail' }]] },
-    heroes2_2: { needs: [[{ level: 'heroes2_2b' }]] },
-    heroes2_thief_goblin: { needs: [[{ level: 'heroes2_2' }]] },
-    heroes2_3_v2: { needs: [[{ level: 'heroes2_thief_goblin' }]] },
-    heroes2_5_altE: { needs: [[{ level: 'heroes2_3_v2' }]] },
-    heroes2_5_no_crystal: { needs: [[{ level: 'heroes2_5_altE' }]] },
-    'heroes2_5.5v5': { needs: [[{ level: 'heroes2_5_no_crystal' }]] },
-    heroes2_6_v3: { needs: [[{ level: 'heroes2_5.5v5' }]] },
-    heroes2_9: { needs: [[{ level: 'heroes2_6_v3' }]] },
-    heroes2_10a_intro: { needs: [[{ level: 'heroes2_9' }]] },
-    heroes2_10: { needs: [[{ level: 'heroes2_10a_intro' }]] },
-    heroes2_11_v2_easier: { needs: [[{ level: 'heroes2_10' }]] },
-    heroes2_12_v2: { needs: [[{ level: 'heroes2_11_v2_easier' }]] },
-    heroes2_11_v2: { needs: [[{ level: 'heroes2_12_v2' }]] },
-    'heroes2_10.5': { needs: [[{ level: 'heroes2_11_v2' }]] },
-    one_fire_v2: { needs: [[{ level: 'heroes2_10.5' }]] },
-    heroes2_13: { needs: [[{ level: 'heroes2_12_v2' }]] },
-    heroes2_14: { needs: [[{ level: 'heroes2_13' }]] },
-    heroes2_15: { needs: [[{ level: 'heroes2_14' }]] },
-    heroes2_16v4: { needs: [[{ level: 'heroes2_15' }]] },
-    heroes2_18: { needs: [[{ level: 'heroes2_16v4' }]] },
-    heroes2_21b: { needs: [[{ level: 'heroes2_16v4' }]] },
-    heroes2_22_v2: { needs: [[{ level: 'heroes2_21b' }]] },
-    mosh_pit_small: { needs: [[{ level: 'heroes2_16v4' }]] },
-    heroes2_17_intro: { needs: [[{ level: 'mosh_pit_small' }]] },
-    heroes2_17: { needs: [[{ level: 'heroes2_17_intro' }]] },
-    heroes2_20: { needs: [[{ level: 'heroes2_17_intro' }]] },
-    heroes2_reprise: { needs: [[{ level: 'heroes2_15' }]] },
-    heroes2_10a: { needs: [[{ level: 'heroes2_10a_intro' }]] },
-    heroes2_3monster: { needs: [[{ level: 'heroes2_10a' }]] },
-
-    // Heroes and Artifacts
-    cleric_isles: { needs: [[{ level: 'flamethrower' }]] },
-    thief_wand: { needs: [[{ level: 'worlds_collide_heroes_and_promesst_v4' }]] },
-    flame_wand: { needs: [[{ level: 'thief_wand' }]] },
-    plus_signs_v3: { needs: [[{ level: 'flame_wand' }]] },
-    friendly_nudges: { needs: [[{ level: 'plus_signs_v3' }]] },
-    gem_transport: { needs: [[{ level: 'plus_signs_v3' }]] },
-    gem_transport_2: { needs: [[{ level: 'gem_transport' }]] },
-    swap_and_spin: { needs: [[{ level: 'flame_wand' }]] },
-    wizard_with_a_gun: { needs: [[{ level: 'swap_and_spin' }]] },
-    bug_spray: { needs: [[{ level: 'thief_wand' }]] },
 
     // Heroes and Light, Advanced
     endpoint_object: { needs: [[{ level: 'purple_haze' }]] },
@@ -396,6 +326,40 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     put_down_roots_v3: { needs: [[{ level: 'four_horsemen' }]] },
     dragon_garden: { needs: [[{ level: 'put_down_roots_v3' }]] },
 
+    // Heroes of Hauling
+    heroes1_1: { needs: [] },
+    heroes1_2_v2: { needs: [[{ level: 'heroes1_1' }]] },
+    heroes1_3: { needs: [[{ level: 'heroes1_2_v2' }]] },
+    heroes1_4: { needs: [[{ level: 'heroes1_3' }]] },
+    'heroes1_4.5': { needs: [[{ level: 'heroes1_4' }]] },
+    heroes1_5_v2: { needs: [[{ level: 'heroes1_4.5' }]] },
+    heroes1_7_v2: { needs: [[{ level: 'heroes1_5_v2' }]] },
+    heroes1_6: { needs: [[{ level: 'heroes1_7_v2' }]] },
+    'heroes1_7.5': { needs: [[{ level: 'heroes1_4.5' }]] },
+    heroes1_8_v2: { needs: [[{ level: 'heroes1_7.5' }]] },
+    heroes1_10_inv_v4_b: { needs: [[{ level: 'heroes1_8_v2' }]] },
+    heroes1_9: { needs: [[{ level: 'heroes1_10_inv_v4_b' }]] },
+    heroes1_11_v2: { needs: [[{ level: 'heroes1_10_inv_v4_b' }], [{ level: 'heroes1_7_v2' }]] },
+    heroes1_13_v2: { needs: [[{ level: 'heroes1_11_v2' }]] },
+    heroes1_12_v2_alt: { needs: [[{ level: 'heroes1_13_v2' }]] },
+    heroes1_15: { needs: [[{ level: 'heroes1_12_v2_alt' }]] },
+    heroes1_16_v3: { needs: [[{ level: 'heroes1_15' }]] },
+    heroes1_17: { needs: [[{ level: 'heroes1_15' }]] },
+    heroes1_18: { needs: [[{ level: 'heroes1_17' }]] },
+    heroes1_19_jail: { needs: [[{ level: 'heroes1_18' }]] },
+    heroes1_21_v3: { needs: [[{ level: 'heroes1_19_jail' }]] },
+    victory_lap: { needs: [[{ level: 'heroes3_21_condensed' }]] },
+
+    // Heroes Together
+    worlds_collide_heroes_and_stones: {
+        needs: [
+            [{ level: 'skipping_shores_v3' }, { level: 'heroes3_21_condensed' }],
+            [{ level: 'skipping_shores_v3' }, { level: 'heroes3_14_v3' }],
+            [{ level: 'skipping_shores_v3' }, { level: 'heroes3_7_v4' }],
+            [{ level: 'skipping_shores_v3' }, { level: 'heroes3_druid_b_v2' }],
+        ],
+    },
+
     // Heroes, Duplicated
     clone_adjust_mirror: { needs: [[{ level: 'going_up_v4' }], [{ level: 'fly_and_flip' }]], drop: [134, 117, 37] },
     clone_maze: { needs: [[{ level: 'clone_adjust_mirror' }]], drop: [134, 117, 37] },
@@ -422,39 +386,6 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     metamirror_c_alt: { needs: [[{ level: 'metamirror_block_v2' }]] },
     two_metamirrors: { needs: [[{ level: 'metamirror_c_alt' }]] },
     metamirror_same_dir_5_alt: { needs: [[{ level: 'metamirror_same_dir_3_alt_2' }]] },
-
-    // Beams Reflected
-    purple_corner_gem: { needs: [[{ level: 'promesst3_streamlined' }]] },
-    gem_clg_v4: { needs: [[{ level: 'purple_corner_gem' }]] },
-    shunt2_alt: { needs: [[{ level: 'plus_signs_v3' }]] },
-    orange_doubleback: { needs: [[{ level: 'dual_screen' }]] },
-    orange_doubledoubleback: { needs: [[{ level: 'orange_doubleback' }]] },
-    sidetrack: { needs: [[{ level: 'orange_doubledoubleback' }]] },
-    purple_wall_around_easier_vp: { needs: [[{ level: 'sidetrack' }]] },
-    purple_clm_v4: { needs: [[{ level: 'sidetrack' }]] },
-    orange_clm_s: { needs: [[{ level: 'purple_clm_v4' }]] },
-
-    // Reflected Beams
-    tempered_glass_red: { needs: [[{ level: 'green_crystal_rover' }]] },
-    red_rooms_v5: { needs: [[{ level: 'tempered_glass_red' }]] },
-    rover_water_purple_v9: { needs: [[{ level: 'red_rooms_v5' }]] },
-    protrusions: { needs: [[{ level: 'rover_water_purple_v9' }]] },
-    mirror_promesst: { needs: [[{ level: 'protrusions' }]] },
-    rover_water_purple_sequel_v3: { needs: [[{ level: 'rover_water_purple_v9' }]] },
-    wrapping_mirror_red_v4: { needs: [[{ level: 'red_rooms_v5' }]] },
-    double_sideways: { needs: [[{ level: 'orange_predicament' }]] },
-    dual_screen: { needs: [[{ level: 'mirror_promesst' }]] },
-    mirror_non_turner_v3: { needs: [[{ level: 'dual_screen' }]] },
-    adjust_explorer_v4: { needs: [[{ level: 'mirror_non_turner_v3' }]] },
-    green_torq_mirror_vs4: { needs: [[{ level: 'wrapping_mirror_red_v4' }], [{ level: 'adjust_explorer_v4' }]] },
-    magic_rover: { needs: [[{ level: 'mirror_promesst' }]] },
-    remote_work: { needs: [[{ level: 'magic_rover' }]] },
-    mirror_rover_orange_2: { needs: [[{ level: 'green_crystal_rover' }]] },
-    moving_bridge: { needs: [[{ level: 'infinite_crystal_hack_v5' }], [{ level: 'square_dance' }]] },
-    smash_or_dash_vs2: { needs: [[{ level: 'red_rooms_v5' }]] },
-    across_the_fence_vtrader_m_p: { needs: [[{ level: 'smash_or_dash_vs2' }]] },
-    break_through_focused: { needs: [[{ level: 'across_the_fence_vtrader_m_p' }]] },
-    worlds_collide_alt: { needs: [[{ level: 'promesst2_streamlined' }], [{ level: 'mirror_12' }]] },
 
     // Mirrors and Stones
     worlds_collide_mirrors_and_stones_v2: { needs: [[{ level: 'skipping_stones' }]] },
@@ -504,12 +435,44 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     sidestone_zach_4: { needs: [[{ level: 'sidestone_zach_3' }]] },
     square_dance: { needs: [[{ level: 'two_step' }]] },
 
-    // Alter Beam
-    'promesst2.5_deeper': { needs: [[{ level: 'promesst2_streamlined' }]] },
-    half_tutorial: { needs: [[{ level: 'promesst2.5_deeper' }]] },
-    monkey_in_the_midpoint: { needs: [[{ level: 'promesst2.5_deeper' }]] },
-    promesst3_streamlined: { needs: [[{ level: 'promesst2.5_deeper' }]] },
-    gem_beam_placement: { needs: [[{ level: 'promesst3_streamlined' }]] },
+    // Reflected Beams
+    tempered_glass_red: { needs: [[{ level: 'green_crystal_rover' }]] },
+    red_rooms_v5: { needs: [[{ level: 'tempered_glass_red' }]] },
+    rover_water_purple_v9: { needs: [[{ level: 'red_rooms_v5' }]] },
+    protrusions: { needs: [[{ level: 'rover_water_purple_v9' }]] },
+    mirror_promesst: { needs: [[{ level: 'protrusions' }]] },
+    rover_water_purple_sequel_v3: { needs: [[{ level: 'rover_water_purple_v9' }]] },
+    wrapping_mirror_red_v4: { needs: [[{ level: 'red_rooms_v5' }]] },
+    double_sideways: { needs: [[{ level: 'orange_predicament' }]] },
+    dual_screen: { needs: [[{ level: 'mirror_promesst' }]] },
+    mirror_non_turner_v3: { needs: [[{ level: 'dual_screen' }]] },
+    adjust_explorer_v4: { needs: [[{ level: 'mirror_non_turner_v3' }]] },
+    green_torq_mirror_vs4: { needs: [[{ level: 'wrapping_mirror_red_v4' }], [{ level: 'adjust_explorer_v4' }]] },
+    magic_rover: { needs: [[{ level: 'mirror_promesst' }]] },
+    remote_work: { needs: [[{ level: 'magic_rover' }]] },
+    mirror_rover_orange_2: { needs: [[{ level: 'green_crystal_rover' }]] },
+    moving_bridge: { needs: [[{ level: 'infinite_crystal_hack_v5' }], [{ level: 'square_dance' }]] },
+    smash_or_dash_vs2: { needs: [[{ level: 'red_rooms_v5' }]] },
+    across_the_fence_vtrader_m_p: { needs: [[{ level: 'smash_or_dash_vs2' }]] },
+    break_through_focused: { needs: [[{ level: 'across_the_fence_vtrader_m_p' }]] },
+    worlds_collide_alt: { needs: [[{ level: 'promesst2_streamlined' }], [{ level: 'mirror_12' }]] },
+
+    // Skipping Stones
+    skipping_stones: { needs: [] },
+    time_tutorial: { needs: [[{ level: 'skipping_stones' }]] },
+    skipping_pals: { needs: [[{ level: 'time_tutorial' }]] },
+
+    // Squeeze, Dragon
+    endpoint1_skipping: { needs: [[{ level: 'promesst3_streamlined' }], [{ level: 'faster_than_stone' }]] },
+    narrow_passage: { needs: [[{ level: 'endpoint1_skipping' }]] },
+    close_circuit: { needs: [[{ level: 'narrow_passage' }]] },
+    dragon_drag: { needs: [[{ level: 'close_circuit' }]] },
+    free_ride: { needs: [[{ level: 'close_circuit' }]] },
+    swap_seats: { needs: [[{ level: 'free_ride' }]] },
+    security_checkpoints_v2: { needs: [[{ level: 'promesst3_streamlined' }], [{ level: 'faster_than_stone' }]] },
+    ocean_blue: { needs: [[{ level: 'security_checkpoints_v2' }]] },
+    double_door: { needs: [[{ level: 'narrow_passage' }]] },
+    rsmash: { needs: [[{ level: 'promesst3_streamlined' }], [{ level: 'faster_than_stone' }]] },
 
     // Stones Illuminated
     first_flight: { needs: [[{ level: 'air_skating_v6' }]], drop: [16, 60, 38] },
@@ -544,6 +507,94 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     skip_wand_v6: { needs: [[{ level: 'skip_or_sink_r' }]] },
     stonewalled: { needs: [[{ level: 'sp_crystal_tuto' }]] },
 
+    // The Antipode
+    end1: { needs: [[{ sign: 115344129 }]] },
+
+    // The Mirror Isles
+    mirror_1: { needs: [] },
+    mirror_2: { needs: [[{ level: 'mirror_1' }]] },
+    mirror_3: { needs: [[{ level: 'mirror_2' }]] },
+    mirror_4: { needs: [[{ level: 'mirror_3' }]] },
+    mirror_5: { needs: [[{ level: 'mirror_3' }]] },
+    mirror_6_alt: { needs: [[{ level: 'mirror_5' }]] },
+    mirror_7: { needs: [[{ level: 'mirror_3' }]] },
+    mirror_8_v5: { needs: [[{ level: 'mirror_7' }]] },
+    mirror_11: { needs: [[{ level: 'skipping_stones' }]] },
+    mirror_12: { needs: [[{ level: 'mirror_11' }]] },
+    mirror_15: { needs: [[{ level: 'mirror_12' }]] },
+    mirror_19: { needs: [[{ level: 'mirror_15' }]] },
+    mirror_17: { needs: [[{ level: 'mirror_19' }], [{ level: 'mirror_8_v5' }]] },
+    mirror_sink: { needs: [[{ level: 'mirror_17' }]] },
+    mirror_20: { needs: [[{ level: 'mirror_sink' }]] },
+    mirror_18: { needs: [[{ level: 'mirror_20' }]] },
+    mirror_10_alt2: { needs: [[{ level: 'mirror_18' }]] },
+    mirror_21: { needs: [[{ level: 'skipping_stones' }]] },
+    mirror_22_v2: { needs: [[{ level: 'mirror_21' }]] },
+    mirror_factory_v2: { needs: [[{ level: 'skipping_stones' }]] },
+    mirror_13: { needs: [[{ level: 'mirror_factory_v2' }]] },
+    mirror_14: { needs: [[{ level: 'mirror_13' }]] },
+    mirror_pals: { needs: [[{ level: 'skipping_stones' }]] },
+    walk_it_over: { needs: [[{ level: 'mirror_pals' }]] },
+    two_step: { needs: [[{ level: 'already_dropped_v2' }]] },
+    use_and_remove: { needs: [[{ level: 'two_step' }]] },
+    infinite_crystal_hack_v5: { needs: [[{ level: 'use_and_remove' }]] },
+    mundane_mirror: { needs: [[{ level: 'mirror_10_alt2' }]] },
+    mirror_10_b_v2: { needs: [[{ level: 'mundane_mirror' }]] },
+    mirror_10_d: { needs: [[{ level: 'mirror_10_b_v2' }]] },
+
+    // Torc
+    cyan_overlap_intro_longer: { needs: [[{ level: 'promesst2_streamlined' }]] },
+    green_revolution: { needs: [[{ level: 'promesst2_streamlined' }]] },
+    torcoban_2: { needs: [[{ level: 'promesst2_streamlined' }], [{ level: 'green_revolution' }]] },
+    blue_revolution_v2: { needs: [[{ level: 'torcoban_2' }]] },
+    double_trouble: { needs: [[{ level: 'first_flight' }]] },
+    worlds_collide_ps: { needs: [[{ level: 'torcoban_2' }], [{ level: 'skipping_pals' }]] },
+
+    // Vault of the Beamcasters
+    promesst1_streamlined: { needs: [] },
+    promesst2_streamlined: { needs: [[{ level: 'promesst1_streamlined' }]] },
+    orange_cross: { needs: [[{ level: 'double_trouble' }]] },
+
+    // Antipode High
+    allocate_heroes_v2: {
+        needs: [
+            [{ sign: 115348482 }],
+            [{ sign: 115348478 }],
+            [{ sign: 115348468 }],
+            [{ sign: 115348474 }],
+        ],
+    },
+    end2_heroes_1_2: { needs: [[{ level: 'allocate_heroes_v2' }]] },
+    end2_heroes_1_5: { needs: [[{ level: 'end2_heroes_1_2' }]] },
+    prelude_priest_water_goblins_only: { needs: [[{ level: 'end2_heroes_1_5' }]] },
+    see_no_evil: { needs: [[{ level: 'end2_heroes_1_5' }]] },
+    end2_mirror_3: { needs: [[{ level: 'end2_heroes_1_5' }]] },
+    mirror_prelude_v2_fix: { needs: [[{ level: 'end2_mirror_3' }]] },
+    peak_toggle: { needs: [[{ level: 'mirror_prelude_v2_fix' }]] },
+    floor_plan_v3: { needs: [[{ level: 'peak_toggle' }], [{ level: 'prelude_priest_water_goblins_only' }]] },
+    stone_economy: { needs: [[{ level: 'end2_heroes_1_5' }]] },
+    place_lily_pushstyle_v6: { needs: [[{ level: 'end2_heroes_1_5' }]] },
+    three_birds_push: { needs: [[{ level: 'place_lily_pushstyle_v6' }]] },
+    stones_prelude: { needs: [[{ level: 'three_birds_push' }]] },
+    end2_river_place: { needs: [[{ level: 'stones_prelude' }]] },
+    chart_a_course: { needs: [[{ level: 'end2_river_place' }], [{ level: 'peak_toggle' }]] },
+    sidestone_zach_2_end2: { needs: [[{ level: 'chart_a_course' }]] },
+    who_you_gonna_call: { needs: [[{ level: 'stones_prelude' }]] },
+    end2_monster_connect: { needs: [[{ level: 'who_you_gonna_call' }]] },
+    place_slot_4x4_pushstyle: { needs: [[{ level: 'end2_heroes_1_5' }]] },
+    color_picker: { needs: [[{ level: 'place_slot_4x4_pushstyle' }]] },
+    place_promesst_rooms: { needs: [[{ level: 'color_picker' }]] },
+    promesst_prelude_pushstyle: { needs: [[{ level: 'place_promesst_rooms' }]] },
+    elevator_mechanic: { needs: [[{ level: 'promesst_prelude_pushstyle' }]] },
+    end2_prism_hp: { needs: [[{ level: 'place_promesst_rooms' }], [{ level: 'see_no_evil' }]] },
+    stack_prelude_pushstyle: { needs: [[{ level: 'peak_toggle' }], [{ level: 'place_promesst_rooms' }]] },
+
+    // Archways
+    archways_2_v2: { needs: [[{ level: 'tippy_intro' }]] },
+    cliff_duo: { needs: [[{ level: 'archways_2_v2' }]] },
+    archways_4: { needs: [[{ level: 'archways_2_v2' }]] },
+    hat_chain_vp: { needs: [[{ level: 'archways_4' }]] },
+
     // Charmed Stacks
     i_beam_v2: { needs: [[{ level: 'flamethrower' }]] },
     bard_must_stack4_fix: { needs: [[{ level: 'flamethrower' }]] },
@@ -557,50 +608,15 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     high_shelf_v2: { needs: [[{ level: 'tippy_towers_4' }]] },
     erosion_alt: { needs: [[{ level: 'falloff_dragons' }]] },
 
-    // Skipping and Falling
-    lily_falls_intro_v2: { needs: [[{ level: '3d_intro_skipping' }]] },
-    many_falls: { needs: [[{ level: 'lily_falls_intro_v2' }]] },
-    pool_pal_v2: { needs: [[{ level: 'many_falls' }]] },
-    tiger_lily_v2: { needs: [[{ level: 'many_falls' }]] },
-    on_the_rocks: { needs: [[{ level: 'pool_pal_v2' }], [{ level: 'tiger_lily_v2' }]] },
-    button_shut_in: { needs: [[{ level: 'on_the_rocks' }]] },
-    sunk_cost_2_v3: { needs: [[{ level: 'pool_pal_v2' }]] },
-    carry_lily: { needs: [[{ level: 'tiger_lily_v2' }]] },
-    removal_v2: { needs: [[{ level: 'carry_lily' }]] },
-    delay_time_v2: { needs: [[{ level: 'many_falls' }]] },
-
-    // Heroes and Depth
-    gated_twice_v2: { needs: [[{ level: '3d_intro_heroes' }]] },
-    gated_twice_thief_v2: { needs: [[{ level: 'gated_twice_v2' }]] },
-    connect_the_dots_v5: { needs: [[{ level: 'gated_twice_thief_v2' }]] },
-    zombie_graves_v3: { needs: [[{ level: 'connect_the_dots_v5' }]] },
-    dragon_bridge: { needs: [[{ level: 'zombie_graves_v3' }]] },
-    pulling_pedestals: { needs: [[{ level: 'connect_the_dots_v5' }]] },
-    thief_stack: { needs: [[{ level: 'pulling_pedestals' }]] },
-    priest_descent_simpler: { needs: [[{ level: 'connect_the_dots_v5' }]] },
-    priest_button_3d_revised: { needs: [[{ level: 'priest_descent_simpler' }]] },
-    priest_3d_goblin_pass: { needs: [[{ level: 'priest_button_3d_revised' }]] },
-    mountain_music: { needs: [[{ level: 'jenga_shortstack_v2' }]] },
-    out_of_range_v4: { needs: [[{ level: 'mountain_music' }]] },
-    magicians_assistant_v2: { needs: [[{ level: 'jenga_shortstack_v2' }]] },
-    musical_staircase_v2: { needs: [[{ level: 'mountain_music' }]] },
-    sticky: { needs: [[{ level: 'mountain_music' }]] },
-    falloff_intro: { needs: [[{ level: 'magicians_assistant_v2' }]] },
-    falloff_4: { needs: [[{ level: 'falloff_intro' }]] },
-    falloff_kill_goblins_v6: { needs: [[{ level: 'falloff_4' }]] },
-    falloff_dragons: { needs: [[{ level: 'falloff_4' }]] },
-    fire_stairs_part_2: { needs: [[{ level: 'fire_stairs_v2' }]] },
-    loading_docks_v2: { needs: [[{ level: 'zombie_graves_v3' }]] },
-    assassins_creed: { needs: [[{ level: 'loading_docks_v2' }]] },
-    magic_tower: { needs: [[{ level: 'erosion_alt' }]] },
-    sky_druid_kill: { needs: [[{ level: 'zombie_graves_v3' }]] },
-    sky_druid_kill_tall_2_goblins: { needs: [[{ level: 'sky_druid_kill' }]] },
-    stopper_topper_v2: { needs: [[{ level: 'sky_druid_kill_tall_2_goblins' }]] },
-    sky_druid_tree_ex: { needs: [[{ level: 'stopper_topper_v2' }]] },
-    druid_3d_beam: { needs: [[{ level: 'sky_druid_tree_ex' }]] },
-    weaklings_bard_v2: { needs: [[{ level: 'sky_druid_tree_ex' }]] },
-    sky_druid_maze: { needs: [[{ level: 'weaklings_bard_v2' }]] },
-    sky_druid_one: { needs: [[{ level: 'sky_druid_maze' }]] },
+    // Crossroads High
+    '3d_intro_vanilla': { needs: [[{ level: 'end1' }]] },
+    push_down_v2: { needs: [[{ level: '3d_intro_vanilla' }]] },
+    sister_staircase_harder: { needs: [[{ level: 'push_down_v2' }]] },
+    carry_simplified: { needs: [[{ level: 'sister_staircase_harder' }]] },
+    '3d_intro_heroes': { needs: [[{ level: 'carry_simplified' }]] },
+    '3d_intro_mirrors': { needs: [[{ level: 'carry_simplified' }]] },
+    '3d_intro_promesst_v5': { needs: [[{ level: 'carry_simplified' }]] },
+    '3d_intro_skipping': { needs: [[{ level: 'carry_simplified' }]] },
 
     // Double Beam Falling
     into_the_water_3: { needs: [[{ level: 'drop_sokoban' }]] },
@@ -636,12 +652,154 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     landmines_v3: { needs: [[{ level: 'taking_the_lift' }]] },
     shower: { needs: [[{ level: 'landmines_v3' }]] },
 
+    // Goblin Turning
+    crystal_logistics: { needs: [[{ level: 'sokobridge_v4' }]] },
+    beam_sisters: { needs: [[{ level: 'crystal_logistics' }]] },
+    goblin_below_intro_same_z: { needs: [[{ level: 'beam_sisters' }]] },
+    chain_gang: { needs: [[{ level: 'thin_ice_rooms' }], [{ level: 'goblin_below_intro_same_z' }]] },
+    chain_gang3: { needs: [[{ level: 'chain_gang' }]] },
+    pass_through_v2_same_z: { needs: [[{ level: 'goblin_below_intro_same_z' }], [{ level: 'thin_ice_rooms' }]] },
+    aggro_maze: { needs: [[{ level: 'thin_ice_rooms' }]] },
+    aggro_which0: { needs: [[{ level: 'aggro_maze' }]] },
+
+    // Heroes and Depth
+    gated_twice_v2: { needs: [[{ level: '3d_intro_heroes' }]] },
+    gated_twice_thief_v2: { needs: [[{ level: 'gated_twice_v2' }]] },
+    connect_the_dots_v5: { needs: [[{ level: 'gated_twice_thief_v2' }]] },
+    zombie_graves_v3: { needs: [[{ level: 'connect_the_dots_v5' }]] },
+    dragon_bridge: { needs: [[{ level: 'zombie_graves_v3' }]] },
+    pulling_pedestals: { needs: [[{ level: 'connect_the_dots_v5' }]] },
+    thief_stack: { needs: [[{ level: 'pulling_pedestals' }]] },
+    priest_descent_simpler: { needs: [[{ level: 'connect_the_dots_v5' }]] },
+    priest_button_3d_revised: { needs: [[{ level: 'priest_descent_simpler' }]] },
+    priest_3d_goblin_pass: { needs: [[{ level: 'priest_button_3d_revised' }]] },
+    mountain_music: { needs: [[{ level: 'jenga_shortstack_v2' }]] },
+    out_of_range_v4: { needs: [[{ level: 'mountain_music' }]] },
+    magicians_assistant_v2: { needs: [[{ level: 'jenga_shortstack_v2' }]] },
+    musical_staircase_v2: { needs: [[{ level: 'mountain_music' }]] },
+    sticky: { needs: [[{ level: 'mountain_music' }]] },
+    falloff_intro: { needs: [[{ level: 'magicians_assistant_v2' }]] },
+    falloff_4: { needs: [[{ level: 'falloff_intro' }]] },
+    falloff_kill_goblins_v6: { needs: [[{ level: 'falloff_4' }]] },
+    falloff_dragons: { needs: [[{ level: 'falloff_4' }]] },
+    fire_stairs_part_2: { needs: [[{ level: 'fire_stairs_v2' }]] },
+    loading_docks_v2: { needs: [[{ level: 'zombie_graves_v3' }]] },
+    assassins_creed: { needs: [[{ level: 'loading_docks_v2' }]] },
+    magic_tower: { needs: [[{ level: 'erosion_alt' }]] },
+    sky_druid_kill: { needs: [[{ level: 'zombie_graves_v3' }]] },
+    sky_druid_kill_tall_2_goblins: { needs: [[{ level: 'sky_druid_kill' }]] },
+    stopper_topper_v2: { needs: [[{ level: 'sky_druid_kill_tall_2_goblins' }]] },
+    sky_druid_tree_ex: { needs: [[{ level: 'stopper_topper_v2' }]] },
+    druid_3d_beam: { needs: [[{ level: 'sky_druid_tree_ex' }]] },
+    weaklings_bard_v2: { needs: [[{ level: 'sky_druid_tree_ex' }]] },
+    sky_druid_maze: { needs: [[{ level: 'weaklings_bard_v2' }]] },
+    sky_druid_one: { needs: [[{ level: 'sky_druid_maze' }]] },
+
+    // Mirror Falling
+    trader_descend: { needs: [[{ level: '3d_intro_mirrors' }]] },
+    cliff_hopping: { needs: [[{ level: 'trader_descend' }]] },
+    make_a_right_simpler: { needs: [[{ level: '3d_intro_mirrors' }]] },
+    make_a_right: { needs: [[{ level: 'make_a_right_simpler' }]] },
+    learn_to_catch_v2: { needs: [[{ level: 'make_a_right_simpler' }]] },
+    trust_falls: { needs: [[{ level: 'learn_to_catch_v2' }]] },
+    falling_blocker_v3: { needs: [[{ level: 'trust_falls' }]] },
+    pillars: { needs: [[{ level: 'falling_blocker_v3' }]] },
+    long_platform_v2: { needs: [[{ level: 'pillars' }]] },
+    blind_spot_v2: { needs: [[{ level: 'long_platform_v2' }]] },
+    triple_gate: { needs: [[{ level: 'cliff_hopping' }], [{ level: 'blind_spot_v2' }]] },
+
+    // Mirror on Head
+    hat_tricks_0_v3: { needs: [[{ level: 'repel' }]] },
+    omnimirror_v2: { needs: [[{ level: 'hat_tricks_0_v3' }]] },
+    goblin_parity_3d: { needs: [[{ level: 'omnimirror_v2' }]] },
+    mirror_carry_duo: { needs: [[{ level: 'goblin_parity_3d' }]] },
+    bothersome_mirror: { needs: [[{ level: 'all_out_goblin_war' }]] },
+
+    // Mirrors and Buttons
+    going_up_v4: { needs: [[{ level: 'archways_2_v2' }]] },
+    automatic_door_v5: { needs: [[{ level: 'archways_2_v2' }]] },
+    vertical_unclone_3: { needs: [[{ level: 'chasm_3' }]] },
+
+    // Protection and Support
+    priest_3d_intro_dragon_v4: { needs: [[{ level: 'priest_3d_goblin_pass' }]] },
+    priest_bottom_v2: { needs: [[{ level: 'priest_3d_intro_dragon_v4' }]] },
+    fire_stairs_v2: { needs: [[{ level: 'priest_bottom_v2' }]] },
+    priest_warrior_descent: { needs: [[{ level: 'priest_bottom_v2' }]] },
+    from_the_depths: { needs: [[{ level: 'priest_bottom_v2' }]] },
+    priest_two_warriors_v3: { needs: [[{ level: 'from_the_depths' }]] },
+    monster_stack: { needs: [[{ level: 'priest_two_warriors_v3' }]] },
+    catching_fire_v2: { needs: [[{ level: 'priest_two_warriors_v3' }]] },
+    frame_advance_v5: { needs: [[{ level: 'catching_fire_v2' }]] },
+    stuck_up_v2: { needs: [[{ level: 'frame_advance_v5' }]] },
+
+    // Skipping and Falling
+    lily_falls_intro_v2: { needs: [[{ level: '3d_intro_skipping' }]] },
+    many_falls: { needs: [[{ level: 'lily_falls_intro_v2' }]] },
+    pool_pal_v2: { needs: [[{ level: 'many_falls' }]] },
+    tiger_lily_v2: { needs: [[{ level: 'many_falls' }]] },
+    on_the_rocks: { needs: [[{ level: 'pool_pal_v2' }], [{ level: 'tiger_lily_v2' }]] },
+    button_shut_in: { needs: [[{ level: 'on_the_rocks' }]] },
+    sunk_cost_2_v3: { needs: [[{ level: 'pool_pal_v2' }]] },
+    carry_lily: { needs: [[{ level: 'tiger_lily_v2' }]] },
+    removal_v2: { needs: [[{ level: 'carry_lily' }]] },
+    delay_time_v2: { needs: [[{ level: 'many_falls' }]] },
+
+    // Skipping Stacks
+    skip_stack_1: { needs: [[{ level: 'pool_pal_v2' }], [{ level: 'tiger_lily_v2' }]] },
+    skip_stack_2: { needs: [[{ level: 'skip_stack_1' }]] },
+    skip_stack_3: { needs: [[{ level: 'skip_stack_2' }]] },
+    depositor_thief: { needs: [[{ level: 'skip_stack_1' }], [{ level: 'skip_stack_3' }]] },
+    depositor_bard: { needs: [[{ level: 'depositor_thief' }]] },
+    the_waterfall_v4: { needs: [[{ level: 'from_the_depths' }], [{ level: 'depositor_thief' }]] },
+    priest_water_back_goblin: { needs: [[{ level: 'the_waterfall_v4' }]] },
+    priest_water_back_place_v3: { needs: [[{ level: 'priest_water_back_goblin' }]] },
+
+    // Spinning Beams
+    turn_control_v2: { needs: [[{ level: 'pool_pal_v2' }], [{ level: 'tiger_lily_v2' }]] },
+    spin_heroes: { needs: [[{ level: 'turn_control_v2' }]] },
+    spray_and_pray: { needs: [[{ level: 'spin_heroes' }]] },
+    rotator: { needs: [[{ level: 'spray_and_pray' }]] },
+    spin_doctors_v3: { needs: [[{ level: 'rotator' }]] },
+
+    // Stacks and Water
+    personal_assistant_v3: { needs: [[{ level: '3d_intro_heroes' }]] },
+    push_down_a_lot_small: { needs: [[{ level: 'personal_assistant_v3' }]] },
+    my_first_stack: { needs: [[{ level: 'push_down_a_lot_small' }]] },
+    single_out: { needs: [[{ level: 'my_first_stack' }]] },
+    jenga_shortstack_v2: { needs: [[{ level: 'single_out' }]] },
+    jenga_easier: { needs: [[{ level: 'jenga_shortstack_v2' }]] },
+
+    // Strength
+    buff_explorer: { needs: [[{ level: 'sokobridge_v4' }]] },
+    cyan_bridge_v3: { needs: [[{ level: 'buff_explorer' }]] },
+    strong_monsters_v2: { needs: [[{ level: 'buff_explorer' }]] },
+    floorhands_v5: { needs: [[{ level: 'buff_explorer' }]] },
+    stay_lit: { needs: [[{ level: 'floorhands_v5' }]] },
+    under_pressure: { needs: [[{ level: 'buff_explorer' }]] },
+    high_horse: { needs: [[{ level: 'assassins_creed' }]] },
+
+    // The Heroic Way
+    laser_pointer: { needs: [[{ level: 'stack_prelude_pushstyle' }]] },
+    all_together_now: {
+        needs: [
+            [{ level: 'end2_monster_connect' }],
+            [{ level: 'end2_prism_hp' }],
+            [{ level: 'floor_plan_v3' }],
+            [{ level: 'laser_pointer' }],
+            [{ level: 'sidestone_zach_2_end2' }],
+            [{ level: 'stone_economy' }],
+        ],
+    },
+
     // The Mirror Way
     flamestrike_v3: { needs: [[{ level: 'priest_3d_intro_dragon_v4' }]] },
     volcano_v3: { needs: [[{ level: 'flamestrike_v3' }]] },
     pachinko: { needs: [[{ level: 'repel' }]] },
     pachinko_rescue_w: { needs: [[{ level: 'pachinko' }]] },
     chasm_3: { needs: [[{ level: 'pachinko_rescue_w' }]] },
+
+    // Top of the World
+    priest_traverse_e_fence: { needs: [[{ level: 'frame_advance_v5' }]] },
 
     // Vertical Endpoints
     sender_simplified_v2: { needs: [[{ level: 'landmines_v3' }]] },
@@ -658,36 +816,12 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     high_endpoint_v2: { needs: [[{ level: 'beam_jail_v3' }]] },
     height_chooser_v0: { needs: [[{ level: 'suspend_directions_v2' }], [{ level: 'one_floor_down_v2' }]] },
 
-    // Skipping Stacks
-    skip_stack_1: { needs: [[{ level: 'pool_pal_v2' }], [{ level: 'tiger_lily_v2' }]] },
-    skip_stack_2: { needs: [[{ level: 'skip_stack_1' }]] },
-    skip_stack_3: { needs: [[{ level: 'skip_stack_2' }]] },
-    depositor_thief: { needs: [[{ level: 'skip_stack_1' }], [{ level: 'skip_stack_3' }]] },
-    depositor_bard: { needs: [[{ level: 'depositor_thief' }]] },
-    the_waterfall_v4: { needs: [[{ level: 'from_the_depths' }], [{ level: 'depositor_thief' }]] },
-    priest_water_back_goblin: { needs: [[{ level: 'the_waterfall_v4' }]] },
-    priest_water_back_place_v3: { needs: [[{ level: 'priest_water_back_goblin' }]] },
-
-    // Stacks and Water
-    personal_assistant_v3: { needs: [[{ level: '3d_intro_heroes' }]] },
-    push_down_a_lot_small: { needs: [[{ level: 'personal_assistant_v3' }]] },
-    my_first_stack: { needs: [[{ level: 'push_down_a_lot_small' }]] },
-    single_out: { needs: [[{ level: 'my_first_stack' }]] },
-    jenga_shortstack_v2: { needs: [[{ level: 'single_out' }]] },
-    jenga_easier: { needs: [[{ level: 'jenga_shortstack_v2' }]] },
-
-    // Goblin Turning
-    crystal_logistics: { needs: [[{ level: 'sokobridge_v4' }]] },
-    beam_sisters: { needs: [[{ level: 'crystal_logistics' }]] },
-    goblin_below_intro_same_z: { needs: [[{ level: 'beam_sisters' }]] },
-    chain_gang: { needs: [[{ level: 'thin_ice_rooms' }], [{ level: 'goblin_below_intro_same_z' }]] },
-    chain_gang3: { needs: [[{ level: 'chain_gang' }]] },
-    pass_through_v2_same_z: { needs: [[{ level: 'goblin_below_intro_same_z' }], [{ level: 'thin_ice_rooms' }]] },
-    aggro_maze: { needs: [[{ level: 'thin_ice_rooms' }]] },
-    aggro_which0: { needs: [[{ level: 'aggro_maze' }]] },
-
-    // Top of the World
-    priest_traverse_e_fence: { needs: [[{ level: 'frame_advance_v5' }]] },
+    // Vertical Mirror Skipping
+    lily_pull_intro: { needs: [[{ level: 'on_the_rocks' }]] },
+    falling_down: { needs: [[{ level: 'on_the_rocks' }]] },
+    lily_pull: { needs: [[{ level: 'falling_down' }], [{ level: 'lily_pull_intro' }]] },
+    retro: { needs: [[{ level: 'lily_pull' }]] },
+    retro_hooks: { needs: [[{ level: 'lily_pull' }]] },
 
     // Vertical Mirrors
     vert_mirror_intro: { needs: [[{ level: 'falling_blocker_v3' }]] },
@@ -716,21 +850,15 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     overwrite: { needs: [[{ level: 'repel' }]] },
     bottom_bridge_tall: { needs: [[{ level: 'bottom_bridge_v2' }]] },
 
-    // Protection and Support
-    priest_3d_intro_dragon_v4: { needs: [[{ level: 'priest_3d_goblin_pass' }]] },
-    priest_bottom_v2: { needs: [[{ level: 'priest_3d_intro_dragon_v4' }]] },
-    fire_stairs_v2: { needs: [[{ level: 'priest_bottom_v2' }]] },
-    priest_warrior_descent: { needs: [[{ level: 'priest_bottom_v2' }]] },
-    from_the_depths: { needs: [[{ level: 'priest_bottom_v2' }]] },
-    priest_two_warriors_v3: { needs: [[{ level: 'from_the_depths' }]] },
-    monster_stack: { needs: [[{ level: 'priest_two_warriors_v3' }]] },
-    catching_fire_v2: { needs: [[{ level: 'priest_two_warriors_v3' }]] },
-    frame_advance_v5: { needs: [[{ level: 'catching_fire_v2' }]] },
-    stuck_up_v2: { needs: [[{ level: 'frame_advance_v5' }]] },
-
-    // Four Together
-    '4wcn_all_fast': { needs: [[{ level: 'three_artifacts_v3' }], [{ level: 'magnitudes_v3' }]] },
-    '4wc_dragon_cyan_s_v2': { needs: [[{ level: '4wcn_all_fast' }]] },
+    // Alter-Smash
+    nowhere_to_smash_combo: { needs: [[{ level: 'push_down_chain' }]] },
+    get_through_alt: { needs: [[{ level: 'nowhere_to_smash_combo' }]] },
+    get_through_depths: { needs: [[{ level: 'get_through_alt' }]] },
+    save_for_later: { needs: [[{ level: 'get_through_depths' }]] },
+    rubble_chain: { needs: [[{ level: 'save_for_later' }]] },
+    do_not_want: { needs: [[{ level: 'rubble_chain' }]] },
+    smartbomb_combo_v3: { needs: [[{ level: 'do_not_want' }]] },
+    wand_reintro: { needs: [[{ level: 'push_down_chain' }]] },
 
     // Bard and Water
     rowboat_wizard_v2: { needs: [[{ level: 'bard_stack_intro' }]] },
@@ -747,6 +875,26 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     bard_movable_island2: { needs: [[{ level: 'bard_movable_island' }]] },
     pole_vault: { needs: [[{ level: 'bard_movable_island2' }]] },
     missile_command: { needs: [[{ level: 'bard_movable_island2' }]] },
+
+    // Beam Computation
+    zachtronics_identity: { needs: [[{ level: 'endpoint_maze' }]] },
+    zachtronics_or: { needs: [[{ level: 'zachtronics_identity' }]] },
+    zachtronics_xor: { needs: [[{ level: 'zachtronics_or' }]] },
+    zachtronics: { needs: [[{ level: 'zachtronics_xor' }]] },
+
+    // Crossroads Low
+    push_down_chain: {
+        needs: [
+            [{ level: 'promesst2.5_deeper' }],
+            [{ level: 'drop_sokoban' }],
+            [{ level: 'under_pressure' }],
+            [{ level: 'strong_monsters_v2' }],
+            [{ level: 'stay_lit' }],
+            [{ level: 'bridgey3_abstract_art' }],
+            [{ level: 'overwrite' }],
+        ],
+    },
+    zach_lilies_v3: { needs: [[{ level: 'push_down_chain' }]] },
 
     // Crystal Carts
     mirror_crystal_rover: { needs: [[{ level: 'mirror_rover_orange_2' }]] },
@@ -769,6 +917,14 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     magnitudes_v3: { needs: [[{ level: 'three_artifacts_v3' }]] },
     orange_water_button_vdouble_v2: { needs: [[{ level: 'orange_water_button_vslow' }]] },
     orange_water_button_vfour_alter: { needs: [[{ level: 'orange_water_button_vdouble_v2' }]] },
+
+    // Endless Skipping
+    before_wings: { needs: [[{ level: 'new_new_new_slam' }]] },
+    far_wings: { needs: [[{ level: 'before_wings' }], [{ level: 'wrap_music' }]] },
+    after_wings: { needs: [[{ level: 'far_wings' }]] },
+    layered_alt: { needs: [[{ level: 'wrap_music' }]] },
+    sick_270_small: { needs: [[{ level: 'wrap_music' }], [{ level: 'layered_alt' }]] },
+    yars_revenge_setup_v3: { needs: [[{ level: 'sick_270_small' }]] },
 
     // Endpoint Falling
     beam_me_up_v3: { needs: [[{ level: 'endpoint_maze' }]] },
@@ -861,6 +1017,58 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     end3_pipeline_aesthetics: { needs: [[{ level: 'end3_pipeline_reorder' }]] },
     rotating_cavalry_spaced: { needs: [[{ level: 'goblin_two_rovers_alt' }]] },
 
+    // Four Together
+    '4wcn_all_fast': { needs: [[{ level: 'three_artifacts_v3' }], [{ level: 'magnitudes_v3' }]] },
+    '4wc_dragon_cyan_s_v2': { needs: [[{ level: '4wcn_all_fast' }]] },
+
+    // Gate Opening
+    thief_dragger_v2: { needs: [[{ level: 'en_root_alt' }]] },
+    monster_promesst_v3: {
+        needs: [
+            [{ level: 'thief_dragger_v2' }, { level: 'open_monster' }],
+            [{ level: 'metamirror_same_dir_3_alt_2' }],
+        ],
+    },
+    button_and_beam_v3: { needs: [[{ level: 'metamirror_same_dir_3_alt_2' }]] },
+    battle_royale_v2: { needs: [[{ level: 'ice_climbers' }]] },
+    open_monster: { needs: [[{ level: 'button_and_beam_v3' }]] },
+
+    // Gem Beams
+    orange_gem_instant: { needs: [[{ level: 'push_down_chain' }]] },
+    boot_cycle_warrior: { needs: [[{ level: 'orange_gem_instant' }]] },
+
+    // Gems as Obstacles
+    gem_trap: { needs: [[{ level: 'get_through_alt' }]] },
+    gem_trap2: { needs: [[{ level: 'gem_trap' }]] },
+    negative_space: { needs: [[{ level: 'gem_trap2' }]] },
+    numberlink_alt: { needs: [[{ level: 'gem_trap2' }]] },
+
+    // Heterogeneous Stacks
+    jenga_assorted: { needs: [[{ level: 'torus_goblins' }]] },
+    how_to_train_your_dragon: { needs: [[{ level: 'jenga_assorted' }]] },
+
+    // Lily Beam Rotation
+    river_rotate_beams_gr: { needs: [[{ level: 'breaking_bread' }]] },
+    lily_two_cyan: { needs: [[{ level: 'river_rotate_beams_gr' }]] },
+    kick: { needs: [[{ level: 'push_down_chain' }]] },
+
+    // Mirrorable Mirror Medley
+    bard_metamirror: { needs: [[{ level: 'metamirror_different_dir_2_alt' }]] },
+    druid_metamirror: { needs: [[{ level: 'metamirror_different_dir_2_alt' }]] },
+    mirror_the_unmirrorable_mirror: { needs: [[{ level: 'druid_metamirror' }]] },
+    druid_vertical_mirror: { needs: [[{ level: 'busy_beaver' }]] },
+    special_move: { needs: [[{ level: 'druid_vertical_mirror' }]] },
+    self_teleporting: { needs: [[{ level: 'druid_metamirror' }]] },
+    wrapping_mirror0: { needs: [[{ level: 'self_teleporting' }]] },
+    wrapping_mirror0_relatively_prime: { needs: [[{ level: 'wrapping_mirror0' }]] },
+    the_line_must_be_drawn_HERE: { needs: [[{ level: 'wrapping_mirror0_relatively_prime' }]] },
+    lemonade: { needs: [[{ level: 'wrapping_mirror0_relatively_prime' }]] },
+    lemonade_tng_stages_towers_no_float: { needs: [[{ level: 'wrapping_mirror0_relatively_prime' }]] },
+    wrapping_mirror_alt: { needs: [[{ level: 'druid_vertical_mirror' }]] },
+    base_jump: { needs: [[{ level: 'wrapping_mirror_alt' }]] },
+    hyper_jump_2c: { needs: [[{ level: 'base_jump' }]] },
+    hyper_jump: { needs: [[{ level: 'hyper_jump_2c' }]] },
+
     // Mirrors and Artifacts
     simultaneous_x: { needs: [[{ level: 'torus_mirrors' }]] },
     simultaneous_x_surprise: { needs: [[{ level: 'torus_mirrors' }], [{ level: 'simultaneous_x' }]] },
@@ -895,6 +1103,14 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     busy_beaver: { needs: [[{ level: 'hanoi_3' }]] },
     moving_through_mirrors_v3: { needs: [[{ level: 'busy_beaver' }]] },
 
+    // Monsters, Through
+    torus_goblins: { needs: [[{ level: 'push_down_chain' }]] },
+    no_murder_weapon_wizard: { needs: [[{ level: 'push_down_chain' }]] },
+    no_murder_weapon_0: { needs: [[{ level: 'no_murder_weapon_wizard' }]] },
+    dragonsweeper: { needs: [[{ level: 'no_murder_weapon_wizard' }]] },
+    green_goblins: { needs: [[{ level: 'dragonsweeper' }]] },
+    en_root_alt: { needs: [[{ level: 'green_goblins' }]] },
+
     // Moving the Flat Things
     swapwiz_harder: { needs: [[{ level: 'wrap_music' }]] },
     infinite_looping_skipper0_alt: { needs: [[{ level: 'wrap_music' }]] },
@@ -928,244 +1144,28 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     reset_trio: { needs: [[{ level: 'treadmill' }]] },
     monster_spawn: { needs: [[{ level: 'treadmill' }]] },
 
-    // Endless Skipping
-    before_wings: { needs: [[{ level: 'new_new_new_slam' }]] },
-    far_wings: { needs: [[{ level: 'before_wings' }], [{ level: 'wrap_music' }]] },
-    after_wings: { needs: [[{ level: 'far_wings' }]] },
-    layered_alt: { needs: [[{ level: 'wrap_music' }]] },
-    sick_270_small: { needs: [[{ level: 'wrap_music' }], [{ level: 'layered_alt' }]] },
-    yars_revenge_setup_v3: { needs: [[{ level: 'sick_270_small' }]] },
+    // Skipping, Misc Beams
+    smash_midskip_simpler4: { needs: [[{ level: 'skip_purple_drop_alt' }]] },
+    bon_voyage: { needs: [[{ level: 'smash_midskip_simpler4' }]] },
+    breaking_bread: { needs: [[{ level: 'get_through_alt' }]] },
 
-    // Beam Computation
-    zachtronics_identity: { needs: [[{ level: 'endpoint_maze' }]] },
-    zachtronics_or: { needs: [[{ level: 'zachtronics_identity' }]] },
-    zachtronics_xor: { needs: [[{ level: 'zachtronics_or' }]] },
-    zachtronics: { needs: [[{ level: 'zachtronics_xor' }]] },
+    // Three at Once
+    '3wcn_shm_dragon_lily': { needs: [[{ level: 'magnitudes_v3' }]] },
+    '3wcn_purple_goblin': { needs: [[{ level: 'half_journey_vh' }]] },
+    '3wcn_stonehenge': { needs: [[{ level: 'triple_skip' }]] },
+    '3wc_into_forest_v7': { needs: [[{ level: '3wcn_stonehenge' }]] },
 
-    // Torc
-    cyan_overlap_intro_longer: { needs: [[{ level: 'promesst2_streamlined' }]] },
-    green_revolution: { needs: [[{ level: 'promesst2_streamlined' }]] },
-    torcoban_2: { needs: [[{ level: 'promesst2_streamlined' }], [{ level: 'green_revolution' }]] },
-    blue_revolution_v2: { needs: [[{ level: 'torcoban_2' }]] },
-    double_trouble: { needs: [[{ level: 'first_flight' }]] },
-    worlds_collide_ps: { needs: [[{ level: 'torcoban_2' }], [{ level: 'skipping_pals' }]] },
-
-    // Heroes 3: Bard, Druid
-    heroes3_10: { needs: [[{ level: 'heroes2_22_v2' }]] },
-    heroes3_11_v2: { needs: [[{ level: 'heroes3_10' }]] },
-    druid_and_dragon: { needs: [[{ level: 'heroes3_11_v2' }]] },
-    wizard_and_druid_alt_5: { needs: [[{ level: 'druid_and_dragon' }]] },
-    heroes3_15_v4: { needs: [[{ level: 'wizard_and_druid_alt_5' }]] },
-    heroes3_13_v2: { needs: [[{ level: 'heroes3_15_v4' }]] },
-    heroes3_druid_b_v2: { needs: [[{ level: 'heroes3_13_v2' }]] },
-    heroes3_druid_a: { needs: [[{ level: 'heroes3_druid_b_v2' }]] },
-    wizard_and_druid_alt: { needs: [[{ level: 'wizard_and_druid_alt_5' }]] },
-    heroes3_1_v3: { needs: [[{ level: 'heroes2_22_v2' }]] },
-    heroes3_2_v4: { needs: [[{ level: 'heroes3_1_v3' }]] },
-    heroes3_3_v2: { needs: [[{ level: 'heroes3_2_v4' }]] },
-    heroes3_4: { needs: [[{ level: 'heroes3_3_v2' }]] },
-    heroes3_5: { needs: [[{ level: 'heroes3_3_v2' }]] },
-    heroes3_8_thief: { needs: [[{ level: 'heroes3_5' }]] },
-    heroes3_6_v3: { needs: [[{ level: 'heroes3_8_thief' }]] },
-    heroes3_7_v4: { needs: [[{ level: 'heroes3_6_v3' }]] },
-    heroes3_8_v4_alt: { needs: [[{ level: 'heroes3_7_v4' }]] },
-    heroes3_8_v3_alt3: { needs: [[{ level: 'heroes3_8_v4_alt' }]] },
-    heroes3_14_v3: { needs: [[{ level: 'heroes3_druid_b_v2' }], [{ level: 'heroes3_7_v4' }]] },
-    compactor_v2: { needs: [[{ level: 'heroes3_14_v3' }]] },
-    gatekeeping_v3: { needs: [[{ level: 'compactor_v2' }]] },
-    heroes3_21_condensed: { needs: [[{ level: 'compactor_v2' }]] },
-    heroes3_16_v4_alt: { needs: [[{ level: 'heroes3_14_v3' }]] },
-
-    // Heroes Together
-    worlds_collide_heroes_and_stones: {
-        needs: [
-            [{ level: 'skipping_shores_v3' }, { level: 'heroes3_21_condensed' }],
-            [{ level: 'skipping_shores_v3' }, { level: 'heroes3_14_v3' }],
-            [{ level: 'skipping_shores_v3' }, { level: 'heroes3_7_v4' }],
-            [{ level: 'skipping_shores_v3' }, { level: 'heroes3_druid_b_v2' }],
-        ],
-    },
-
-    // Cart, Rod
-    pushy: { needs: [[{ level: 'promesst2_streamlined' }]] },
-    worlds_collide_heroes_and_promesst_v4: {
-        needs: [
-            [{ level: 'dragon_on_the_wall' }],
-            [{ level: 'multipush_for_me2' }],
-            [{ level: 'side_kick' }],
-        ],
-    },
-    gem_pushers: { needs: [[{ level: 'worlds_collide_heroes_and_promesst_v4' }]] },
-    forbidden_room: { needs: [[{ level: 'pushy' }]] },
-    right_hand_man: { needs: [[{ level: 'pushy' }]] },
-    target_practice_gem: { needs: [[{ level: 'right_hand_man' }], [{ level: 'forbidden_room' }]] },
-    beam_rooms: { needs: [[{ level: 'right_hand_man' }], [{ level: 'forbidden_room' }]] },
-
-    // Archways
-    archways_2_v2: { needs: [[{ level: 'tippy_intro' }]] },
-    cliff_duo: { needs: [[{ level: 'archways_2_v2' }]] },
-    archways_4: { needs: [[{ level: 'archways_2_v2' }]] },
-    hat_chain_vp: { needs: [[{ level: 'archways_4' }]] },
-
-    // The Heroic Way
-    laser_pointer: { needs: [[{ level: 'stack_prelude_pushstyle' }]] },
-    all_together_now: {
-        needs: [
-            [{ level: 'end2_monster_connect' }],
-            [{ level: 'end2_prism_hp' }],
-            [{ level: 'floor_plan_v3' }],
-            [{ level: 'laser_pointer' }],
-            [{ level: 'sidestone_zach_2_end2' }],
-            [{ level: 'stone_economy' }],
-        ],
-    },
-
-    // Beams, Mirrorably
-    floating_orange_purple: { needs: [[{ level: 'double_sideways' }]] },
-    top_green_purple_v3: { needs: [[{ level: 'break_through_focused' }]] },
-    fun_house: { needs: [[{ level: 'top_green_purple_v3' }]] },
-    cyan_torc_maze_vs: { needs: [[{ level: 'fun_house' }]] },
-    cyan_counter_med3: { needs: [[{ level: 'cyan_torc_maze_vs' }]] },
-    green_metamirror: { needs: [[{ level: 'cyan_torc_maze_vs' }]] },
-    orange_floaty_reflect_v3: { needs: [[{ level: 'cyan_torc_maze_vs' }]] },
-    meta_orange_purple: { needs: [[{ level: 'orange_floaty_reflect_v3' }]] },
-    meta_orange_purple_2: { needs: [[{ level: 'meta_orange_purple' }]] },
-    the_spiral: { needs: [[{ level: 'cyan_torc_maze_vs' }]] },
-
-    // Squeeze, Dragon
-    endpoint1_skipping: { needs: [[{ level: 'promesst3_streamlined' }], [{ level: 'faster_than_stone' }]] },
-    narrow_passage: { needs: [[{ level: 'endpoint1_skipping' }]] },
-    close_circuit: { needs: [[{ level: 'narrow_passage' }]] },
-    dragon_drag: { needs: [[{ level: 'close_circuit' }]] },
-    free_ride: { needs: [[{ level: 'close_circuit' }]] },
-    swap_seats: { needs: [[{ level: 'free_ride' }]] },
-    security_checkpoints_v2: { needs: [[{ level: 'promesst3_streamlined' }], [{ level: 'faster_than_stone' }]] },
-    ocean_blue: { needs: [[{ level: 'security_checkpoints_v2' }]] },
-    double_door: { needs: [[{ level: 'narrow_passage' }]] },
-    rsmash: { needs: [[{ level: 'promesst3_streamlined' }], [{ level: 'faster_than_stone' }]] },
-
-    // Mirrors and Buttons
-    going_up_v4: { needs: [[{ level: 'archways_2_v2' }]] },
-    automatic_door_v5: { needs: [[{ level: 'archways_2_v2' }]] },
-    vertical_unclone_3: { needs: [[{ level: 'chasm_3' }]] },
-
-    // Spinning Beams
-    turn_control_v2: { needs: [[{ level: 'pool_pal_v2' }], [{ level: 'tiger_lily_v2' }]] },
-    spin_heroes: { needs: [[{ level: 'turn_control_v2' }]] },
-    spray_and_pray: { needs: [[{ level: 'spin_heroes' }]] },
-    rotator: { needs: [[{ level: 'spray_and_pray' }]] },
-    spin_doctors_v3: { needs: [[{ level: 'rotator' }]] },
-
-    // Crossroads High
-    '3d_intro_vanilla': { needs: [[{ level: 'end1' }]] },
-    push_down_v2: { needs: [[{ level: '3d_intro_vanilla' }]] },
-    sister_staircase_harder: { needs: [[{ level: 'push_down_v2' }]] },
-    carry_simplified: { needs: [[{ level: 'sister_staircase_harder' }]] },
-    '3d_intro_heroes': { needs: [[{ level: 'carry_simplified' }]] },
-    '3d_intro_mirrors': { needs: [[{ level: 'carry_simplified' }]] },
-    '3d_intro_promesst_v5': { needs: [[{ level: 'carry_simplified' }]] },
-    '3d_intro_skipping': { needs: [[{ level: 'carry_simplified' }]] },
-
-    // Mirror on Head
-    hat_tricks_0_v3: { needs: [[{ level: 'repel' }]] },
-    omnimirror_v2: { needs: [[{ level: 'hat_tricks_0_v3' }]] },
-    goblin_parity_3d: { needs: [[{ level: 'omnimirror_v2' }]] },
-    mirror_carry_duo: { needs: [[{ level: 'goblin_parity_3d' }]] },
-    bothersome_mirror: { needs: [[{ level: 'all_out_goblin_war' }]] },
-
-    // Strength
-    buff_explorer: { needs: [[{ level: 'sokobridge_v4' }]] },
-    cyan_bridge_v3: { needs: [[{ level: 'buff_explorer' }]] },
-    strong_monsters_v2: { needs: [[{ level: 'buff_explorer' }]] },
-    floorhands_v5: { needs: [[{ level: 'buff_explorer' }]] },
-    stay_lit: { needs: [[{ level: 'floorhands_v5' }]] },
-    under_pressure: { needs: [[{ level: 'buff_explorer' }]] },
-    high_horse: { needs: [[{ level: 'assassins_creed' }]] },
-
-    // Vertical Mirror Skipping
-    lily_pull_intro: { needs: [[{ level: 'on_the_rocks' }]] },
-    falling_down: { needs: [[{ level: 'on_the_rocks' }]] },
-    lily_pull: { needs: [[{ level: 'falling_down' }], [{ level: 'lily_pull_intro' }]] },
-    retro: { needs: [[{ level: 'lily_pull' }]] },
-    retro_hooks: { needs: [[{ level: 'lily_pull' }]] },
-
-    // Mirror Falling
-    trader_descend: { needs: [[{ level: '3d_intro_mirrors' }]] },
-    cliff_hopping: { needs: [[{ level: 'trader_descend' }]] },
-    make_a_right_simpler: { needs: [[{ level: '3d_intro_mirrors' }]] },
-    make_a_right: { needs: [[{ level: 'make_a_right_simpler' }]] },
-    learn_to_catch_v2: { needs: [[{ level: 'make_a_right_simpler' }]] },
-    trust_falls: { needs: [[{ level: 'learn_to_catch_v2' }]] },
-    falling_blocker_v3: { needs: [[{ level: 'trust_falls' }]] },
-    pillars: { needs: [[{ level: 'falling_blocker_v3' }]] },
-    long_platform_v2: { needs: [[{ level: 'pillars' }]] },
-    blind_spot_v2: { needs: [[{ level: 'long_platform_v2' }]] },
-    triple_gate: { needs: [[{ level: 'cliff_hopping' }], [{ level: 'blind_spot_v2' }]] },
-
-    // Crossroads Low
-    push_down_chain: {
-        needs: [
-            [{ level: 'promesst2.5_deeper' }],
-            [{ level: 'drop_sokoban' }],
-            [{ level: 'under_pressure' }],
-            [{ level: 'strong_monsters_v2' }],
-            [{ level: 'stay_lit' }],
-            [{ level: 'bridgey3_abstract_art' }],
-            [{ level: 'overwrite' }],
-        ],
-    },
-    zach_lilies_v3: { needs: [[{ level: 'push_down_chain' }]] },
-
-    // Alter-Smash
-    nowhere_to_smash_combo: { needs: [[{ level: 'push_down_chain' }]] },
-    get_through_alt: { needs: [[{ level: 'nowhere_to_smash_combo' }]] },
-    get_through_depths: { needs: [[{ level: 'get_through_alt' }]] },
-    save_for_later: { needs: [[{ level: 'get_through_depths' }]] },
-    rubble_chain: { needs: [[{ level: 'save_for_later' }]] },
-    do_not_want: { needs: [[{ level: 'rubble_chain' }]] },
-    smartbomb_combo_v3: { needs: [[{ level: 'do_not_want' }]] },
-    wand_reintro: { needs: [[{ level: 'push_down_chain' }]] },
-
-    // Lily Beam Rotation
-    river_rotate_beams_gr: { needs: [[{ level: 'breaking_bread' }]] },
-    lily_two_cyan: { needs: [[{ level: 'river_rotate_beams_gr' }]] },
-    kick: { needs: [[{ level: 'push_down_chain' }]] },
-
-    // Gems as Obstacles
-    gem_trap: { needs: [[{ level: 'get_through_alt' }]] },
-    gem_trap2: { needs: [[{ level: 'gem_trap' }]] },
-    negative_space: { needs: [[{ level: 'gem_trap2' }]] },
-    numberlink_alt: { needs: [[{ level: 'gem_trap2' }]] },
-
-    // Monsters, Through
-    torus_goblins: { needs: [[{ level: 'push_down_chain' }]] },
-    no_murder_weapon_wizard: { needs: [[{ level: 'push_down_chain' }]] },
-    no_murder_weapon_0: { needs: [[{ level: 'no_murder_weapon_wizard' }]] },
-    dragonsweeper: { needs: [[{ level: 'no_murder_weapon_wizard' }]] },
-    green_goblins: { needs: [[{ level: 'dragonsweeper' }]] },
-    en_root_alt: { needs: [[{ level: 'green_goblins' }]] },
-
-    // Gem Beams
-    orange_gem_instant: { needs: [[{ level: 'push_down_chain' }]] },
-    boot_cycle_warrior: { needs: [[{ level: 'orange_gem_instant' }]] },
+    // Wrapping Mirrors
+    torus_mirrors: { needs: [[{ level: 'crystal_island' }]] },
+    wrapping_magic_mirror_2: { needs: [[{ level: 'torus_mirrors' }]] },
+    double_sided_skip: { needs: [[{ level: 'wrapping_magic_mirror_2' }]] },
+    stasis_v2: { needs: [[{ level: 'crystal_island' }]] },
 
     // Wrapping Wizard
     torus_bard: { needs: [[{ level: 'torus_goblins' }]] },
     torus_blocks_alt_v4: { needs: [[{ level: 'torus_bard' }]] },
     grid_hopping0: { needs: [[{ level: 'torus_blocks_alt_v4' }]] },
     wasteland: { needs: [[{ level: 'torus_goblins' }]] },
-
-    // Gate Opening
-    thief_dragger_v2: { needs: [[{ level: 'en_root_alt' }]] },
-    monster_promesst_v3: {
-        needs: [
-            [{ level: 'thief_dragger_v2' }, { level: 'open_monster' }],
-            [{ level: 'metamirror_same_dir_3_alt_2' }],
-        ],
-    },
-    button_and_beam_v3: { needs: [[{ level: 'metamirror_same_dir_3_alt_2' }]] },
-    battle_royale_v2: { needs: [[{ level: 'ice_climbers' }]] },
-    open_monster: { needs: [[{ level: 'button_and_beam_v3' }]] },
 };
 
 export interface PadRouteRow {
