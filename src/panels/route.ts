@@ -26,6 +26,15 @@ export interface RouteSection {
     points: Position[];
 }
 
+/** The links at the foot of a panel: the level's WikiTactics page when it has one, and where to correct the route. */
+export function panelFootHtml(wikiUrl?: string): string {
+    let html = '<div class="foot">';
+    if (wikiUrl) html += `<a href="${escapeHtml(wikiUrl)}" target="_blank" rel="noopener">WikiTactics</a>`;
+    const fixTitle = 'Open a pull request against the level table file';
+    html += `<a class="fix" href="${TABLE_FILE_URL}" target="_blank" rel="noopener" title="${fixTitle}">Route wrong? Fix it</a>`;
+    return html + '</div>';
+}
+
 // the Crossroads pad in the middle of each map layer
 const LAYER_HUBS = new Map<string, Position>([
     ['ground', [80, 71, 0]],
@@ -134,9 +143,6 @@ function sectionOf(context: PanelContext, z: number, chain: NeedChain): RouteSec
     points.push(...chain.drops);
     context.chainPoints = [...context.chainPoints, ...points];
     html += otherLayersHtml(context, chain, points, z);
-
-    const link = `<a href="${TABLE_FILE_URL}" target="_blank" rel="noopener">level table file</a>`;
-    html += `<div class="muted">If this route is wrong, you can open a pull request against the ${link}.</div>`;
 
     const links = chain.edges.map((edge): MapLink => {
         let kind: MapLink[2] = 'req';

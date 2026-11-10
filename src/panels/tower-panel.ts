@@ -10,7 +10,7 @@ import type { TowerProgress } from '../model/towers.ts';
 import type { PanelContext } from './context.ts';
 import { markSelected } from './list.ts';
 import { chainOf, layerNote, levelChip, panelHead, pathHtml, pointsOf, stepsOf, uniqueLinks } from './plan-chips.ts';
-import { routeSection } from './route.ts';
+import { panelFootHtml, routeSection } from './route.ts';
 
 // a bar and count of a tower's levels solved; while some are under fog only the ones not under fog are counted, and
 // the count says there are more. Activated and Gold follow as chips.
@@ -80,6 +80,7 @@ export function showTowerPanel(context: PanelContext, towerIndex: number, how?: 
 
     const route = routeSection(context, tower.p[2], ...todo.map((level) => ({ level })));
     html += route.html;
+    html += panelFootHtml();
 
     // the levels' routes, then lines from the tower to its unsolved levels: solid for required ones, dashed for dropdowns
     const links = uniqueLinks([

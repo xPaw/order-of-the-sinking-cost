@@ -20,7 +20,7 @@ import {
     stepsOf,
     uniqueLinks,
 } from './plan-chips.ts';
-import { routeSection } from './route.ts';
+import { panelFootHtml, routeSection } from './route.ts';
 
 function opensHtml(context: PanelContext, sign: Sign, gateIds: number[]): string {
     if (!gateIds.length) return '';
@@ -79,6 +79,7 @@ export function showSignPanel(context: PanelContext, signIndex: number, how?: Se
 
     const route = routeSection(context, sign.p[2], { sign: signIndex });
     html += route.html;
+    html += panelFootHtml();
 
     const gateLinks = gateIds.map((freezerIndex): MapLink => [sign.p, context.freezers[freezerIndex].p, 'req']);
     const gateOverlays = gateIds.map((freezerIndex) => 'g' + freezerIndex);

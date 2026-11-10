@@ -24,7 +24,7 @@ import {
     stepsOf,
     uniqueLinks,
 } from './plan-chips.ts';
-import { routeSection } from './route.ts';
+import { panelFootHtml, routeSection } from './route.ts';
 
 function leadsToHtml(context: PanelContext, leadsAll: number[], leads: number[]): string {
     if (!leadsAll.length) return '';
@@ -81,6 +81,7 @@ export function showGatePanel(context: PanelContext, freezerIndex: number, how?:
 
     const route = routeSection(context, freezer.p[2], { freezer: freezerIndex });
     html += route.html;
+    html += panelFootHtml();
 
     const signsShown: number[] = [];
 

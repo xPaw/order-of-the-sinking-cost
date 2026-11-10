@@ -40,7 +40,7 @@ import {
     wrappable,
 } from './plan-chips.ts';
 import type { Chain } from './plan-chips.ts';
-import { fullChainSection, routeSection } from './route.ts';
+import { fullChainSection, panelFootHtml, routeSection } from './route.ts';
 import type { RouteSection } from './route.ts';
 import { approxTip, wayIn, whyParts, whyText } from './why.ts';
 
@@ -272,12 +272,6 @@ function unlocksHtml(context: PanelContext, unlocks: LevelUnlocks, unlockedGates
     return `<div class="h">Unlocks</div><div>${pick(context, unlocks.levels)}${gateChips}</div>`;
 }
 
-function wikiTacticsHtml(level: ProgressLevel): string {
-    const url = wikiTacticsUrl(level.n);
-    if (!url) return '';
-    return `<div class="extlink"><a href="${escapeHtml(url)}" target="_blank" rel="noopener">WikiTactics</a></div>`;
-}
-
 // the lines the map draws for the level: what it requires and unlocks, its tower, the gates around it, its chain and
 // its route
 function levelLinks(context: PanelContext, parts: LevelPanelParts): MapLink[] {
@@ -408,12 +402,12 @@ export function showLevelPanel(context: PanelContext, levelIndex: number, how?: 
 
     const tower = towerSection(context, levelIndex);
     html += tower.html;
-    html += wikiTacticsHtml(level);
 
     const route = fullChain
         ? fullChainSection(context, level.p[2], { level: levelIndex })
         : routeSection(context, level.p[2], { level: levelIndex });
     html += route.html;
+    html += panelFootHtml(wikiTacticsUrl(level.n));
 
     const parts: LevelPanelParts = {
         levelIndex,

@@ -2050,12 +2050,24 @@ main > .mapbox {
     right: -10px;
     border-right-color: var(--gold);
 }
-.detail .extlink {
+/* the panel's foot: the outside links in one row, the route correction at the right */
+.detail .foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s1) var(--s4);
     margin-top: var(--s4);
     padding-top: var(--s3);
     border-top: 1px solid var(--line);
+    font-size: 0.9em;
 }
-.detail .extlink a::after {
+.detail .foot .fix {
+    margin-left: auto;
+    color: var(--muted);
+}
+.detail .foot .fix:hover {
+    color: var(--hi);
+}
+.detail .foot a::after {
     content: '';
     display: inline-block;
     width: 0.7em;
