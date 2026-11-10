@@ -947,7 +947,7 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     // Torc
     cyan_overlap_intro_longer: { needs: [[{ level: 'promesst2_streamlined' }]] },
     green_revolution: { needs: [[{ level: 'promesst2_streamlined' }]] },
-    torcoban_2: { needs: [[{ level: 'promesst2_streamlined' }]] },
+    torcoban_2: { needs: [[{ level: 'promesst2_streamlined' }], [{ level: 'green_revolution' }]] },
     blue_revolution_v2: { needs: [[{ level: 'torcoban_2' }]] },
     double_trouble: { known: true, needs: [[{ level: 'first_flight' }]] },
     worlds_collide_ps: { needs: [[{ level: 'torcoban_2' }], [{ level: 'skipping_pals' }]] },
