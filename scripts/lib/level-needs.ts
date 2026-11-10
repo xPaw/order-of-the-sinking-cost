@@ -67,40 +67,12 @@ function resolvePadRoute(source: PadRouteRow, data: TableData): PadRoute {
     return route;
 }
 
-// The needs a level's game unlocks make: each required level, or one group of them for a level any one of which unlocks
-function unlockNeeds(level: ProgressLevel): RouteNeed[][] {
-    const options = level.req.map((required): RouteNeed => ({ level: required }));
-    if (options.length === 0) return [];
-    if (level.or) return [options];
-    return options.map((option) => [option]);
-}
-
-function needKey(need: RouteNeed): string {
-    return 'level' in need ? `level:${need.level}` : `sign:${need.sign}`;
-}
-
-function groupKey(group: RouteNeed[]): string {
-    return group.map(needKey).toSorted().join(',');
-}
-
-// Whether a level with unlocks has no needs beyond them
-function onlyUnlocks(needs: RouteNeed[][], level: ProgressLevel): boolean {
-    if (level.req.length === 0) return false;
-
-    const unlocks = new Set(unlockNeeds(level).map(groupKey));
-    const keys = new Set(needs.map(groupKey));
-    return keys.size === unlocks.size && [...keys].every((key) => unlocks.has(key));
-}
-
-// Sets `needs` and `drop` on the levels the table lists. A level whose needs are only its game unlocks, unless the row is
-// `known`, or that has none, keeps no `needs` and is left to the walk. Every level has to appear.
+// Sets `needs` and `drop` on the levels the table lists. A level whose row has no needs is left to the walk. Every level
+// has to appear.
 function applyLevelTable(data: TableData): void {
     for (const [name, row] of Object.entries(LEVEL_TABLE)) {
         const level = data.levels[levelByName(data.levels, name, PREFIX)];
-        if (row.needs !== undefined) {
-            const needs = resolveNeeds(row.needs, data);
-            if (row.known || !onlyUnlocks(needs, level)) level.needs = needs;
-        }
+        if (row.needs !== undefined) level.needs = resolveNeeds(row.needs, data);
         if (row.drop !== undefined) level.drop = row.drop;
     }
 

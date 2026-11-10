@@ -1003,8 +1003,8 @@ at the pad of the level's layer. A need of a ground level on another layer runs 
 ground pad, and the panel links each other layer the route runs on.
 
 A table row's `needs` lists the levels that unlock it in the game data (one group each, or one group of alternatives for
-a level any one unlocks) and then what play adds, and the rows of a section read in that order. A row whose needs are
-only the unlocks, or that has none, leaves the reach to the walk; `known` keeps the needs of a row that adds nothing.
+a level any one unlocks) and then what play adds, and the rows of a section read in that order. A row without needs
+leaves the reach to the walk.
 
 A level's panel lists the groups of its needs that the game data does not, under "Also needs", marked as from play.
 

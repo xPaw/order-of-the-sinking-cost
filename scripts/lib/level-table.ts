@@ -3,11 +3,9 @@ export type Need = { level: string } | { sign: number };
 export interface LevelRow {
     /**
      * What the level needs to be reached: all of the groups, one need of a group. It lists the levels that unlock it in
-     * the game data first, then what play adds. A row that adds nothing leaves the reach to the walk.
+     * the game data first, then what play adds. A row without needs leaves the reach to the walk.
      */
     needs?: Need[][];
-    /** These needs are the whole way in, though they add nothing to the game's unlocks. */
-    known?: boolean;
     /** The hole the hero drops through; a level with one is entered from the sky. */
     drop?: [number, number, number];
 }
@@ -18,7 +16,7 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
 
     // Heroes and Light
     snipperclips_0_square: { needs: [[{ level: 'promesst3_streamlined' }]] },
-    snipperclips_square: { known: true, needs: [[{ level: 'snipperclips_0_square' }]] },
+    snipperclips_square: { needs: [[{ level: 'snipperclips_0_square' }]] },
     snipperclips_diagonal: { needs: [[{ level: 'snipperclips_square' }]] },
     druid_multismash_v3: { needs: [[{ level: 'snipperclips_diagonal' }]] },
     red_yellow_alter_with_intro_v2: { needs: [[{ level: 'snipperclips_diagonal' }]] },
@@ -114,7 +112,7 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     mirror_14: { needs: [[{ level: 'mirror_13' }]] },
     mirror_pals: { needs: [[{ level: 'skipping_stones' }]] },
     walk_it_over: { needs: [[{ level: 'mirror_pals' }]] },
-    two_step: { known: true, needs: [[{ level: 'already_dropped_v2' }]] },
+    two_step: { needs: [[{ level: 'already_dropped_v2' }]] },
     use_and_remove: { needs: [[{ level: 'two_step' }]] },
     infinite_crystal_hack_v5: { needs: [[{ level: 'use_and_remove' }]] },
     mundane_mirror: { needs: [[{ level: 'mirror_10_alt2' }]] },
@@ -254,18 +252,18 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     be_aggro_alt_2: { needs: [[{ level: 'endpoint_object' }], [{ level: 'dragon_on_the_wall' }]] },
     orange_wizard_intro: { needs: [[{ level: 'be_aggro_alt_2' }]] },
     learning_double: { needs: [[{ level: 'orange_wizard_intro' }]] },
-    double_tempo: {},
+    double_tempo: { needs: [[{ level: 'matching_purple' }]] },
     button_playground: { needs: [[{ level: 'double_tempo' }]] },
     endpoint_weapon: { needs: [[{ level: 'button_playground' }]] },
     immobilize: { needs: [[{ level: 'endpoint_weapon' }]] },
     invisible_hand: { needs: [[{ level: 'endpoint_object' }], [{ level: 'dragon_on_the_wall' }]] },
     purple_wizard_maze: { needs: [[{ level: 'invisible_hand' }]] },
-    magic_square: {},
+    magic_square: { needs: [[{ level: 'learning_double' }]] },
     magic_shield: { needs: [[{ level: 'magic_square' }]] },
-    mini_green_maze: {},
-    safe_returns: {},
+    mini_green_maze: { needs: [[{ level: 'magic_square' }]] },
+    see_through: { needs: [[{ level: 'mini_green_maze' }]] },
+    safe_returns: { needs: [[{ level: 'see_through' }]] },
     two_through_alt_2: { needs: [[{ level: 'safe_returns' }]] },
-    see_through: {},
     wizard_finesse_1: { needs: [[{ level: 'endpoint_object' }], [{ level: 'dragon_on_the_wall' }]] },
     wizard_finesse_2: { needs: [[{ level: 'wizard_finesse_1' }]] },
     wizard_finesse_3: { needs: [[{ level: 'wizard_finesse_2' }]] },
@@ -279,7 +277,7 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     fire_and_flip: { needs: [[{ level: 'fly_and_flip' }]] },
     elope: { needs: [[{ level: 'fire_and_flip' }]] },
     reattachment: { needs: [[{ level: 'crystal_bridges' }]] },
-    detachment: { known: true, needs: [[{ level: 'reattachment' }]] },
+    detachment: { needs: [[{ level: 'reattachment' }]] },
     holes: { needs: [[{ level: 'crystal_bridges' }]] },
     double_break: { needs: [[{ level: 'holes' }]] },
     drop_tool: { needs: [[{ level: 'holes' }]] },
@@ -430,7 +428,7 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     gem_clg_v4: { needs: [[{ level: 'purple_corner_gem' }]] },
     shunt2_alt: { needs: [[{ level: 'plus_signs_v3' }]] },
     orange_doubleback: { needs: [[{ level: 'dual_screen' }]] },
-    orange_doubledoubleback: { known: true, needs: [[{ level: 'orange_doubleback' }]] },
+    orange_doubledoubleback: { needs: [[{ level: 'orange_doubleback' }]] },
     sidetrack: { needs: [[{ level: 'orange_doubledoubleback' }]] },
     purple_wall_around_easier_vp: { needs: [[{ level: 'sidetrack' }]] },
     purple_clm_v4: { needs: [[{ level: 'sidetrack' }]] },
@@ -472,10 +470,6 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     catch_and_drop: { needs: [[{ level: 'mirror_stone_intro' }]] },
     catch_and_throw: { needs: [[{ level: 'catch_and_drop' }]] },
     already_dropped_v2: { needs: [[{ level: 'on_the_rocks' }]], drop: [131, 44, 29] },
-    cancel_out: {},
-    zig_zag: { needs: [[{ level: 'cancel_out' }]] },
-    ricochet_v2: { needs: [[{ level: 'zig_zag' }]] },
-    run_the_clock_alt: { needs: [[{ level: 'ricochet_v2' }]] },
     far_river: { needs: [[{ level: 'river_dictionary_alt_up' }]] },
     ditching_cargo: { needs: [[{ level: 'far_river' }]] },
     unblock_block_alt: { needs: [[{ level: 'ditching_cargo' }]] },
@@ -493,6 +487,10 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     bad_aim_v2: { needs: [[{ level: 'reel_it_in' }]] },
     multipurpose: { needs: [[{ level: 'bad_aim_v2' }]] },
     wide_ocean: { needs: [[{ level: 'bad_aim_v2' }]] },
+    zig_zag: { needs: [[{ level: 'wide_ocean' }]] },
+    ricochet_v2: { needs: [[{ level: 'zig_zag' }]] },
+    run_the_clock_alt: { needs: [[{ level: 'ricochet_v2' }]] },
+    cancel_out: { needs: [[{ level: 'run_the_clock_alt' }]] },
     mirror_motion: { needs: [[{ level: 'reel_it_in' }]] },
     diag_slide: { needs: [[{ level: 'mirror_motion' }]] },
     the_long_way: { needs: [[{ level: 'diag_slide' }]] },
@@ -517,7 +515,7 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     first_flight: { needs: [[{ level: 'air_skating_v6' }]], drop: [16, 60, 38] },
     orange_predicament: { needs: [[{ level: 'air_skating_v6' }]], drop: [8, 42, 38] },
     skip_orange_maze_v3: { needs: [[{ level: 'air_skating_v6' }]], drop: [20, 39, 38] },
-    orange_skip_place_v3: { known: true, needs: [[{ level: 'skip_orange_maze_v3' }]] },
+    orange_skip_place_v3: { needs: [[{ level: 'skip_orange_maze_v3' }]] },
     skip_orange_wall_v3: { needs: [[{ level: 'orange_skip_place_v3' }]] },
     through_way: { needs: [[{ level: 'worlds_collide_ps' }]] },
     sp_crystal_tuto: { needs: [[{ level: 'through_way' }]] },
@@ -552,13 +550,12 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     jump_to_pillar_v3: { needs: [[{ level: 'flamethrower' }]] },
     no_charm: { needs: [[{ level: 'flamethrower' }]] },
     stones_below_v3: { needs: [[{ level: 'no_charm' }]] },
-    mountain_music: { needs: [[{ level: 'jenga_shortstack_v2' }]] },
     tippy_intro: { needs: [[{ level: 'mountain_music' }]] },
     tippy_towers_1: { needs: [[{ level: 'tippy_intro' }]] },
     tippy_towers_4: { needs: [[{ level: 'tippy_towers_1' }]] },
     bard_triangle: { needs: [[{ level: 'tippy_towers_4' }]] },
     high_shelf_v2: { needs: [[{ level: 'tippy_towers_4' }]] },
-    erosion_alt: { known: true, needs: [[{ level: 'falloff_dragons' }]] },
+    erosion_alt: { needs: [[{ level: 'falloff_dragons' }]] },
 
     // Skipping and Falling
     lily_falls_intro_v2: { needs: [[{ level: '3d_intro_skipping' }]] },
@@ -581,8 +578,9 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     pulling_pedestals: { needs: [[{ level: 'connect_the_dots_v5' }]] },
     thief_stack: { needs: [[{ level: 'pulling_pedestals' }]] },
     priest_descent_simpler: { needs: [[{ level: 'connect_the_dots_v5' }]] },
-    priest_button_3d_revised: { known: true, needs: [[{ level: 'priest_descent_simpler' }]] },
+    priest_button_3d_revised: { needs: [[{ level: 'priest_descent_simpler' }]] },
     priest_3d_goblin_pass: { needs: [[{ level: 'priest_button_3d_revised' }]] },
+    mountain_music: { needs: [[{ level: 'jenga_shortstack_v2' }]] },
     out_of_range_v4: { needs: [[{ level: 'mountain_music' }]] },
     magicians_assistant_v2: { needs: [[{ level: 'jenga_shortstack_v2' }]] },
     musical_staircase_v2: { needs: [[{ level: 'mountain_music' }]] },
@@ -590,14 +588,14 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     falloff_intro: { needs: [[{ level: 'magicians_assistant_v2' }]] },
     falloff_4: { needs: [[{ level: 'falloff_intro' }]] },
     falloff_kill_goblins_v6: { needs: [[{ level: 'falloff_4' }]] },
-    falloff_dragons: { known: true, needs: [[{ level: 'falloff_4' }]] },
+    falloff_dragons: { needs: [[{ level: 'falloff_4' }]] },
     fire_stairs_part_2: { needs: [[{ level: 'fire_stairs_v2' }]] },
     loading_docks_v2: { needs: [[{ level: 'zombie_graves_v3' }]] },
     assassins_creed: { needs: [[{ level: 'loading_docks_v2' }]] },
     magic_tower: { needs: [[{ level: 'erosion_alt' }]] },
     sky_druid_kill: { needs: [[{ level: 'zombie_graves_v3' }]] },
     sky_druid_kill_tall_2_goblins: { needs: [[{ level: 'sky_druid_kill' }]] },
-    stopper_topper_v2: { known: true, needs: [[{ level: 'sky_druid_kill_tall_2_goblins' }]] },
+    stopper_topper_v2: { needs: [[{ level: 'sky_druid_kill_tall_2_goblins' }]] },
     sky_druid_tree_ex: { needs: [[{ level: 'stopper_topper_v2' }]] },
     druid_3d_beam: { needs: [[{ level: 'sky_druid_tree_ex' }]] },
     weaklings_bard_v2: { needs: [[{ level: 'sky_druid_tree_ex' }]] },
@@ -672,7 +670,7 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
 
     // Stacks and Water
     personal_assistant_v3: { needs: [[{ level: '3d_intro_heroes' }]] },
-    push_down_a_lot_small: { known: true, needs: [[{ level: 'personal_assistant_v3' }]] },
+    push_down_a_lot_small: { needs: [[{ level: 'personal_assistant_v3' }]] },
     my_first_stack: { needs: [[{ level: 'push_down_a_lot_small' }]] },
     single_out: { needs: [[{ level: 'my_first_stack' }]] },
     jenga_shortstack_v2: { needs: [[{ level: 'single_out' }]] },
@@ -746,7 +744,7 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     front_side_bus2: { needs: [[{ level: 'boat_priest_v3' }]] },
     front_side_bus3: { needs: [[{ level: 'front_side_bus2' }]] },
     bard_movable_island: { needs: [[{ level: 'front_side_bus3' }]] },
-    bard_movable_island2: { known: true, needs: [[{ level: 'bard_movable_island' }]] },
+    bard_movable_island2: { needs: [[{ level: 'bard_movable_island' }]] },
     pole_vault: { needs: [[{ level: 'bard_movable_island2' }]] },
     missile_command: { needs: [[{ level: 'bard_movable_island2' }]] },
 
@@ -790,8 +788,8 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     hover_corner_3: { needs: [[{ level: 'mobile_cover_2' }]] },
     hover_corner_4: { needs: [[{ level: 'hover_corner_3' }]] },
     stone_rescue_v3: { needs: [[{ level: 'skip_purple_drop_alt' }]] },
-    wrap_music: { known: true, needs: [[{ level: 'stone_rescue_v3' }]] },
-    wrap_music_2: { known: true, needs: [[{ level: 'wrap_music' }]] },
+    wrap_music: { needs: [[{ level: 'stone_rescue_v3' }]] },
+    wrap_music_2: { needs: [[{ level: 'wrap_music' }]] },
     retvrn0: { needs: [[{ level: 'stone_rescue_v3' }]] },
     tricky_endpoint: { needs: [[{ level: 'retvrn0' }]] },
     drop_operation_v3: { needs: [[{ level: 'retvrn0' }]] },
@@ -893,7 +891,7 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     // Mirrors as Obstacles
     crystal_island: { needs: [[{ level: 'push_down_chain' }]] },
     bottleneck: { needs: [[{ level: 'crystal_island' }]] },
-    hanoi_3: { known: true, needs: [[{ level: 'bottleneck' }]] },
+    hanoi_3: { needs: [[{ level: 'bottleneck' }]] },
     busy_beaver: { needs: [[{ level: 'hanoi_3' }]] },
     moving_through_mirrors_v3: { needs: [[{ level: 'busy_beaver' }]] },
 
@@ -912,7 +910,7 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     movable_buttons: { needs: [[{ level: 'movable_button' }]] },
     gem_slot_on_lily: { needs: [[{ level: 'movable_buttons' }]] },
     lily_switch_p: { needs: [[{ level: 'gem_slot_on_lily' }]] },
-    sombreros: { known: true, needs: [[{ level: 'lily_switch_p' }]] },
+    sombreros: { needs: [[{ level: 'lily_switch_p' }]] },
     skybridge: { needs: [[{ level: 'drop_operation_v3' }], [{ level: 'juggalos' }]] },
     zap_bridge: { needs: [[{ level: 'skybridge' }]] },
     zap_bridge_perp: { needs: [[{ level: 'zap_bridge' }]] },
@@ -940,7 +938,7 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
 
     // Beam Computation
     zachtronics_identity: { needs: [[{ level: 'endpoint_maze' }]] },
-    zachtronics_or: { known: true, needs: [[{ level: 'zachtronics_identity' }]] },
+    zachtronics_or: { needs: [[{ level: 'zachtronics_identity' }]] },
     zachtronics_xor: { needs: [[{ level: 'zachtronics_or' }]] },
     zachtronics: { needs: [[{ level: 'zachtronics_xor' }]] },
 
@@ -949,7 +947,7 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     green_revolution: { needs: [[{ level: 'promesst2_streamlined' }]] },
     torcoban_2: { needs: [[{ level: 'promesst2_streamlined' }], [{ level: 'green_revolution' }]] },
     blue_revolution_v2: { needs: [[{ level: 'torcoban_2' }]] },
-    double_trouble: { known: true, needs: [[{ level: 'first_flight' }]] },
+    double_trouble: { needs: [[{ level: 'first_flight' }]] },
     worlds_collide_ps: { needs: [[{ level: 'torcoban_2' }], [{ level: 'skipping_pals' }]] },
 
     // Heroes 3: Bard, Druid
@@ -1024,27 +1022,27 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
 
     // Beams, Mirrorably
     floating_orange_purple: { needs: [[{ level: 'double_sideways' }]] },
-    green_metamirror: {},
-    orange_floaty_reflect_v3: {},
-    meta_orange_purple: { needs: [[{ level: 'orange_floaty_reflect_v3' }]] },
-    meta_orange_purple_2: { needs: [[{ level: 'meta_orange_purple' }]] },
-    the_spiral: {},
     top_green_purple_v3: { needs: [[{ level: 'break_through_focused' }]] },
     fun_house: { needs: [[{ level: 'top_green_purple_v3' }]] },
     cyan_torc_maze_vs: { needs: [[{ level: 'fun_house' }]] },
     cyan_counter_med3: { needs: [[{ level: 'cyan_torc_maze_vs' }]] },
+    green_metamirror: { needs: [[{ level: 'cyan_torc_maze_vs' }]] },
+    orange_floaty_reflect_v3: { needs: [[{ level: 'cyan_torc_maze_vs' }]] },
+    meta_orange_purple: { needs: [[{ level: 'orange_floaty_reflect_v3' }]] },
+    meta_orange_purple_2: { needs: [[{ level: 'meta_orange_purple' }]] },
+    the_spiral: { needs: [[{ level: 'cyan_torc_maze_vs' }]] },
 
     // Squeeze, Dragon
-    endpoint1_skipping: {},
-    narrow_passage: {},
+    endpoint1_skipping: { needs: [[{ level: 'promesst3_streamlined' }], [{ level: 'faster_than_stone' }]] },
+    narrow_passage: { needs: [[{ level: 'endpoint1_skipping' }]] },
     close_circuit: { needs: [[{ level: 'narrow_passage' }]] },
     dragon_drag: { needs: [[{ level: 'close_circuit' }]] },
     free_ride: { needs: [[{ level: 'close_circuit' }]] },
     swap_seats: { needs: [[{ level: 'free_ride' }]] },
-    security_checkpoints_v2: { needs: [[{ level: 'promesst3_streamlined' }]] },
+    security_checkpoints_v2: { needs: [[{ level: 'promesst3_streamlined' }], [{ level: 'faster_than_stone' }]] },
     ocean_blue: { needs: [[{ level: 'security_checkpoints_v2' }]] },
     double_door: { needs: [[{ level: 'narrow_passage' }]] },
-    rsmash: { needs: [[{ level: 'promesst3_streamlined' }]] },
+    rsmash: { needs: [[{ level: 'promesst3_streamlined' }], [{ level: 'faster_than_stone' }]] },
 
     // Mirrors and Buttons
     going_up_v4: { needs: [[{ level: 'archways_2_v2' }]] },
@@ -1077,11 +1075,11 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
 
     // Strength
     buff_explorer: { needs: [[{ level: 'sokobridge_v4' }]] },
-    cyan_bridge_v3: { known: true, needs: [[{ level: 'buff_explorer' }]] },
-    strong_monsters_v2: { known: true, needs: [[{ level: 'buff_explorer' }]] },
+    cyan_bridge_v3: { needs: [[{ level: 'buff_explorer' }]] },
+    strong_monsters_v2: { needs: [[{ level: 'buff_explorer' }]] },
     floorhands_v5: { needs: [[{ level: 'buff_explorer' }]] },
     stay_lit: { needs: [[{ level: 'floorhands_v5' }]] },
-    under_pressure: { known: true, needs: [[{ level: 'buff_explorer' }]] },
+    under_pressure: { needs: [[{ level: 'buff_explorer' }]] },
     high_horse: { needs: [[{ level: 'assassins_creed' }]] },
 
     // Vertical Mirror Skipping

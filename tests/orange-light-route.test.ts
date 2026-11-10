@@ -59,7 +59,8 @@ describe('the orange light above simultaneous_x', () => {
         expect(reachOf(['magnitudes_v3'], ARRIVALS)).toEqual([false, false]);
     });
 
-    test('with both solved the walk reaches 4wcn_all_fast and the level it leads to', () => {
-        expect(reachOf(['three_artifacts_v3', 'magnitudes_v3'], ARRIVALS)).toEqual([true, true]);
+    test('with both solved the walk reaches 4wcn_all_fast, and the level it unlocks once it is solved', () => {
+        expect(reachOf(['three_artifacts_v3', 'magnitudes_v3'], ARRIVALS)).toEqual([true, false]);
+        expect(reachOf(['three_artifacts_v3', 'magnitudes_v3', '4wcn_all_fast'], ARRIVALS)).toEqual([true, true]);
     });
 });

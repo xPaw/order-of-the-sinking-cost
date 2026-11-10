@@ -181,11 +181,8 @@ describe('the needs a level table row sets', () => {
     );
     const needsOf = (name: string) => built.levels.find((level) => level.n === name)?.needs;
 
-    test('a row marked known keeps needs that are only the unlocks of its level', () => {
+    test('a row keeps needs that are only the unlocks of its level', () => {
         expect(needsOf('snipperclips_square')).toHaveLength(1);
-    });
-
-    test('a row that adds nothing to the unlocks leaves the needs to the walk', () => {
-        expect(needsOf('mirror_4')).toBeUndefined();
+        expect(needsOf('mirror_4')).toBeDefined();
     });
 });
