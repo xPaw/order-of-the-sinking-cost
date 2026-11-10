@@ -149,6 +149,8 @@ export default defineConfig({
         root: ROOT,
         include: ['tests/**/*.test.{js,ts}'],
         testTimeout: 120000,
+        // Node warns on the first read of its localStorage; the tests run with storage unavailable
+        execArgv: ['--no-webstorage'],
     },
     fmt: {
         printWidth: 120,

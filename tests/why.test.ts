@@ -14,6 +14,7 @@ vi.mock('../src/data.ts', async () => {
     const SCHEMA = (await import('../data/schema.json')).default;
     return { SCHEMA, PROG: { levels: [], freezers: FREEZERS }, WORLD: {}, worldReady: Promise.resolve() };
 });
+vi.mock('../src/walk-data.ts', () => ({ STATIC_ROLES: null, FLOOR_HEIGHTS: null, walkReady: Promise.resolve() }));
 
 interface Stub {
     fromSky: boolean;
