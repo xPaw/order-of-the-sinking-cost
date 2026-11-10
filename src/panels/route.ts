@@ -103,7 +103,7 @@ function otherLayersHtml(context: PanelContext, chain: NeedChain, points: Positi
     return html;
 }
 
-// the debug view of a chain: nothing is met, nothing is under fog and every option of a group is followed, so the chain
+// the full chain view: nothing is met, nothing is under fog and every option of a group is followed, so the chain
 // runs all the way back
 function fullChainWorld(context: PanelContext): ChainWorld {
     return {

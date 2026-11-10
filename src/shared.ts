@@ -108,11 +108,8 @@ export const setSpoilersHidden = (value: boolean): void => {
     spoilersHidden = value;
 };
 
-/** Whether the debug controls exist: on the dev server only. */
-export const debugTools = import.meta.env?.DEV === true;
-
-/** Whether a selected level draws its whole need chain in place of its direct links (a debug view). */
-export let fullChain = debugTools && readPreference('fullChain') === '1';
+/** Whether a selected level draws its whole need chain in place of its direct links. */
+export let fullChain = readPreference('fullChain') === '1';
 
 export const setFullChain = (value: boolean): void => {
     fullChain = value;

@@ -3,7 +3,6 @@
 import { PROG } from './data.ts';
 import { $, apolloDate, apolloSeconds, duration, escapeHtml, setButtonPressed } from './util.ts';
 import {
-    debugTools,
     fullChain,
     hooks,
     revealedOf,
@@ -88,12 +87,9 @@ function progressHtml(model: ProgressModel | null | undefined): string {
         fogNote = `<div class="muted">${message}${onlyEntered}</div>`;
     }
 
-    let chainSwitch = '';
-    if (debugTools) {
-        const chainTitle = 'Debug: a selected level draws its whole need chain to the hub, not its direct links';
-        const chainAttributes = `class="spoil" id="pgChain" title="${chainTitle}"`;
-        chainSwitch = `<button ${chainAttributes}><span class="knob"></span>Full chain</button>`;
-    }
+    const chainTitle = 'A selected level draws its whole need chain to the hub, not its direct links';
+    const chainAttributes = `class="spoil" id="pgChain" title="${chainTitle}"`;
+    const chainSwitch = `<button ${chainAttributes}><span class="knob"></span>Full chain</button>`;
 
     return `${solvedHtml(model)}${spoilSwitch}${chainSwitch}${fogNote}`;
 }
@@ -344,14 +340,12 @@ export function renderSide(model?: ProgressModel | null): void {
         show();
     });
 
-    if (debugTools) {
-        setButtonPressed($('#pgChain'), fullChain);
-        $('#pgChain').addEventListener('click', () => {
-            setFullChain(!fullChain);
-            setPreference('fullChain', fullChain ? '1' : '0');
-            show();
-        });
-    }
+    setButtonPressed($('#pgChain'), fullChain);
+    $('#pgChain').addEventListener('click', () => {
+        setFullChain(!fullChain);
+        setPreference('fullChain', fullChain ? '1' : '0');
+        show();
+    });
 
     $('#statsTog')?.addEventListener('click', onStatsToggle);
     $('#sideGoals').addEventListener('click', (event) => onGoalsClick(event, model));

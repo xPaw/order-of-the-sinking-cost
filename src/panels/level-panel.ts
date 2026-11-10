@@ -346,7 +346,7 @@ function levelSelection(context: PanelContext, parts: LevelPanelParts): MapSelec
     };
 }
 
-// the debug view of a level: its whole need chain back to the hub, in place of its direct links
+// the full chain view of a level: its whole need chain back to the hub, in place of its direct links
 function fullChainSelection(context: PanelContext, parts: LevelPanelParts): MapSelection {
     const { levelIndex, html, route } = parts;
     const level = context.levels[levelIndex];
