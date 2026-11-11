@@ -16,13 +16,14 @@ import { searchRooms } from '../src/walk/room-search.ts';
 import { teleporterStatesOf } from '../src/walk/teleporters.ts';
 import { buildWalkGrid } from '../src/walk/walker.ts';
 import { FLOOR_HEIGHTS, STATIC_ROLES, walkReady } from '../src/walk-data.ts';
+import { worldReady } from '../src/world-data.ts';
 
 const DATA = join(import.meta.dirname, '..', 'data');
 const stored: WalkFile = JSON.parse(readFileSync(join(DATA, 'walk.json'), 'utf8'));
 const FULL_SEARCH = process.env.WALK_FULL === '1';
 
 beforeAll(async () => {
-    await walkReady;
+    await Promise.all([walkReady, worldReady]);
     setRoomAnswers(storedRooms());
 });
 

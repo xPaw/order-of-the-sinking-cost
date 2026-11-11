@@ -16,19 +16,13 @@ An unofficial, spoiler-free progress viewer for _Order of the Sinking Star_, liv
 Drop your save folder (`%USERPROFILE%\Saved Games\Order of the Sinking Star`) onto the page, or use **Open save
 folder**. Everything runs in your browser; the save is only read.
 
-Run locally:
+Run locally with your own copy of the game, which the data is built from (see
+[scripts/README.md](scripts/README.md)):
 
 ```
-npm install
+npm ci
+npm run data
 npm run dev
-```
-
-Rebuild the data (needs your own copy of the game; see [scripts/README.md](scripts/README.md)):
-
-```
-npm run data:progress
-npm run data:walk
-npm run data:cells
 ```
 
 How the game and the viewer work: [docs/readme.md](docs/readme.md).
