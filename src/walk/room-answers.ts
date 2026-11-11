@@ -1,5 +1,5 @@
 // The stored room answers: what an exhaustive push search of each screen room found, and which rooms a walker may
-// use them for (VIEWER.md "Room answers")
+// use them for (viewer.md "Room answers")
 import { cellOnSide, keyOf } from './cells.ts';
 import { exists } from './groups.ts';
 import type { LevelGeometry } from './geometry.ts';

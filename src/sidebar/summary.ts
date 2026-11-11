@@ -1,5 +1,5 @@
 // The sidebar's save summary: how much is solved, where the hero is and the save's stats
-// (VIEWER.md "The page (viewer)", "The spoiler model (viewer)")
+// (viewer.md "The page (viewer)", "The spoiler model (viewer)")
 import { PROG } from '../data.ts';
 import { escapeHtml } from '../util.ts';
 import { percent, progressBarHtml } from '../format.ts';

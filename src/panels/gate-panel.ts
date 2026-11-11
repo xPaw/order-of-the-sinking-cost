@@ -1,5 +1,5 @@
 // A Freezer's panel on the map: open or closed and its role, what opens it, the levels it leads to and the path to
-// open it (VIEWER.md "The page (viewer)")
+// open it (viewer.md "The page (viewer)")
 import { escapeHtml } from '../util.ts';
 import type { MapLink, SelectHow } from '../map/map-view.ts';
 import { capitalized, freezerNoun } from '../model/freezer-names.ts';

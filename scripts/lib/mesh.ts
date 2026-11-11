@@ -1,4 +1,4 @@
-// Reader for the game's render assets (data-pc/*.compressed_mesh, *.texture; format in docs/GAMEDATA.md, Render assets)
+// Reader for the game's render assets (data-pc/*.compressed_mesh, *.texture; format in docs/gamedata.md, Render assets)
 import { readFileSync } from 'node:fs';
 import * as paths from './paths.ts';
 

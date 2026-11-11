@@ -1,4 +1,4 @@
-// Magic-mirror hops (MOVEMENT.md "Magic mirrors", VIEWER.md "Magic-mirror hops")
+// Magic-mirror hops (movement.md "Magic mirrors", viewer.md "Magic-mirror hops")
 import { roomOf } from './beams.ts';
 import { addTo, cellOnSide, BEAMSTOP, GATE, MONSTER, MOVABLE, ROCK, SOLID, STEP, Z_BIAS } from './cells.ts';
 import type { Latch } from './gates.ts';

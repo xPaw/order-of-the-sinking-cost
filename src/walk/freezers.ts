@@ -1,4 +1,4 @@
-// The Freezers: those that hold level entrances, and the closed ones in a walker's grid (STATE.md "Freezers in the
+// The Freezers: those that hold level entrances, and the closed ones in a walker's grid (state.md "Freezers in the
 // save")
 import { PROG } from '../data.ts';
 import type { Position } from '../types.ts';

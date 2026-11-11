@@ -1,5 +1,5 @@
-// Promesst lights, the Gem_Slots that power them, their beams and where an ENDPOINT move lands (MOVEMENT.md
-// "Promesst beams and powers", VIEWER.md "Beams")
+// Promesst lights, the Gem_Slots that power them, their beams and where an ENDPOINT move lands (movement.md
+// "Promesst beams and powers", viewer.md "Beams")
 import { latestF32, rawU32 } from '../save.ts';
 import type { LightRow } from '../types.ts';
 import { addTo, cellOnSide, BEAM, BEAM_STOP, mod, OPTION_MARK, POWER_MARK, SOLID, THRU, Z_BIAS } from './cells.ts';

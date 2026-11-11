@@ -1,5 +1,5 @@
 // Gates and Switches: the latches that switch presses change, the moves that bring an object onto a Switch, and an
-// OPEN beam bumping a Gate open (MOVEMENT.md "Gates, switches and buttons", "Promesst beams and powers")
+// OPEN beam bumping a Gate open (movement.md "Gates, switches and buttons", "Promesst beams and powers")
 import { latestFlag } from '../save.ts';
 import { attackedAt, GOBLIN } from './attacks.ts';
 import {
@@ -183,7 +183,7 @@ export function walled(walkGrid: WalkGrid, floodState: FloodState, cell: number)
 
 /**
  * Calls way(from, bardCell, SKIPS | CHARMED) for each cell a hero with CHARM can launch the stone in `from` from, `side`
- * into water (SKILLS.md "CHARM"): a cell standable within CHARM_RANGE of the stone in each direction, one layer up or
+ * into water (skills.md "CHARM"): a cell standable within CHARM_RANGE of the stone in each direction, one layer up or
  * down included, from which his step on `side` is open, since a charm move pushes nothing. The step may go to the
  * stone's own cell, which the stone leaves.
  */
@@ -343,7 +343,7 @@ function pushesInto(
 }
 
 /**
- * The Rod launches that land an object in cell `into` at height intoZ (SKILLS.md "TRANSMUTE and the other skills"):
+ * The Rod launches that land an object in cell `into` at height intoZ (skills.md "TRANSMUTE and the other skills"):
  * way(from, heroCell, LAUNCHED) for each side. The launch sends the object in the cell ahead of the hero to the first
  * cell past it that is not walled, so along each side the object stands in the first cell behind `into` past the
  * walled cells right behind it, and the hero behind the object. Fences are not looked at. A launch that would wrap back

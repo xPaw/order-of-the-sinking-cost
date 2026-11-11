@@ -1,5 +1,5 @@
 // A tower's panel on the map: activated or how many to go, the path to activate it, its unsolved, solved and dropdown
-// levels (VIEWER.md "The page (viewer)")
+// levels (viewer.md "The page (viewer)")
 import { escapeHtml } from '../util.ts';
 import { progressBarHtml } from '../format.ts';
 import type { MapLink, SelectHow } from '../map/map-view.ts';

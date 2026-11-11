@@ -64,7 +64,7 @@ const HISTORY_VERSIONS = [70, 72, 73];
 
 // One undo record: a fixed header, move transactions, lily groups, then undo actions. Move transactions, lily
 // groups and scrape changes are skipped by size. Each action gets the record's key: the larger first move + span, then
-// the later mip level (STATE.md "Overworld state from the save"); the level-start record after the mip levels
+// the later mip level (state.md "Overworld state from the save"); the level-start record after the mip levels
 // (Action_Icon START, first move 0, no moves) ranks oldest. A record is applied to `history` only once it has been read
 // whole.
 function readUndoActions(reader: Reader, history: ParsedHistory, start: boolean, mipLevel: number): void {

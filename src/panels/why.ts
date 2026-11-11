@@ -1,5 +1,5 @@
 // Why the level table does not reach a level: the closed Freezers in front of it and the layer it is on
-// (VIEWER.md "Ways in and leads", "The spoiler model (viewer)")
+// (viewer.md "Ways in and leads", "The spoiler model (viewer)")
 import { PROG } from '../data.ts';
 import { freezerNoun, freezersNoun } from '../model/freezer-names.ts';
 import { layerName, wayTo } from '../model/layers.ts';

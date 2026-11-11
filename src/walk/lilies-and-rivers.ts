@@ -1,4 +1,4 @@
-// Lilies and the rivers they drift on (MOVEMENT.md "Lilies", "Rivers")
+// Lilies and the rivers they drift on (movement.md "Lilies", "Rivers")
 import { cellOf, cellOnSide, BEAMSTOP, FLOOR, KICK_MARK, PUSH, SIDES, Z_BIAS } from './cells.ts';
 import type { FloodState } from './flood.ts';
 import { exists, place, put } from './groups.ts';

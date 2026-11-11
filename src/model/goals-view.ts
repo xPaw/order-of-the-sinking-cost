@@ -1,4 +1,4 @@
-// The goals ladder as the page shows it, nothing under fog named or counted (VIEWER.md "Goals (viewer)")
+// The goals ladder as the page shows it, nothing under fog named or counted (viewer.md "Goals (viewer)")
 import { PROG } from '../data.ts';
 import type { ProgressLevel } from '../types.ts';
 import { achievementName, hasAchievement } from './achievements.ts';
@@ -611,7 +611,7 @@ function ladderOf(context: GoalsContext): GoalView[] {
 }
 
 /**
- * The goals ladder as the page shows it (VIEWER.md "Goals (viewer)"), from progress.goals:
+ * The goals ladder as the page shows it (viewer.md "Goals (viewer)"), from progress.goals:
  * - goals: per goal key, kind, label, done, active, progress ([got, total]; for an ending null, or the first ending's
  *   Antipode teleporters visited of the ones its Sign needs), left (what is still to do, in `unit`: an ending's plan
  *   steps, else achievements or levels), fogged (more of it is under fog) and, for the first two endings and the

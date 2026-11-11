@@ -1,5 +1,5 @@
 // Level_Entry unlocking: which levels and Freezers are open, and what waits on a level
-// (PROGRESSION.md "Level_Entry unlocking and state", VIEWER.md "Level states (viewer)")
+// (progression.md "Level_Entry unlocking and state", viewer.md "Level states (viewer)")
 import { PROG } from '../data.ts';
 import type { Freezer, FreezerSign, ProgressLevel } from '../types.ts';
 import type { Status } from '../status-file.ts';

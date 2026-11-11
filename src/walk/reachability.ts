@@ -1,5 +1,5 @@
 // Where the hero has been and can go: the reached cells, the levels behind closed Freezers and the floor heights
-// (VIEWER.md "The walk model (viewer)")
+// (viewer.md "The walk model (viewer)")
 import { PROG } from '../data.ts';
 import { reachedByNeeds } from '../model/route-needs.ts';
 import { heroesWithSkill, latestFlag, PROTECTION_FLAG, TELEPORT_FLAG, TRANSMUTE_FLAG } from '../save.ts';

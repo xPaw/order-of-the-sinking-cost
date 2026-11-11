@@ -1,4 +1,4 @@
-// The overworld's layers (ground, sky, underworld) and its wrapping (WORLD.md "Ground layers", STATE.md "Fog of war")
+// The overworld's layers (ground, sky, underworld) and its wrapping (world.md "Ground layers", state.md "Fog of war")
 import { PROG } from '../data.ts';
 
 /** The fog's layers by their index in the level data. */

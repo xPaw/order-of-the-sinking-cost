@@ -1,5 +1,5 @@
 // The patch of each level: the standable cells of a map layer nearer to its door by walking than to any other door's
-// (VIEWER.md "The page (viewer)", the Reachable overlay)
+// (viewer.md "The page (viewer)", the Reachable overlay)
 import { NO_LEVEL } from '../../src/types.ts';
 import { STEP } from '../../src/walk/cells.ts';
 

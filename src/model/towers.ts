@@ -1,4 +1,4 @@
-// Towers: their worlds, layers, names and progress (PROGRESSION.md "Tower")
+// Towers: their worlds, layers, names and progress (progression.md "Tower")
 import { PROG } from '../data.ts';
 import type { Tower } from '../types.ts';
 import { indicesWhere } from '../util.ts';

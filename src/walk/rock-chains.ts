@@ -1,5 +1,5 @@
 // Rocks that sink side by side: the second Rock is pushed over the water cell the first one bridged, so a gap of two or
-// three water cells closes (MOVEMENT.md "Objects in water", VIEWER.md "Moves")
+// three water cells closes (movement.md "Objects in water", viewer.md "Moves")
 import { addTo, BRIDGE_MARK, cellOnSide, SIDES, Z_BIAS } from './cells.ts';
 import type { FloodState } from './flood.ts';
 import { missChanged, PRESS_FALL, pressInputs } from './gates.ts';

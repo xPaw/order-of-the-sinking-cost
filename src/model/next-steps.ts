@@ -1,5 +1,5 @@
 // Next steps: the levels playable now that open what is still to do, and the order of a goal's list
-// (VIEWER.md "Next steps")
+// (viewer.md "Next steps")
 import { PROG } from '../data.ts';
 import { ENDINGS, hasAchievement } from './achievements.ts';
 import { roleFor } from './goal-roles.ts';

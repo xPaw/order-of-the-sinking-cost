@@ -1,4 +1,4 @@
-// Elevators (MOVEMENT.md "Elevators")
+// Elevators (movement.md "Elevators")
 import type { World } from '../types.ts';
 import { addTo, FLOOR, keyOf } from './cells.ts';
 import type { GridShape } from './cells.ts';

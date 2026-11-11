@@ -1,5 +1,5 @@
 // A level's panel on the map: its area, state and role, the Freezer it is in, the path to unlock it, the gates in front
-// of it and why it is not reachable, what it requires and unlocks, its tower (VIEWER.md "The page (viewer)")
+// of it and why it is not reachable, what it requires and unlocks, its tower (viewer.md "The page (viewer)")
 import { escapeHtml } from '../util.ts';
 import { fullChain } from '../shared.ts';
 import { towerEmblemHtml } from '../map/icons.ts';

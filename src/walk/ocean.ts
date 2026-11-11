@@ -1,5 +1,5 @@
-// Ground layers and water: the Ocean_Maps per column and the surface over a cell (WORLD.md "Ground layers", STATE.md
-// "Water in the save", MOVEMENT.md "Water")
+// Ground layers and water: the Ocean_Maps per column and the surface over a cell (world.md "Ground layers", state.md
+// "Water in the save", movement.md "Water")
 import type { World } from '../types.ts';
 import type { WorldCells } from '../world-data.ts';
 import { mod, Z_BIAS } from './cells.ts';
@@ -41,7 +41,7 @@ export function waterAt(walkGrid: WalkGrid, column: number, z: number): number |
 
 /**
  * Whether water cancels a fall step into height z at the column: the surface lies more than 1 and less than 3 above z
- * (MOVEMENT.md "Falling"), so a falling object stops one cell above, at surface - 1. Above the surface a fall passes.
+ * (movement.md "Falling"), so a falling object stops one cell above, at surface - 1. Above the surface a fall passes.
  */
 export function waterStopsFall(walkGrid: WalkGrid, column: number, z: number): boolean {
     const surface = waterAt(walkGrid, column, z);

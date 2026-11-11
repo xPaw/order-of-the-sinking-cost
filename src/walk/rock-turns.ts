@@ -1,5 +1,5 @@
 // Rocks and spare Gems pushed into water with turns: a Rock or Gem the walk can push to a cell where it sinks makes the
-// water cell a bridge (MOVEMENT.md "Objects in water", VIEWER.md "Moves")
+// water cell a bridge (movement.md "Objects in water", viewer.md "Moves")
 import { attackedAt } from './attacks.ts';
 import { BRIDGE_MARK, cellOnSide, PUSH, Z_BIAS } from './cells.ts';
 import type { FloodState } from './flood.ts';

@@ -6,7 +6,7 @@
 // With a save folder (a campaign holding overworld.history), also prints which regions that save has revealed.
 // `start` is the fog the viewer shows before a save is loaded: the state of a new campaign, NEW_CAMPAIGN_START.
 //
-// Model (docs/STATE.md "Fog of war"):
+// Model (docs/state.md "Fog of war"):
 // - Each primary Fog_Of_War (one per ground layer: ground, underworld, sky) splits the level into per-screen
 //   regions: screen (sx, sy) = (int((x - corner.x) / squares_per_screen_x), int((y - corner.y) / squares_per_screen_y)),
 //   region index = sx + screens_x * sy. Its region_states[index] is 0 FILLED, 1 PARTIAL (fading), 2 CLEARED.
@@ -52,7 +52,7 @@ const PLACES = 3;
 const DEFAULT_ASCENT = 6.5;
 const DEFAULT_DESCENT = 4.5;
 const REGION_STATES: FogFile['states'] = { 0: 'FILLED', 1: 'PARTIAL', 2: 'CLEARED' };
-// A new campaign whose hero has walked everywhere reachable without solving anything (docs/STATE.md "Fog of war"): the
+// A new campaign whose hero has walked everywhere reachable without solving anything (docs/state.md "Fog of war"): the
 // hero's position, the cleared regions per Fog_Of_War pid and the activated Area_Pins
 const NEW_CAMPAIGN_START: FogFile['start'] = {
     hero: [81, 76, 0],

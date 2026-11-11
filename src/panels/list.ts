@@ -1,5 +1,5 @@
 // The results list: the goal's levels in groups or a search's matches, the chips that narrow it, its count, and showing a
-// level in it (VIEWER.md "The page (viewer)")
+// level in it (viewer.md "The page (viewer)")
 import { $, escapeHtml, setHtml } from '../util.ts';
 import { clearNarrowing } from '../shared.ts';
 import type { ProgressFilters } from '../shared.ts';

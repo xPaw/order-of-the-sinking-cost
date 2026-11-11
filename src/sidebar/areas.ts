@@ -1,5 +1,5 @@
 // The areas listed under Completionist: the areas by layer with their solved counts, the map's layer first
-// (VIEWER.md "The page (viewer)", "Level areas (viewer)")
+// (viewer.md "The page (viewer)", "Level areas (viewer)")
 import { PROG } from '../data.ts';
 import { escapeHtml } from '../util.ts';
 import { readPreference, setPreference } from '../shared.ts';

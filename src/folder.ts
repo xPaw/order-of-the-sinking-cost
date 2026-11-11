@@ -1,4 +1,4 @@
-// Opening saves (SAVES.md "Files and versions"): the file picker, the live folder with its polling, and drag and drop
+// Opening saves (saves.md "Files and versions"): the file picker, the live folder with its polling, and drag and drop
 import { $, escapeHtml } from './util.ts';
 import { readPreference, progressFilters, revealed, setPreference, state } from './shared.ts';
 import { addFiles, newFile, realFiles, relPath, SAVE_PATH, SAVE_RE, showDemo } from './files.ts';

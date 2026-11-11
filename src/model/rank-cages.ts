@@ -1,4 +1,4 @@
-// The cages that rank Signs open, for the results list of the ending being worked toward (VIEWER.md "Goals (viewer)")
+// The cages that rank Signs open, for the results list of the ending being worked toward (viewer.md "Goals (viewer)")
 import { PROG } from '../data.ts';
 
 /** A closed cage whose rank Sign's rank is reached. */

@@ -1,5 +1,5 @@
 // The icons of the map's markers and sidebar rows: the rendered images in src/assets/icons/, and the
-// shapes that mark a level's role (VIEWER.md "Level states (viewer)", "Level roles (viewer)" and "The page (viewer)")
+// shapes that mark a level's role (viewer.md "Level states (viewer)", "Level roles (viewer)" and "The page (viewer)")
 import type { Area } from '../types.ts';
 import type { TowerProgress } from '../model/towers.ts';
 import {

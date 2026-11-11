@@ -1,4 +1,4 @@
-// The kinds of mark the sidebar's Find on the map names, in the order it lists them (VIEWER.md "The page (viewer)")
+// The kinds of mark the sidebar's Find on the map names, in the order it lists them (viewer.md "The page (viewer)")
 import type { OverlayKind } from '../map/map-html.ts';
 import type { ProgressLevel } from '../types.ts';
 import { ENDINGS } from './achievements.ts';

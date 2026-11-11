@@ -1,5 +1,5 @@
 // The chips of the panels and the list (levels, Freezers, signs, towers, plan steps) and an unlock plan as panel text
-// and as a chain on the map (VIEWER.md "The page (viewer)", "Unlock plans and next steps (viewer)",
+// and as a chain on the map (viewer.md "The page (viewer)", "Unlock plans and next steps (viewer)",
 // "The spoiler model (viewer)")
 import { PROG } from '../data.ts';
 import { countBy, escapeHtml } from '../util.ts';

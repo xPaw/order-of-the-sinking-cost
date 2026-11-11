@@ -1,6 +1,6 @@
 // Completion progress of a campaign from its saves: level states, towers, Freezers, the levels the level table reaches,
-// the ways into the others and the plans built on them (rules: PROGRESSION.md "Level_Entry unlocking and state", the
-// viewer's model: VIEWER.md "Level states (viewer)", data: data/progress.json)
+// the ways into the others and the plans built on them (rules: progression.md "Level_Entry unlocking and state", the
+// viewer's model: viewer.md "Level states (viewer)", data: data/progress.json)
 import { PROG } from '../data.ts';
 import { latestFlag, latestOf } from '../save.ts';
 import type { History, LatestValues } from '../save.ts';

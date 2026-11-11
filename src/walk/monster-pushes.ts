@@ -1,5 +1,5 @@
-// Monsters pushed to their death: into water, where they drown, into a dragon's fire or beside a goblin (MOVEMENT.md
-// "Water", "Goblins, dragons and PROTECTION", VIEWER.md "Moves")
+// Monsters pushed to their death: into water, where they drown, into a dragon's fire or beside a goblin (movement.md
+// "Water", "Goblins, dragons and PROTECTION", viewer.md "Moves")
 import { cellOnSide, FIRE_STOP, FLOOR, MONSTER } from './cells.ts';
 import type { FloodState } from './flood.ts';
 import { missChanged, PRESS_CELLS, pressInputs } from './gates.ts';

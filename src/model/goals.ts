@@ -1,4 +1,4 @@
-// The goals ladder (VIEWER.md "Goals (viewer)")
+// The goals ladder (viewer.md "Goals (viewer)")
 import { PROG } from '../data.ts';
 import type { EndingStageDone } from '../types.ts';
 import { achievementNames, achievementRules, ENDINGS, hasAchievement } from './achievements.ts';
@@ -139,7 +139,7 @@ export function freezerTowers(): Map<number, number[]> {
 }
 
 /**
- * The goals ladder (VIEWER.md "Goals (viewer)"), without fog: the three endings in rank order, the achievements,
+ * The goals ladder (viewer.md "Goals (viewer)"), without fog: the three endings in rank order, the achievements,
  * Completionist. Per goal: key, kind, done, active (the first goal not done), targets (the requirement ids it asks for),
  * roles (goalRoles over the targets) and, for the achievements, children of the same shape: one per achievement but
  * Completionist, which is a goal of its own. The first ending has one child per ground tower (the towers with an

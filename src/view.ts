@@ -1,5 +1,5 @@
 // The page's redraw. page.ts gives it the drawing; the modules page.ts draws (the save files, the folder, the
-// sidebar) call show() without importing page.ts (VIEWER.md "The page (viewer)").
+// sidebar) call show() without importing page.ts (viewer.md "The page (viewer)").
 
 /** How page.ts draws: the redraw, whether a redraw now is quick, and the note shown while a slow one waits. */
 export interface PageDrawing {

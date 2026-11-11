@@ -1,4 +1,4 @@
-// The progress view: the results list, the map and its panels (VIEWER.md "The page (viewer)")
+// The progress view: the results list, the map and its panels (viewer.md "The page (viewer)")
 import { PROG } from './data.ts';
 import { $ } from './util.ts';
 import { hooks } from './shared.ts';

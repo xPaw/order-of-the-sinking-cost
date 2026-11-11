@@ -1,5 +1,5 @@
 // The sidebar's Find on the map: a row per kind of mark, its icon showing or hiding the kind on the map and its name
-// listing the items in the results column (VIEWER.md "The page (viewer)")
+// listing the items in the results column (viewer.md "The page (viewer)")
 import { escapeHtml } from '../util.ts';
 import { hooks } from '../shared.ts';
 import type { ProgressFilters } from '../shared.ts';

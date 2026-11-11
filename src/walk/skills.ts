@@ -1,4 +1,4 @@
-// Wardrobes, the hero's walk layer and the TELEPORT swap (SKILLS.md "Wardrobes", "TELEPORT and PULL")
+// Wardrobes, the hero's walk layer and the TELEPORT swap (skills.md "Wardrobes", "TELEPORT and PULL")
 import { CHARM_FLAG, PROTECTION_FLAG, rawU32, TELEPORT_FLAG, TRANSMUTE_FLAG, WAND_FLAG } from '../save.ts';
 import type { Position, World } from '../types.ts';
 import { BEAM, BEAMSTOP, cellOf, cellsOnSide, FROZEN_MARK, keyOf, LINE_STOP, SOLID, WARDROBE_MARK } from './cells.ts';

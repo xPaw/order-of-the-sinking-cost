@@ -1,6 +1,6 @@
 // The progress view's events: clicks in the list, the chips and the panels, the sidebar's hooks into the view (open a
 // level, frame a tower, an area or a totals row, name a revealed level), the list's arrow keys and the panel the
-// address names (VIEWER.md "The page (viewer)")
+// address names (viewer.md "The page (viewer)")
 import { PROG } from '../data.ts';
 import { $ } from '../util.ts';
 import { hooks } from '../shared.ts';

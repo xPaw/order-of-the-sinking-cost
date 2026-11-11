@@ -1,5 +1,5 @@
 // The list of one kind of mark in the results column, in place of the goal's levels: what is left to do first, then the
-// done ones when asked for (VIEWER.md "The page (viewer)")
+// done ones when asked for (viewer.md "The page (viewer)")
 import { $, compareText, escapeHtml, setHtml } from '../util.ts';
 import type { PanelKey } from '../shared.ts';
 import { iconHtml } from '../map/icons.ts';

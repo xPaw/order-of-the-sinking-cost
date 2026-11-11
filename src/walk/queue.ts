@@ -1,5 +1,5 @@
 // The flood's queue: how a flood records the cells it reaches, the fall onto a supported cell, and how it walks on
-// from the cells it reached (VIEWER.md "Moves", MOVEMENT.md "Falling")
+// from the cells it reached (viewer.md "Moves", movement.md "Falling")
 import { DIRS, FIRE, FROZEN_MARK, neighbourOf } from './cells.ts';
 import type { FloodState } from './flood.ts';
 import { layerOf, waterAt } from './ocean.ts';

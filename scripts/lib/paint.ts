@@ -1,4 +1,4 @@
-// Reader for the per-entity vertex paint of a level (data-common/<level>.all_paint_data, docs/GAMEDATA.md)
+// Reader for the per-entity vertex paint of a level (data-common/<level>.all_paint_data, docs/gamedata.md)
 import { readFileSync } from 'node:fs';
 import type { Mesh } from './mesh.ts';
 import * as paths from './paths.ts';

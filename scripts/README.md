@@ -1,7 +1,8 @@
 # Data scripts
 
 Run the scripts with the npm scripts below. Generated data lands in `data/` (not committed, apart from
-`data/schema.json`); the built page is `dist/index.html` with its script, stylesheet, source map and images in `dist/assets/`, each named with a
+`data/schema.json` and `data/wikitactics.txt`; the local IDA files and harness under `data/` are not committed either); the
+built page is `dist/index.html` with its script, stylesheet, source map and images in `dist/assets/`, each named with a
 hash of its content. The page source is in `src/`. The map images are `src/assets/map-<layer>.avif` and the marker icons
 are in `src/assets/icons/`. `public/_headers` gives the files in `assets/` a cache lifetime of a year.
 
@@ -17,37 +18,42 @@ else `%USERPROFILE%\Saved Games\Order of the Sinking Star` on Windows, or that f
 
 ## Pipeline, in run order
 
-| # | Script | Reads | Writes | npm script |
-|---|---|---|---|---|
-| 1 | the schema exporter (not in this repository) | `sinking_star.exe` in IDA, entity type list | `data/schema.json` | see below |
-| 2 | `build-levels.ts` | `data/levels.package` (game), `data/schema.json` | `data/levels.json`, `data/level_entities/` | `npm run data:levels` |
-| 3 | `build-areas.ts` | `data/levels.package` (game), `data/strings/en.localization` (game) | `data/level_areas.json` | `npm run data:areas` |
-| 4 | `build-fog.ts` | `data/levels.package` (game), `data/schema.json` | `data/fog.json` | `npm run data:fog` |
-| 5 | `build-world.ts` | `data/levels.package` (game), `data/schema.json` | `data/world.json` | `npm run data:world` |
-| 6 | `build-map.ts` | `data/levels.json`, game `data/levels.package` | `data/map.json` | `npm run data:map` |
-| 7 | `build-progress.ts` | `data/levels.json`, `data/level_areas.json`, `data/fog.json`, `data/map.json`, `data/world.json`, game `data/levels.package` | `data/progress.json` | `npm run data:progress` |
-| 8 | `build-walk.ts` | `data/progress.json` (hashes `data/world.json` too) | `data/walk.json` | `npm run data:walk` |
-| 9 | `vite.config.ts` | `src/`, `public/`, `data/schema.json`, `data/progress.json`, `data/walk.json` | `dist/index.html`, `dist/levels/index.html` (every level by area, as plain HTML), `dist/_headers`, `dist/robots.txt`, `dist/sitemap.xml`, `dist/assets/` | `npm run build` |
+| #   | Script                                       | Reads                                                                                                                        | Writes                                                                                                                                                   | npm script              |
+| --- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| 1   | the schema exporter (not in this repository) | `sinking_star.exe` in IDA, entity type list                                                                                  | `data/schema.json`                                                                                                                                       | see below               |
+| 2   | `build-levels.ts`                            | `data/levels.package` (game), `data/schema.json`                                                                             | `data/levels.json`, `data/level_entities/`                                                                                                               | `npm run data:levels`   |
+| 3   | `build-areas.ts`                             | `data/levels.package` (game), `data/strings/en.localization` (game)                                                          | `data/level_areas.json`                                                                                                                                  | `npm run data:areas`    |
+| 4   | `build-fog.ts`                               | `data/levels.package` (game), `data/schema.json`                                                                             | `data/fog.json`                                                                                                                                          | `npm run data:fog`      |
+| 5   | `build-world.ts`                             | `data/levels.package` (game), `data/schema.json`                                                                             | `data/world.json`                                                                                                                                        | `npm run data:world`    |
+| 6   | `build-map.ts`                               | `data/levels.json`, game `data/levels.package`                                                                               | `data/map.json`                                                                                                                                          | `npm run data:map`      |
+| 7   | `build-progress.ts`                          | `data/levels.json`, `data/level_areas.json`, `data/fog.json`, `data/map.json`, `data/world.json`, game `data/levels.package` | `data/progress.json`                                                                                                                                     | `npm run data:progress` |
+| 8   | `build-walk.ts`                              | `data/progress.json` (hashes `data/world.json` too)                                                                          | `data/walk.json`, `data/rooms.json`                                                                                                                      | `npm run data:walk`     |
+| 9   | `build-level-cells.ts`                       | `data/walk.json` (floors), `data/progress.json`                                                                              | `data/level-cells.json`                                                                                                                                  | `npm run data:cells`    |
+| 10  | `vite.config.ts`                             | `src/`, `public/`, `data/schema.json`, `data/progress.json`, `data/walk.json`, `data/level-cells.json`                       | `dist/index.html`, `dist/levels/index.html` (every level by area, as plain HTML), `dist/_headers`, `dist/robots.txt`, `dist/sitemap.xml`, `dist/assets/` | `npm run build`         |
 
 `build-icons.ts` stands alone, like the map images: `npm run icons` renders the marker icons from the game's 3D models
 into `src/assets/icons/` (committed, not part of `npm run data`). It reads the game's render assets, the overworld
 entities in `data/levels.package` and `data/schema.json`, and needs ImageMagick (`magick`, with AVIF support) on the
 PATH or in WSL to write the AVIFs. `--only <name,...>` renders some icons, `--png <dir>` writes PNG previews to a folder
 instead (no ImageMagick needed, `src/assets/icons/` untouched) and `--size <px>` sets the preview size. See
-[The marker icons](../docs/DATAFILES.md#the-marker-icons).
+[The marker icons](../docs/datafiles.md#the-marker-icons).
 
-`npm run data` runs steps 2 to 8 in order. `build-fog.ts` also takes a campaign folder and then prints a report on
+The page build embeds `data/progress.json`, `data/walk.json`, `data/level-cells.json`, `data/wikitactics.txt` and
+`data/schema.json` cut down by the `schemaForPage` plugin in `vite.config.ts`, so run `npm run data` first.
+
+`npm run data` runs steps 2 to 9 in order. `build-fog.ts` also takes a campaign folder and then prints a report on
 that save: `npm run data:fog -- "<campaign folder>"`.
 
 Step 1 is needed only when the game binary changes. The exporter runs in IDA on the game binary and is not part of this
-repository ([Reading the schema out of the binary](../docs/GAMEDATA.md#reading-the-schema-out-of-the-binary)); it
+repository ([Reading the schema out of the binary](../docs/gamedata.md#reading-the-schema-out-of-the-binary)); it
 takes the entity type list that `node scripts\build-levels.ts --types-json <file>` writes.
 
 The save and diff-blob readers are the page's own modules (`src/reader.ts`, `src/status-file.ts`,
 `src/history-file.ts`, `src/blob.ts`), and so is the walk model (`src/walk/`, `staticRoles()` in
-`src/model/static-roles.ts`). `build-walk.ts` stores what the walk gives on the level data alone, the static roles and
-the map's floor heights, in `data/walk.json`. Nothing it imports may import `walk.json`, so a fresh `npm run data` can
-write it.
+`src/model/static-roles.ts`). The walk runs only at build time and in the tests; the page decides reach from the level
+table (`scripts/lib/level-table.ts`). `build-walk.ts` stores what the walk gives on the level data alone, the static
+roles and the map's floor heights, in `data/walk.json`, and the room answers in `data/rooms.json`, which the page does
+not load. Nothing it imports may import `walk.json`, so a fresh `npm run data` can write it.
 
 ## Output
 

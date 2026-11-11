@@ -1,4 +1,4 @@
-// Fog of war: the regions a save has cleared, from data/fog.json via data/progress.json (STATE.md "Fog of war")
+// Fog of war: the regions a save has cleared, from data/fog.json via data/progress.json (state.md "Fog of war")
 import { PROG } from './data.ts';
 import { historyEntry } from './files.ts';
 import { FOG_LAYER_KEYS } from './model/layers.ts';

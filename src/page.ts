@@ -1,4 +1,4 @@
-// Draws the page for the current campaign: the sidebar, the progress view and the banner (VIEWER.md "The page
+// Draws the page for the current campaign: the sidebar, the progress view and the banner (viewer.md "The page
 // (viewer)")
 import { PROG } from './data.ts';
 import { $, escapeHtml, hexDump } from './util.ts';

@@ -1,5 +1,5 @@
 // Resolves the names and pids of the hand-written table (level-table.ts) to the indices data/progress.json holds
-// (VIEWER.md "Level needs and pad routes")
+// (viewer.md "Level needs and pad routes")
 import type {
     NamedArea,
     PadRoute,

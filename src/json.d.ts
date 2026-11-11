@@ -1,4 +1,4 @@
-// The data files the page imports, typed as docs/DATAFILES.md describes them
+// The data files the page imports, typed as docs/datafiles.md describes them
 
 declare module '*/schema.json' {
     const schema: import('./types.ts').Schema;

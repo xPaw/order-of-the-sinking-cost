@@ -1,5 +1,5 @@
 // Rovers that sank in water and drive on under it: the hero boards one where it runs and steps off where its track
-// borders ground (MOVEMENT.md "Rovers", "Objects in water", VIEWER.md "Moves")
+// borders ground (movement.md "Rovers", "Objects in water", viewer.md "Moves")
 import { latestF32 } from '../save.ts';
 import { cellOnSide, mod, PUSH, RIDE_MARK, SOLID, Z_BIAS } from './cells.ts';
 import type { FloodState } from './flood.ts';

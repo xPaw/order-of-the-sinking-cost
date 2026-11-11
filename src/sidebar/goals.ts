@@ -1,5 +1,5 @@
 // The sidebar's goals ladder: a row per goal with its mark and count, the first two endings' towers, the achievements and
-// the areas listed inline, and the picking of a goal or an area for the list and the map (VIEWER.md "The page (viewer)",
+// the areas listed inline, and the picking of a goal or an area for the list and the map (viewer.md "The page (viewer)",
 // "Goals (viewer)")
 import { $, escapeHtml } from '../util.ts';
 import { hooks, showGoalList } from '../shared.ts';

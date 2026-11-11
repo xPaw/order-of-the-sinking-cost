@@ -1,4 +1,4 @@
-// The page's entry (VIEWER.md "The page (viewer)"): loads the folder and page modules and wires the page-wide keys and
+// The page's entry (viewer.md "The page (viewer)"): loads the folder and page modules and wires the page-wide keys and
 // clicks
 import './folder.ts';
 import './page.ts';

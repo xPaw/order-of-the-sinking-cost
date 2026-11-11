@@ -1,6 +1,6 @@
 // Builds data/progress.json (overworld levels, unlock gates, towers, areas, map) for the progress view from
 // data/levels.json, plus data/level_areas.json, data/fog.json (build-fog.ts), map.json (build-map.ts) and world.json
-// (build-world.ts) when present. Rules are described in docs/PROGRESSION.md.
+// (build-world.ts) when present. Rules are described in docs/progression.md.
 //
 // Reads levels.json, level_areas.json, fog.json, map.json and world.json from data/, and the overworld from
 // <game>/data/levels.package (type defaults). Writes data/progress.json.
@@ -376,7 +376,7 @@ function assignSets(levelData: LevelsFile, levels: ProgressLevel[]): LevelSet[] 
     return table;
 }
 
-// The ways into the endgame areas, which the walk does not find (PROGRESSION.md "Endings"), from the gate unlockers and
+// The ways into the endgame areas, which the walk does not find (progression.md "Endings"), from the gate unlockers and
 // positions: rows [level, gates, replace], where replace says the gates stand in for the walk's way-in gates rather
 // than filling in for none. The gates of a replace 1 row are alternatives; those of a replace 0 row are all needed.
 // - The level that earns ENDGAME1 stands inside the gates of the gold room Sign.

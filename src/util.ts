@@ -1,4 +1,4 @@
-// DOM and text helpers: queries, escaping, the save's Apollo times (SAVES.md "Status.sokoban_status (campaign status)"),
+// DOM and text helpers: queries, escaping, the save's Apollo times (saves.md "Status.sokoban_status (campaign status)"),
 // durations and hex dumps
 
 /** The first element of the page that matches `selector`. Callers of an element the markup may lack use `?.`. */

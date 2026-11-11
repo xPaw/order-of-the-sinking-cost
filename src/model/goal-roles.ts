@@ -1,4 +1,4 @@
-// Roles relative to a goal, from the requirement graph of the plans (VIEWER.md "Goal roles (viewer)")
+// Roles relative to a goal, from the requirement graph of the plans (viewer.md "Goal roles (viewer)")
 import { PROG } from '../data.ts';
 import type { Plans } from './plans.ts';
 import type { Graph } from './requirements.ts';
@@ -85,7 +85,7 @@ export function routeGraph(plans: Plans): RouteGraph {
 }
 
 /**
- * Roles relative to a goal (VIEWER.md "Goal roles (viewer)"): the requirement graph of the plans (planAll) walked back
+ * Roles relative to a goal (viewer.md "Goal roles (viewer)"): the requirement graph of the plans (planAll) walked back
  * from the goal's targets (requirement ids), so that every goal's roles come from the one static roles pass the graph
  * reads. need per requirement: 2 Required (on every route to a target), 1 Required as one of several (on some routes),
  * 0 not needed. An AND passes its strength to every part; an OR to its only route, else as one of several to each route

@@ -1,4 +1,4 @@
-// Unlock plans: what is still to do before a level, Freezer, tower or sign opens up (VIEWER.md "Planning")
+// Unlock plans: what is still to do before a level, Freezer, tower or sign opens up (viewer.md "Planning")
 import type { BaseProgress } from './progress.ts';
 import { requirementGraph } from './requirements.ts';
 import type { Graph, PlanStep } from './requirements.ts';

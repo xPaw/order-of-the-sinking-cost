@@ -1,4 +1,4 @@
-// Achievements, the endings and the rank markers (PROGRESSION.md "Achievements and ranks", "Endings")
+// Achievements, the endings and the rank markers (progression.md "Achievements and ranks", "Endings")
 import { PROG, SCHEMA } from '../data.ts';
 import { towerAchievement } from './towers.ts';
 import type { TowerProgress } from './towers.ts';

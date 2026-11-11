@@ -1,4 +1,4 @@
-// The save files given to the page, by path, and the campaigns they make up (SAVES.md "Files and versions")
+// The save files given to the page, by path, and the campaigns they make up (saves.md "Files and versions")
 import { DEMO_STATUS, demoHistory } from './demo-save.ts';
 import { levelCellsReady } from './level-cells.ts';
 import { walkReady } from './walk-data.ts';

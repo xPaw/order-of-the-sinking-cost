@@ -1,4 +1,4 @@
-// Dragon fire and goblin attacks (MOVEMENT.md "Goblins, dragons and PROTECTION", VIEWER.md "Attacks")
+// Dragon fire and goblin attacks (movement.md "Goblins, dragons and PROTECTION", viewer.md "Attacks")
 import { latestF32 } from '../save.ts';
 import { addTo, cellOnSide, FIRE, FIRE_STOP, FLOOR, mod, MONSTER, SOLID } from './cells.ts';
 import { exists, place, put } from './groups.ts';

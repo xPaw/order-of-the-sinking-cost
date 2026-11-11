@@ -1,4 +1,4 @@
-// Cell keys and their neighbours, sides and the per-cell bits of a walker's grid (WORLD.md "Positions and cells",
+// Cell keys and their neighbours, sides and the per-cell bits of a walker's grid (world.md "Positions and cells",
 // "Wrapping", "Map rooms")
 import { PROG } from '../data.ts';
 

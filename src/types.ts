@@ -1,5 +1,5 @@
 // The shapes of the data files the viewer embeds: data/progress.json (with data/world.json merged in) and
-// data/walk.json, as docs/DATAFILES.md describes them. A trailing `exists` element of a world row is the entity's
+// data/walk.json, as docs/datafiles.md describes them. A trailing `exists` element of a world row is the entity's
 // existence when the level loads; rows without it always exist.
 import type { GlowGroup } from './map/level-icons.ts';
 

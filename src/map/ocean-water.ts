@@ -1,4 +1,4 @@
-// The squares an OCEAN_CHANGE turned into water (STATE.md "Water in the save"), drawn over the map's images
+// The squares an OCEAN_CHANGE turned into water (state.md "Water in the save"), drawn over the map's images
 import { fromBase64, PROG } from '../data.ts';
 import type { LatestValues } from '../save.ts';
 import { mapCol } from '../walk/cells.ts';

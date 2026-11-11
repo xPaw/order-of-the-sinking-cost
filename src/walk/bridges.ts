@@ -1,4 +1,4 @@
-// Rock and Gem bridges: a Rock or a spare Gem pushed into water sinks and holds the hero up (MOVEMENT.md "Objects in
+// Rock and Gem bridges: a Rock or a spare Gem pushed into water sinks and holds the hero up (movement.md "Objects in
 // water")
 import { addTo } from './cells.ts';
 import { GEM_KIND } from './beams.ts';

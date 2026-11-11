@@ -1,4 +1,4 @@
-// The requirement graph the plans are worked out over (VIEWER.md "The requirement graph")
+// The requirement graph the plans are worked out over (viewer.md "The requirement graph")
 import { PROG } from '../data.ts';
 import type { FreezerSign, PadRoute, RouteNeed } from '../types.ts';
 import { ENDINGS, MARKER_RANKS } from './achievements.ts';
@@ -106,7 +106,7 @@ export function requirementGraph(progress: BaseProgress): Graph {
     const towerId = progress.towers.map((tower, towerIndex) => graph.add('t' + towerIndex, { t: 't', id: towerIndex }));
     const signIds = new Map<string, number>();
 
-    // the endings (PROGRESSION.md "Endings"): a rank r is the cheapest of the ways to it or past it, the ENDGAME levels
+    // the endings (progression.md "Endings"): a rank r is the cheapest of the ways to it or past it, the ENDGAME levels
     // and the ASCEND and DESCEND markers. The way onto the sky (its pieces wait in rank 1 Freezers) comes after rank 1
     // and the way into the underworld after the sky, each a step of its own while the walk does not find it; ASCEND
     // and DESCEND stand on those layers.

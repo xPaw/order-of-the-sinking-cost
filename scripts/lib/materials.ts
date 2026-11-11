@@ -1,4 +1,4 @@
-// The game's materials (data/materials.package, format in docs/GAMEDATA.md, Render assets) turned into a colour
+// The game's materials (data/materials.package, format in docs/gamedata.md, Render assets) turned into a colour
 // function per material, for the icon renderer. Lighting, normal maps and reflections are not modelled.
 import * as paths from './paths.ts';
 import { Archive } from './archive.ts';

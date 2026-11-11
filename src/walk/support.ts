@@ -1,4 +1,4 @@
-// What blocks the hero and what holds the hero up while a flood runs (MOVEMENT.md "Support", "Falling", VIEWER.md
+// What blocks the hero and what holds the hero up while a flood runs (movement.md "Support", "Falling", viewer.md
 // "Support and open cells")
 import {
     BEAM,

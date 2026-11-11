@@ -1,6 +1,6 @@
 // Pushes that change the beams while a flood runs: a free Gem pushed onto a Gem_Slot of its room, a Promesst_Light
-// pushed along a line, and a Rock that stops a beam pushed off the beam's line (MOVEMENT.md "Pushing and pulling",
-// "Promesst beams and powers", VIEWER.md "Beams moved by pushes")
+// pushed along a line, and a Rock that stops a beam pushed off the beam's line (movement.md "Pushing and pulling",
+// "Promesst beams and powers", viewer.md "Beams moved by pushes")
 import type { LightRow } from '../types.ts';
 import {
     clearBits,

@@ -1,4 +1,4 @@
-// The mechanics the walk models in part or not at all (VIEWER.md "What the walk leaves out")
+// The mechanics the walk models in part or not at all (viewer.md "What the walk leaves out")
 import { rawU16 } from '../save.ts';
 import { DIRS, keyOf, neighbourOf, Z_BIAS } from './cells.ts';
 import { exists } from './groups.ts';

@@ -1,5 +1,5 @@
 // The sidebar: the save with its progress, No spoilers and where the hero is, the goals with the areas under
-// Completionist, the kinds of mark to find on the map and the save's stats (VIEWER.md "The page (viewer)")
+// Completionist, the kinds of mark to find on the map and the save's stats (viewer.md "The page (viewer)")
 import { PROG } from './data.ts';
 import { $, apolloDate, apolloSeconds, duration, escapeHtml, setButtonPressed } from './util.ts';
 import {

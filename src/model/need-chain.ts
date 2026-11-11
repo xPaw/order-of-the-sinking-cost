@@ -1,5 +1,5 @@
 // The chain of table needs behind a level or Freezer, followed back to the middle of the map or to where the table stops
-// (VIEWER.md "Level needs and pad routes")
+// (viewer.md "Level needs and pad routes")
 import type { Freezer, GoldRoom, Position, ProgressLevel, RouteNeed, Sign, Tower } from '../types.ts';
 import { needMet } from './route-needs.ts';
 import type { NeedsView } from './route-needs.ts';

@@ -1,4 +1,4 @@
-// Pan and zoom of an svg map by its viewBox. The map is a torus (WORLD.md "Wrapping"): its content repeats in every direction, the view's
+// Pan and zoom of an svg map by its viewBox. The map is a torus (world.md "Wrapping"): its content repeats in every direction, the view's
 // centre is kept inside one copy of it, and the elements use[data-kx][data-ky] (copies shifted by that many content
 // widths and heights) are shown where the view reaches them.
 import { PROG } from './data.ts';

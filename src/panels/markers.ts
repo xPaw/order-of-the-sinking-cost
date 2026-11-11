@@ -1,6 +1,6 @@
 // What the map draws for the progress view: the level markers by state or role, the towers, the area labels and the
 // overlays (Freezers, signs, pads, gold rooms, voice logs, map scrolls, Area_Pins, treasures)
-// (VIEWER.md "The page (viewer)", "The spoiler model (viewer)")
+// (viewer.md "The page (viewer)", "The spoiler model (viewer)")
 import { PROG } from '../data.ts';
 import { escapeHtml } from '../util.ts';
 import { ROLES, towerEmblemHtml } from '../map/icons.ts';

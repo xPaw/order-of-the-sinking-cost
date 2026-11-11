@@ -4,7 +4,7 @@
 //
 // Reads the overworld entities in <game>/data/levels.package (tints and glow colours), data/schema.json, and the render
 // assets of the game folder: data-pc/*.compressed_mesh and *.texture, data/materials.package and
-// data-common/overworld.all_paint_data (format in docs/GAMEDATA.md, Render assets).
+// data-common/overworld.all_paint_data (format in docs/gamedata.md, Render assets).
 // Writes src/assets/icons/.
 //
 // Usage: node scripts/build-icons.ts [--game DIR] [--only NAME[,NAME...]] [--png DIR]

@@ -1,7 +1,7 @@
 // The totals the page shows: treasures, Freezers, signs, fast-travel pads, voice logs, map scrolls and Area_Pins, each
 // over the things not under fog or already found; and the gold rooms the map rings, with spoilers hidden only once
 // visited
-// (PROGRESSION.md "Treasures and gold rooms", "In-game progress displays")
+// (progression.md "Treasures and gold rooms", "In-game progress displays")
 import { PROG } from '../data.ts';
 import { latestFlag } from '../save.ts';
 import type { AreaPinRow, GoldRoom, Position, Teleporter, TreasureDisplay, ViewGiver, VoiceLog } from '../types.ts';

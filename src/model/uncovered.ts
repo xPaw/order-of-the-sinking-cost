@@ -1,4 +1,4 @@
-// How much of the map the fog has uncovered: the cleared screens of each layer's primary fog (STATE.md "Fog of war")
+// How much of the map the fog has uncovered: the cleared screens of each layer's primary fog (state.md "Fog of war")
 import type { Fog } from '../fog.ts';
 import { inFindLayer } from './find-kinds.ts';
 import { AREA_LAYERS, layerName } from './layers.ts';

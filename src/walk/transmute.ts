@@ -1,5 +1,5 @@
 // TRANSMUTE: a hero who left a TRANSMUTE Wardrobe by its door turns the Tree or dragon he bumps into a crystal Rock
-// (SKILLS.md "TRANSMUTE and the other skills", VIEWER.md "Moves")
+// (skills.md "TRANSMUTE and the other skills", viewer.md "Moves")
 import { addTo, BEAMSTOP, cellOnSide, FIRE, MONSTER, ROCK, SIDES, SOLID, SUPPORT } from './cells.ts';
 import type { FloodState } from './flood.ts';
 import { exists } from './groups.ts';

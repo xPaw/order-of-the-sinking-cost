@@ -1,5 +1,5 @@
 // What the page calls a Freezer, by its model: the pod (model A) is a cage, the doorway (model B, `doorway`) a gate
-// (VIEWER.md "The page (viewer)")
+// (viewer.md "The page (viewer)")
 import { PROG } from '../data.ts';
 
 /** Whether the Freezer is the doorway model. */

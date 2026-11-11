@@ -5,7 +5,7 @@
 //
 // Usage: node scripts/build-levels.ts [--game DIR] [--types-json FILE]
 // With --types-json, only writes the [name, version] list of entity types in the package (input for the schema
-// exporter, docs/GAMEDATA.md "Reading the schema out of the binary").
+// exporter, docs/gamedata.md "Reading the schema out of the binary").
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { countBy } from '../src/util.ts';

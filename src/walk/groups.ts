@@ -1,4 +1,4 @@
-// Existence Groups: whether an entity exists, and the cell writes of the members of a Group that does not (VIEWER.md
+// Existence Groups: whether an entity exists, and the cell writes of the members of a Group that does not (viewer.md
 // "Existence")
 import { rawU32 } from '../save.ts';
 import type { WalkGrid } from './walker.ts';

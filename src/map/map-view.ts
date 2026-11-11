@@ -1,4 +1,4 @@
-// The overworld map of the progress view (VIEWER.md "The page (viewer)"): one layer's image under the fog, the
+// The overworld map of the progress view (viewer.md "The page (viewer)"): one layer's image under the fog, the
 // Reachable overlay, the overlay marks, the level and tower markers with the selection's links and steps, the area
 // labels, the selection panel, the toolbar and the tooltip, over panZoom's view of the wrapping map
 import { PROG } from '../data.ts';

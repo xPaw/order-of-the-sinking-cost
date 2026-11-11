@@ -1,4 +1,4 @@
-// The hand-written stages of the endings after the first, in the order a run takes them (VIEWER.md "Goals (viewer)"),
+// The hand-written stages of the endings after the first, in the order a run takes them (viewer.md "Goals (viewer)"),
 // and the resolving of their names and pids to the indices data/progress.json holds.
 import type {
     EndingStage,

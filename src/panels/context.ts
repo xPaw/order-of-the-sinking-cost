@@ -1,5 +1,5 @@
 // The state of one drawn progress view, shared by its parts: the model's data, the goal the list and the map show with
-// its levels, the list filter, the map and the open panel (VIEWER.md "The page (viewer)")
+// its levels, the list filter, the map and the open panel (viewer.md "The page (viewer)")
 import type { Fog } from '../fog.ts';
 import type { MapView, MapOptions, MapOverlay, SelectHow } from '../map/map-view.ts';
 import { PROG } from '../data.ts';

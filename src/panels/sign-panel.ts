@@ -1,5 +1,5 @@
 // A sign's panel on the map: satisfied or not, what it needs, its tower, the path to satisfy it and the gates it opens
-// (VIEWER.md "The page (viewer)")
+// (viewer.md "The page (viewer)")
 import { escapeHtml } from '../util.ts';
 import type { MapLink, SelectHow } from '../map/map-view.ts';
 import { unlockPlan } from '../model/plans.ts';

@@ -1,5 +1,5 @@
-// Monster Gates: a shut monster Gate opens once no living Monster stands in its room (MOVEMENT.md "Gates, switches and
-// buttons", VIEWER.md "Moves")
+// Monster Gates: a shut monster Gate opens once no living Monster stands in its room (movement.md "Gates, switches and
+// buttons", viewer.md "Moves")
 import { GOBLIN } from './attacks.ts';
 import { roomOf } from './beams.ts';
 import { addTo, cellOnSide, SIDES } from './cells.ts';

@@ -1,5 +1,5 @@
 // The areas: which Area_Pins are activated and the area a point or a level is in
-// (STATE.md "Areas", VIEWER.md "Level areas (viewer)")
+// (state.md "Areas", viewer.md "Level areas (viewer)")
 import { PROG } from '../data.ts';
 import { latestFlag, latestOf } from '../save.ts';
 import type { History } from '../save.ts';

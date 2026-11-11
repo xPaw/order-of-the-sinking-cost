@@ -1,4 +1,4 @@
-// Level roles from the walk on the level data (VIEWER.md "Level roles (viewer)"). Imported by scripts/build-walk.ts, so
+// Level roles from the walk on the level data (viewer.md "Level roles (viewer)"). Imported by scripts/build-walk.ts, so
 // it must not import src/walk-data.ts, which reads the file that script writes.
 import { PROG } from '../data.ts';
 import type { Position } from '../types.ts';
@@ -12,7 +12,7 @@ import type { StoredRoles } from '../walk-data.ts';
 import { optionCount } from './unlocking.ts';
 
 /**
- * Level roles (VIEWER.md "Level roles (viewer)"): the walk on the level data from a new game's start, opening the closed
+ * Level roles (viewer.md "Level roles (viewer)"): the walk on the level data from a new game's start, opening the closed
  * Freezers on the edge of the reached cells in rounds. need: 2 Required, 1 Required as one of several, 0 Optional, per
  * level ('l') and Freezer ('g'); bg: the Freezers each Freezer ('g') and Sign ('s') sits behind.
  */

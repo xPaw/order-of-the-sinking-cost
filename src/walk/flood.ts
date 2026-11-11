@@ -1,4 +1,4 @@
-// The flood: the cells a walk reaches from its seeds, and the pads it reveals through the map rooms (VIEWER.md
+// The flood: the cells a walk reaches from its seeds, and the pads it reveals through the map rooms (viewer.md
 // "Moves", "Seeds and the reached cells", "Pads revealed through the map rooms")
 import { pushForBeams, undoBeamMoves } from './beam-moves.ts';
 import type { BeamFlood } from './beam-moves.ts';

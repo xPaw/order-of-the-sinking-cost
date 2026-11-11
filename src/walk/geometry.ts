@@ -1,5 +1,5 @@
 // The level-data part of the walk: everything a walker's grid takes from data/progress.json and data/world.json alone,
-// which no save changes (VIEWER.md "The walk model (viewer)")
+// which no save changes (viewer.md "The walk model (viewer)")
 import { PROG } from '../data.ts';
 import type { ExistenceGroup, Freezer, SpawnRow, Teleporter, World } from '../types.ts';
 import { WORLD, WORLD_FILE } from '../world-data.ts';

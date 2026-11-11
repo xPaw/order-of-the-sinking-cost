@@ -6,7 +6,7 @@
 //
 // Usage: node scripts/build-walk.ts [--game DIR]
 //
-// Output (docs/VIEWER.md "The walk model (viewer)" and "Level roles (viewer)"):
+// Output (docs/viewer.md "The walk model (viewer)" and "Level roles (viewer)"):
 //   walk.json, which the page loads:
 //   inputs: per input file name (in data/), the SHA-256 of its bytes, and the SHA-256 of the room search's sources
 //     (scripts/lib/walk-inputs.ts); tests/walk-data.test.ts fails when they no longer match. The full recompute of the

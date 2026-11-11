@@ -1,4 +1,4 @@
-// Map coordinates on the wrapping overworld (WORLD.md "Wrapping"): world squares to map positions, the copies of the
+// Map coordinates on the wrapping overworld (world.md "Wrapping"): world squares to map positions, the copies of the
 // map shown around the first one, and the smallest box on the torus
 import { PROG } from '../data.ts';
 import { mod } from '../walk/cells.ts';

@@ -1,4 +1,4 @@
-// Level roles (VIEWER.md "Level roles (viewer)"): the static roles stored in data/walk.json
+// Level roles (viewer.md "Level roles (viewer)"): the static roles stored in data/walk.json
 import { STATIC_ROLES } from '../walk-data.ts';
 import type { StoredRoles } from '../walk-data.ts';
 

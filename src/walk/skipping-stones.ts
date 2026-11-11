@@ -1,4 +1,4 @@
-// Skipping stones: the skip lanes and the TELEPORT swap onto a stone (MOVEMENT.md "Skipping stones", VIEWER.md "Skip
+// Skipping stones: the skip lanes and the TELEPORT swap onto a stone (movement.md "Skipping stones", viewer.md "Skip
 // lanes and the TELEPORT swap")
 import { rawU16 } from '../save.ts';
 import { cellOnSide, DIRS, KICK_MARK, neighbourOf, PUSH, SOLID, Z_BIAS } from './cells.ts';
@@ -331,7 +331,7 @@ function isIslet(walkGrid: WalkGrid, cell: number): boolean {
 }
 
 /**
- * The stones a hero with CHARM launches (the MIRRORABLE ones, MOVEMENT.md "Skipping stones", SKILLS.md "CHARM"): a
+ * The stones a hero with CHARM launches (the MIRRORABLE ones, movement.md "Skipping stones", skills.md "CHARM"): a
  * stone is launched from the cell the save left it in, and from each cell it lands on, which it is then launched from
  * again (at most MAX_PUSH_POSITIONS cells). `charmStones`: the cells the stones stand in; `charmPlaces`: those and the
  * landings; `charmIslets`: the places no hero steps onto, whose Switch the object search alone decides.

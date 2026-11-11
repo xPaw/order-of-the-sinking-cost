@@ -1,4 +1,4 @@
-// The map's markup before it is drawn (VIEWER.md "The page (viewer)"): the holder of the layer images under the svg, the
+// The map's markup before it is drawn (viewer.md "The page (viewer)"): the holder of the layer images under the svg, the
 // fog group, the repeated copies of the terrain, the overlay group (its copies are made as the view reaches them), the
 // buttons over the map; the overlay switches and the view kept per campaign
 import { PROG } from '../data.ts';

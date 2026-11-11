@@ -74,7 +74,7 @@ class Scenery {
         this.layerIndex = new Map(LAYERS.map((layer, index) => [layer.fog, index]));
     }
 
-    // Whether an entity exists when the level loads (docs/ENTITIES.md "Existence groups"): a direct member of an
+    // Whether an entity exists when the level loads (docs/entities.md "Existence groups"): a direct member of an
     // existence Group follows the Group's exists_by_default, another entity in an existence group its stored
     // CURRENTLY_EXISTS; an EXISTS_FOR_COSMETIC_TRANSITION_PURPOSES_ONLY one is no member and exists only by its flags
     existsAtLoad(fields: Fields): boolean {

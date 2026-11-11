@@ -1,4 +1,4 @@
-// The Freezers a level sits behind, read from the level table's needs (VIEWER.md "Ways in and leads")
+// The Freezers a level sits behind, read from the level table's needs (viewer.md "Ways in and leads")
 import { PROG } from '../data.ts';
 import type { Freezer, Position, ProgressLevel } from '../types.ts';
 import { wrapDelta } from './layers.ts';

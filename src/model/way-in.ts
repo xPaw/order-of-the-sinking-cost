@@ -1,5 +1,5 @@
 // The way into a level its needs do not reach: the closed Freezers it sits behind from the start, less those it is
-// behind only through itself (VIEWER.md "Ways in and leads", "Endgame way-in gates")
+// behind only through itself (viewer.md "Ways in and leads", "Endgame way-in gates")
 import { PROG } from '../data.ts';
 import type { Freezer } from '../types.ts';
 import { ICE } from '../walk/freezers.ts';
@@ -75,7 +75,7 @@ export function components(nodeCount: number, edges: number[][]): Int32Array {
 
 /**
  * The closed gates that are no way in: their requirements can be met only from behind the gate itself, through any
- * chain of gates and levels (VIEWER.md "Next steps"). Requirements (nodes: levels 0..L-1, then gates):
+ * chain of gates and levels (viewer.md "Next steps"). Requirements (nodes: levels 0..L-1, then gates):
  * - a level its needs do not reach needs its way-in gates;
  * - a locked level its unsolved requirements (all, or one for an OR level) or the closed Freezer it is frozen in;
  * - a closed Freezer its unmet levels (all, or one for an OR gate; an OR gate with a met option or a sign needs none).

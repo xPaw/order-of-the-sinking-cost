@@ -1,4 +1,4 @@
-// Decoder for the game's textures (data-pc/*.texture, format in docs/GAMEDATA.md, Render assets): the largest mip as
+// Decoder for the game's textures (data-pc/*.texture, format in docs/gamedata.md, Render assets): the largest mip as
 // 8-bit RGBA, with a box-filtered mip chain for sampling.
 import { existsSync } from 'node:fs';
 import { dataPcPath, readAsset } from './mesh.ts';

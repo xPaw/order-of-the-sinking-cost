@@ -1,4 +1,4 @@
-// Reader for the game's level archive (data/levels.package, format in docs/GAMEDATA.md) and the entities in it.
+// Reader for the game's level archive (data/levels.package, format in docs/gamedata.md) and the entities in it.
 import { readFileSync } from 'node:fs';
 import { atVersion } from '../../src/blob.ts';
 import { Reader } from '../../src/reader.ts';

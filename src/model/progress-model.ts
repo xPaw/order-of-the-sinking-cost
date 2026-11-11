@@ -1,5 +1,5 @@
 // The progress model of a campaign: progress, fog, areas and the totals the page shows
-// (VIEWER.md "The spoiler model (viewer)")
+// (viewer.md "The spoiler model (viewer)")
 import { PROG } from '../data.ts';
 import { historyEntry, statusEntry } from '../files.ts';
 import { fogOf, NO_FOG } from '../fog.ts';

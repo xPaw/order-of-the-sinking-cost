@@ -1,4 +1,4 @@
-// The Reachable overlay image of one map layer, from the cells nearest to the levels the save can reach (VIEWER.md "The
+// The Reachable overlay image of one map layer, from the cells nearest to the levels the save can reach (viewer.md "The
 // page (viewer)")
 import { PROG } from '../data.ts';
 import type { Fog } from '../fog.ts';

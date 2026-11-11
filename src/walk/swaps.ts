@@ -1,5 +1,5 @@
-// What a TELEPORT swap leaves behind: the target lands in the cell the hero left (SKILLS.md "TELEPORT and PULL",
-// VIEWER.md "Moves", "Skip lanes and the TELEPORT swap")
+// What a TELEPORT swap leaves behind: the target lands in the cell the hero left (skills.md "TELEPORT and PULL",
+// viewer.md "Moves", "Skip lanes and the TELEPORT swap")
 import type { FloodState } from './flood.ts';
 import type { Cursor } from './queue.ts';
 import type { RockTurn } from './rock-turns.ts';

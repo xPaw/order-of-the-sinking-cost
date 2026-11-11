@@ -1,5 +1,5 @@
 // The route section of a level, Freezer, Sign or tower panel: the chain of table needs that are left, as lines on the map,
-// where it breaks and how to correct it (VIEWER.md "Level needs and pad routes")
+// where it breaks and how to correct it (viewer.md "Level needs and pad routes")
 import type { MapLink, MapStep } from '../map/map-view.ts';
 import { capitalized, freezerNoun } from '../model/freezer-names.ts';
 import { layerName, mapLayerOf } from '../model/layers.ts';

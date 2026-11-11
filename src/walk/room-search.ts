@@ -1,6 +1,6 @@
 // The exhaustive push search of the screen rooms: every position the objects of a room can be pushed to, with the hero
 // pushing from the cells he stands in as the walk reads them. Run at build time on the level data alone for the stored
-// answers, and on a walker's grid for the rooms a save has touched (VIEWER.md "Room answers")
+// answers, and on a walker's grid for the rooms a save has touched (viewer.md "Room answers")
 import { attackedAt, GOBLIN, recastAttacks } from './attacks.ts';
 import { GEM_KIND, roomOf } from './beams.ts';
 import {

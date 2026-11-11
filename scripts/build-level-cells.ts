@@ -1,5 +1,5 @@
 // Writes data/level-cells.json: for each map layer, the level whose door each standable cell is nearest to by
-// walking, which the Reachable overlay shades by (docs/DATAFILES.md "level-cells.json", docs/VIEWER.md "The page
+// walking, which the Reachable overlay shades by (docs/datafiles.md "level-cells.json", docs/viewer.md "The page
 // (viewer)").
 //
 // Reads data/walk.json for the floor heights (run `npm run data:walk` first), so every Freezer is open in it.

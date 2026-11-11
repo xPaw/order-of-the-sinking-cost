@@ -1,5 +1,5 @@
 // Teleporter states, the pads of a walker's grid and where they send the hero, and the pads a discovery reveals
-// (MOVEMENT.md "Teleporter pads and fast travel", STATE.md "Teleporters in the save", VIEWER.md "Pads revealed through
+// (movement.md "Teleporter pads and fast travel", state.md "Teleporters in the save", viewer.md "Pads revealed through
 // the map rooms")
 import { PROG } from '../data.ts';
 import { latestF32, latestFlag } from '../save.ts';

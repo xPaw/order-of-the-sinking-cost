@@ -1,5 +1,5 @@
 // The panel kept open per campaign and the page address that names it (#level=<name>, #tower=<pid>, #gate=<pid> or
-// #sign=<pid>) (VIEWER.md "The page (viewer)")
+// #sign=<pid>) (viewer.md "The page (viewer)")
 import { hooks } from '../shared.ts';
 import type { PanelKey, PanelKind } from '../shared.ts';
 

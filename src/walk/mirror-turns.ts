@@ -1,5 +1,5 @@
-// Magic Mirrors pushed with turns: a Mirror the walk pushes to another cell hops from there (MOVEMENT.md "Magic
-// mirrors", VIEWER.md "Moves", "Magic-mirror hops")
+// Magic Mirrors pushed with turns: a Mirror the walk pushes to another cell hops from there (movement.md "Magic
+// mirrors", viewer.md "Moves", "Magic-mirror hops")
 import { roomOf } from './beams.ts';
 import { cellOnSide, MOVABLE, SIDES, TRAVEL_MARK, Z_BIAS } from './cells.ts';
 import type { FloodState } from './flood.ts';

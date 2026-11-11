@@ -1,6 +1,6 @@
 // Builds data/world.json: the overworld's walkable-cell model (Wall_Set voxels, fences, gates, water, lilies, elevators,
 // teleporters, Freezers) plus teleporter, treasure and gold-room tables, for the viewer's reachability and progress
-// views. build-progress.ts merges it into data/progress.json; the viewer walks it (docs/VIEWER.md "The walk model (viewer)" and
+// views. build-progress.ts merges it into data/progress.json; the viewer walks it (docs/viewer.md "The walk model (viewer)" and
 // "Level roles (viewer)").
 //
 // Reads <game>/data/levels.package (overworld) and data/schema.json; writes data/world.json.
@@ -58,9 +58,9 @@
 //          as grid steps (a, b), vertical ones with zero arms; freezer: the pid of the Freezer in its cell, else 0
 //   mirror_facings: [[pid, quarter turns, shape]]   every Mirror: its level-data `theta_target` in quarter turns (the
 //          save holds its changes), shape 0 flat, 1 vertical, 2 vertical_downward; they give the open sides a line meets
-//          (docs/MOVEMENT.md "Mirrors turning fire and beams")
+//          (docs/movement.md "Mirrors turning fire and beams")
 //   rover_facings: [[pid, quarter turns]]   every Rover: its level-data `theta_target` in quarter turns (the save holds
-//          its changes); even runs it east-west, odd north-south (docs/MOVEMENT.md "Rovers")
+//          its changes); even runs it east-west, odd north-south (docs/movement.md "Rovers")
 //   skippable: [pid]   the SKIPPABLE Rocks (skipping stones)
 //   teleport: [pid]   the Wardrobes whose skill_flags hold TELEPORT
 //   charm: [pid]   the Wardrobes whose skill_flags hold CHARM
@@ -927,7 +927,7 @@ function buildWorld(pkg: Package) {
     const fenceKeys = new Set(fences.map((fence) => world.key(fence[1], fence[2], fence[3]) * 4 + fence[4]));
     const elevators = buildElevators(world, columns, groupSolid, fenceKeys, rockAt);
 
-    // dragon fire and goblin attacks hold a hero with PROTECTION over water (docs/VIEWER.md "The walk model (viewer)")
+    // dragon fire and goblin attacks hold a hero with PROTECTION over water (docs/viewer.md "The walk model (viewer)")
     const monsters = world.ofType('Monster').map((monster) => {
         const flags = flagsOf(monster.fields, 'constant_flags');
         const facing = flags.includes('DRAGON') ? axisSide(monster.fields) : null;

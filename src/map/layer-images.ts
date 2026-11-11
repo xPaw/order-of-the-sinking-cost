@@ -1,4 +1,4 @@
-// The images of the map layers (DATAFILES.md "The map images"). A layer's thumbnail (one pixel per square) is embedded in
+// The images of the map layers (datafiles.md "The map images"). A layer's thumbnail (one pixel per square) is embedded in
 // the page as a data URL and drawn pixelated until the layer's full image (src/assets/map-<layer>.avif) is
 // decoded. The images are the repeating backgrounds of html elements under the map's svg, so the wrap of the map needs
 // no copies, and a layer is decoded once, before it is shown.
