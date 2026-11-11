@@ -20,7 +20,7 @@ function stateOf(world: FreezerWorld, solved: number[], open: number[], entered:
         (row, i) => solved.includes(i) || entered.includes(i) || (row.needs ?? []).length === 0,
     );
     return {
-        levelReached: reached,
+        doorReached: reached,
         levelSolved: (i) => solved.includes(i),
         gateOpen: world.freezers.map((_, i) => open.includes(i)),
     };

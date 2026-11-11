@@ -16,7 +16,8 @@ export type NeedFreezers = Array<Array<Array<number | undefined>>>;
 
 /** What a save says about the levels and Freezers. */
 export interface BehindState {
-    levelReached: readonly boolean[];
+    /** Per level, whether the hero can reach its door. */
+    doorReached: readonly boolean[];
     levelSolved: (level: number) => boolean;
     gateOpen: readonly boolean[];
 }
@@ -118,7 +119,7 @@ function computeUnmetNeeds(world: FreezerWorld, choice: NeedFreezers, state: Beh
             if (freezerIndex !== undefined && !state.gateOpen[freezerIndex]) {
                 gates.push({ freezer: freezerIndex, opener: need.level });
             }
-            if (!state.levelReached[need.level]) levels.push(need.level);
+            if (!state.doorReached[need.level]) levels.push(need.level);
         });
     });
     return { gates, levels };
@@ -132,7 +133,7 @@ const ascending = (first: number, second: number): number => first - second;
  */
 export function directGatesOf(world: FreezerWorld, choice: NeedFreezers, state: BehindState): number[][] {
     return world.levels.map((_, level) => {
-        if (state.levelReached[level]) return [];
+        if (state.doorReached[level]) return [];
 
         const unmet = unmetNeedsOf(world, choice, state, level);
         const gates = new Set(unmet.gates.map((gate) => gate.freezer));
@@ -147,7 +148,7 @@ export function directGatesOf(world: FreezerWorld, choice: NeedFreezers, state: 
  */
 export function gatesBehindOf(world: FreezerWorld, choice: NeedFreezers, state: BehindState): number[][] {
     return world.levels.map((_, start) => {
-        if (state.levelReached[start]) return [];
+        if (state.doorReached[start]) return [];
 
         const frontier = new Set<number>();
         let nearest: Set<number> | undefined;
@@ -161,7 +162,7 @@ export function gatesBehindOf(world: FreezerWorld, choice: NeedFreezers, state: 
                 const unmet = unmetNeedsOf(world, choice, state, level);
                 for (const gate of unmet.gates) {
                     layerGates.add(gate.freezer);
-                    if (state.levelReached[gate.opener]) frontier.add(gate.freezer);
+                    if (state.doorReached[gate.opener]) frontier.add(gate.freezer);
                 }
                 for (const needed of unmet.levels) {
                     if (seen.has(needed)) continue;

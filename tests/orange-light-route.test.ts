@@ -38,6 +38,18 @@ describe('the doors of endpoint_holder3 and endpoint_holder4', () => {
     test('with skip_purple_drop_alt unsolved neither door is reached', () => {
         expect(doorsOf([], HOLDERS)).toEqual([false, false]);
     });
+
+    test('a level whose door is reached is not blocked, behind a Freezer or a lead', () => {
+        const { status, history } = syntheticCampaign({ rank: 1 });
+        const levels = [{ name: 'skip_purple_drop_alt', flags: SOLVED }];
+        const progress = computeProgress({ ...status, levels }, history);
+        const holder4 = PROG.levels.findIndex((level) => level.n === 'endpoint_holder4');
+
+        expect(progress.doorReached[holder4]).toBe(true);
+        expect(progress.state[holder4]).not.toBe('blocked');
+        expect(progress.behind[holder4]).toEqual([]);
+        expect(progress.leads.some((levelIndices) => levelIndices.includes(holder4))).toBe(false);
+    });
 });
 
 describe('the row 77 walk to simultaneous_x and its Surprise', () => {

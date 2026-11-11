@@ -170,12 +170,12 @@ export function computeProgress(status: ProgressStatus, history: History | null)
     const entered = levelFlags.map((flags) => flags !== undefined);
     const ice = frozenInOf(gateOpen);
     // a level with no needs in the level data is open from the start
-    const { reached: levelReached, doorReached } = needsReach(needsView, entered, ice);
+    const { doorReached } = needsReach(needsView, entered, ice);
     const reachKnown = !!history && !history.demo;
-    const knownReach = reachKnown ? levelReached : null;
+    const knownReach = reachKnown ? doorReached : null;
     const state = levelStates(levelFlags, knownReach);
     const unlocks = unlocksOf();
-    const behindState: BehindState = { levelReached, levelSolved: solved, gateOpen };
+    const behindState: BehindState = { doorReached, levelSolved: solved, gateOpen };
     const behind = gatesBehind(behindState);
     const layersReached = layersReachedOf(knownReach);
     const signFaced = signsFacedOf(gateOpen);

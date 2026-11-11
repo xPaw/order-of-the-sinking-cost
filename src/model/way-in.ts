@@ -221,14 +221,14 @@ export function frozenInOf(gateOpen: boolean[]): Array<number | undefined> {
 }
 
 /**
- * Per level its needs do not reach, the closed Freezers the hero can act on next to get nearer to it (level-freezers.ts
- * gatesBehindOf); none for the others.
+ * Per level whose door the hero cannot reach, the closed Freezers the hero can act on next to get nearer to it
+ * (level-freezers.ts gatesBehindOf); none for the others.
  */
 export function gatesBehind(state: BehindState): number[][] {
     return gatesBehindOf(tableWorld(), tableNeedFreezers(), state);
 }
 
-/** Per closed Freezer, the levels its needs do not reach that have an unmet need standing for it. */
+/** Per closed Freezer, the levels whose door the hero cannot reach that have an unmet need standing for it. */
 export function leadsOf(state: BehindState): number[][] {
     const direct = directGatesOf(tableWorld(), tableNeedFreezers(), state);
     const leads = PROG.freezers.map((): number[] => []);
@@ -317,16 +317,16 @@ export function wayInFor({
     return wayInOf;
 }
 
-/** The map layers that hold a level its needs reach (`levelReached`: per level); every layer without it. */
-export function layersReachedOf(levelReached: readonly boolean[] | null): Set<string> {
+/** The map layers that hold a level whose door the hero can reach (`doorReached`: per level); every layer without it. */
+export function layersReachedOf(doorReached: readonly boolean[] | null): Set<string> {
     const layers = new Set<string>();
-    if (!levelReached) {
+    if (!doorReached) {
         for (const layer of PROG.map?.layers || []) layers.add(layer.key);
         return layers;
     }
 
     PROG.levels.forEach((level, i) => {
-        if (levelReached[i]) layers.add(mapLayerOf(level.p[2]));
+        if (doorReached[i]) layers.add(mapLayerOf(level.p[2]));
     });
     return layers;
 }

@@ -115,25 +115,25 @@ function requirementsMet(level: ProgressLevel, levelFlags: LevelFlags): boolean 
     return level.req.every((required) => isSolved(levelFlags, required));
 }
 
-// a level enabled in the level data is open from the start whatever its gate; without `levelReached` an open level
+// a level enabled in the level data is open from the start whatever its gate; without `doorReached` an open level
 // counts as reachable
 function levelState(
     level: ProgressLevel,
     index: number,
     levelFlags: LevelFlags,
-    levelReached: readonly boolean[] | null,
+    doorReached: readonly boolean[] | null,
 ): LevelState {
     if (isSolved(levelFlags, index)) return 'solved';
     if (isPartlySolved(levelFlags, index)) return 'partial';
     if (levelFlags[index] !== undefined) return 'visited';
     if (!level.en && !requirementsMet(level, levelFlags)) return 'locked';
-    if (!levelReached || levelReached[index]) return 'unlocked';
+    if (!doorReached || doorReached[index]) return 'unlocked';
     return 'blocked';
 }
 
-/** Per level its state; `levelReached`: per level, whether its needs reach it, null when the save has no history. */
-export function levelStates(levelFlags: LevelFlags, levelReached: readonly boolean[] | null): LevelState[] {
-    return PROG.levels.map((level, index) => levelState(level, index, levelFlags, levelReached));
+/** Per level its state; `doorReached`: per level, whether the hero can reach its door, null when the save has no history. */
+export function levelStates(levelFlags: LevelFlags, doorReached: readonly boolean[] | null): LevelState[] {
+    return PROG.levels.map((level, index) => levelState(level, index, levelFlags, doorReached));
 }
 
 // Whether a level opens only once its requirements are met: not enabled from the start, and (for an OR level) no

@@ -236,14 +236,14 @@ The page decides reach from the level table alone ([Level needs and pad routes](
 no flood.
 
 - Door reached (`P.doorReached`): a level's door is reachable when the save entered the level, or its needs hold (a need on a level of its own `req` counts once that level is reached), and it is not frozen in a closed Freezer. A level with no needs counts as reached. Without a history (`P.reachKnown` false) every open level reads "Not entered".
-- Behind (`P.behind`): per level not reached, the closed Freezers to act on next. A need level stands for the Freezer it opens (the nearest by wrapped x/y distance if several, none if it opens none). The walk back along the unmet needs through the unreached levels keeps the closed Freezers whose opener level is reached; with none, the closed Freezers it meets first. A group with a solved need adds none.
-- Leads (`P.leads`): per closed Freezer, the unreached levels with an unmet need that stands for it.
+- Behind (`P.behind`): per level whose door is not reached, the closed Freezers to act on next. A need level stands for the Freezer it opens (the nearest by wrapped x/y distance if several, none if it opens none). The walk back along the unmet needs through the levels whose door is not reached keeps the closed Freezers whose opener level's door is reached; with none, the closed Freezers it meets first. A group with a solved need adds none.
+- Leads (`P.leads`): per closed Freezer, the levels whose door is not reached with an unmet need that stands for it.
 - `inner(gate, level)`: a closed gate is no way in when what it still needs is the level itself or levels whose own requirements need it. For an OR gate with several options: every remaining option is such a level and it has no Sign.
 - Levels needing level L (`levelsNeedingLevel`): walking back along `unlocked_by`, every unsolved level still waiting on its requirements that requires L or such a level (an AND level through any one requirement, an OR level with several options only when every option is such). A gate waiting on them waits on L: a cycle, no way in.
 - Way in (`P.wayIn`): per blocked level, the closed Freezers it sits behind, minus the `inner` ones. In the endgame areas the level table's gates stand in or fill in ([Endgame way-in gates](#endgame-way-in-gates)). Last, gates behind themselves are dropped ([Next steps](#next-steps)).
 - Why (per blocked level): its way-in gates. With no gate and no access mark it reads "no known route", or "from High" when the level data enters it from the sky (`drop`) and fog shows the sky; under fog as for a hidden layer ([The spoiler model (viewer)](#the-spoiler-model-viewer)). A level behind only closed gates it unlocks itself, all shown, reads "only behind a cage it unlocks" (or "cages", "gates").
-- Access (`P.access`): a blocked level on a layer holding no reached level (the sky or the underworld) is marked with that layer; one the level data enters from the sky (`drop`) is marked with the sky while no sky level is reached ([The requirement graph](#the-requirement-graph)).
-- Signs (`P.signFaced`): faced when every Freezer it sits behind from the start (`bg.s` in the static roles) is open ([Sign `rank_satisfied`](progression.md#sign-rank_satisfied)); a Sign the build walk never reaches is not faced. A Sign not faced takes those Freezers as its way in (`P.signWayIn`), less one that waits on the Sign, and its layer as access (`P.signAccess`) when no level there is reached.
+- Access (`P.access`): a blocked level on a layer holding no level with a reached door (the sky or the underworld) is marked with that layer; one the level data enters from the sky (`drop`) is marked with the sky while no sky level has a reached door ([The requirement graph](#the-requirement-graph)).
+- Signs (`P.signFaced`): faced when every Freezer it sits behind from the start (`bg.s` in the static roles) is open ([Sign `rank_satisfied`](progression.md#sign-rank_satisfied)); a Sign the build walk never reaches is not faced. A Sign not faced takes those Freezers as its way in (`P.signWayIn`), less one that waits on the Sign, and its layer as access (`P.signAccess`) when no level there has a reached door.
 
 ### What the walk leaves out
 
@@ -269,8 +269,8 @@ Per overworld level, first match wins:
 | partial              | flags & PARTIALLY_SOLVED                                                                                                                                                |
 | visited (Entered)    | any Status entry                                                                                                                                                        |
 | locked               | not enabled in the level data (`enabled_t_target` 0) and its unlock gate is not met ([Level_Entry unlocking and state](progression.md#level_entry-unlocking-and-state)) |
-| unlocked (Reachable) | the level table reaches it, or there is no history                                                                                                                      |
-| blocked              | the level table does not reach it                                                                                                                                       |
+| unlocked (Reachable) | the level's door is reached, or there is no history                                                                                                                     |
+| blocked              | the level's door is not reached                                                                                                                                         |
 
 Freezers are open when listed in Status list A or satisfied now
 ([Level_Entry unlocking and state](progression.md#level_entry-unlocking-and-state)). Without a history file there is no reach and
