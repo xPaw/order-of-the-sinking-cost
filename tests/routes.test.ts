@@ -574,7 +574,7 @@ describe('levels whose requirements need a level', () => {
     levels.forEach((level, i) => level.req.forEach((j) => unlocks[j].levels.push(i)));
     const solved = (i: number) => i === 6;
     test('AND levels through any requirement, OR levels through every option', () => {
-        expect([...levelsNeedingLevel(levels, unlocks, solved, 0)].toSorted()).toEqual([1, 2, 3, 4]);
+        expect([...levelsNeedingLevel(levels, unlocks, solved, 0)].toSorted((a, b) => a - b)).toEqual([1, 2, 3, 4]);
     });
 });
 

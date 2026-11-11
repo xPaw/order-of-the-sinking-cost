@@ -165,7 +165,7 @@ describe('a gate that needs what sits behind it is no way in', () => {
             gateOpen: [false, false, false],
             met: () => false,
         });
-        expect([...behind].toSorted()).toEqual([0, 1]);
+        expect([...behind].toSorted((a, b) => a - b)).toEqual([0, 1]);
         const kept = wayIn.map((gates) => gates && gates.filter((fi) => !behind.has(fi)));
         const P = progress({ state, wayIn: kept });
         expect(keys(P, ['level', 2])).toEqual(['l3', 'g2', 'l2']);

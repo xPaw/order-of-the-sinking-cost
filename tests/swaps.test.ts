@@ -405,7 +405,7 @@ describe('a stone riding a Lily', () => {
             const walkGrid = setup([[50, 6, 0, 0]], river, { freezers: both, closed: [true, true] });
             const front = new Set<number>();
             walkGrid.flood([walkGrid.cellOf(8, 1, 0)], null, front, { pocket: true });
-            expect([...front].toSorted()).toEqual([0, 1]);
+            expect([...front].toSorted((a, b) => a - b)).toEqual([0, 1]);
         });
     });
 });
@@ -877,7 +877,7 @@ describe('a magic-mirror hop onto a sunk skipping stone', () => {
         const water: Columns = {};
         const walls: Columns = {};
         MAP.forEach((row, j) => {
-            [...row].forEach((tile, i) => {
+            Array.from(row).forEach((tile, i) => {
                 if (tile === '~') water[i + j * 10] = [0];
                 if (tile === '#') walls[i + j * 10] = [0];
             });

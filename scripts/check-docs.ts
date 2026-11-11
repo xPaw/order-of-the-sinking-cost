@@ -47,7 +47,7 @@ function plain(text: string): string {
 }
 
 function slug(text: string): string {
-    const kept = [...plain(text).toLowerCase()].filter((char) => SLUG_KEEPS.test(char));
+    const kept = Array.from(plain(text).toLowerCase()).filter((char) => SLUG_KEEPS.test(char));
     return kept.join('').replaceAll(' ', '-');
 }
 

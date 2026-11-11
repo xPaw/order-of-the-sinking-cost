@@ -47,7 +47,7 @@ test("the end2 room's levels also need all four hub Freezers, one per sky tower"
     expect(progress.wayInAll!.size).toBeGreaterThan(0);
     for (const [level, gates] of progress.wayInAll!) {
         if (PROG.levels[level].a === 'ENDGAME2') continue;
-        expect(gates.toSorted()).toEqual(skyGates.toSorted());
+        expect(gates.toSorted((a, b) => a - b)).toEqual(skyGates.toSorted((a, b) => a - b));
     }
 });
 

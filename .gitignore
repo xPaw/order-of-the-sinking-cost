@@ -1,21 +1,15 @@
-# game binaries and IDA databases
-ida/
-
-# save copies
-saves/
-
-# generated and dumped data, and the built page; the schema comes from the game binary and the WikiTactics list from
-# another repository, so both are kept
+# generated and dumped data, local tools and game binaries, and the built page; the schema comes from the game binary
+# and the WikiTactics list from another repository, so both are kept
 data/*
 !data/schema.json
 !data/wikitactics.txt
 /dist/
 
-# local notes
-IDA_BRIEF.md
-
 # npm
 node_modules/
+
+# Cloudflare deploy cache
+.wrangler/
 
 # Claude Code
 .claude/

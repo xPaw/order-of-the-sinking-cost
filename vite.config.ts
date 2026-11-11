@@ -1,5 +1,5 @@
 import { createReadStream, realpathSync, statSync } from 'node:fs';
-import { relative, resolve, sep } from 'node:path';
+import { dirname, relative, resolve, sep } from 'node:path';
 import { defineConfig, type Plugin } from 'vite-plus';
 import { FOG_TYPE, LATEST_TYPES, PAGE_ENUMS } from './src/schema-types.ts';
 import type { Schema, SchemaField } from './src/types.ts';
@@ -95,34 +95,34 @@ function schemaForPage(): Plugin {
     };
 }
 
-// The build has exactly one script, and its source map lists the sources relative to the repository, with the contents
-// of the JSON data files left out
+// The source maps leave out the contents of the JSON data files
 function scriptMap(): Plugin {
     return {
         name: 'soko:script-map',
         apply: 'build',
         enforce: 'post',
-        generateBundle(options, bundle) {
-            const scripts = Object.values(bundle).filter((output) => output.type === 'chunk');
-            const script = scripts[0];
-            if (scripts.length !== 1 || !script.map) {
-                const names = scripts.map((chunk) => chunk.fileName).join(', ');
-                this.error(`expected one script with a source map, got ${names}`);
+        generateBundle(_options, bundle) {
+            for (const output of Object.values(bundle)) {
+                if (output.type !== 'chunk' || !output.map) continue;
+
+                const map = output.map;
+                const sourcesContent = map.sourcesContent.map((content, index) => {
+                    if (map.sources[index].endsWith('.json')) return null;
+                    return content;
+                });
+                Object.assign(map, { sourcesContent });
+
+                const file = bundle[`${output.fileName}.map`];
+                if (file && file.type === 'asset') file.source = JSON.stringify(map);
             }
-
-            const map = script.map;
-            const outDir = options.dir || DIST;
-            map.sources = map.sources.map((source) => relative(ROOT, resolve(outDir, source)).replace(/\\/g, '/'));
-            const sourcesContent = map.sourcesContent.map((content, index) => {
-                if (map.sources[index].endsWith('.json')) return null;
-                return content;
-            });
-            Object.assign(map, { sourcesContent });
-
-            const file = bundle[`${script.fileName}.map`];
-            if (file && file.type === 'asset') file.source = JSON.stringify(map);
         },
     };
+}
+
+// The source map lists the sources relative to the repository, with forward slashes
+function repoRelativeSource(source: string, mapPath: string): string {
+    const absolute = resolve(dirname(mapPath), source);
+    return relative(ROOT, absolute).replace(/\\/g, '/');
 }
 
 // /levels/ is a static page of every level by area, built from the level data; an empty list fails the build
@@ -137,14 +137,6 @@ function levelsPage(): Plugin {
             this.emitFile({ type: 'asset', fileName: 'levels/index.html', source: levelsPageHtml(sections) });
         },
     };
-}
-
-// Every file in assets/ has the hash of its content in its name, so it can be cached for good (public/_headers); the
-// page's styles are one file, named like the script
-function assetFileName(asset: { names?: string[]; name?: string }): string {
-    const name = asset.names?.[0] ?? asset.name ?? '';
-    if (name.endsWith('.css')) return 'assets/viewer-[hash].css';
-    return 'assets/[name]-[hash][extname]';
 }
 
 export default defineConfig({
@@ -170,9 +162,7 @@ export default defineConfig({
             output: {
                 format: 'es',
                 minify: { compress: true, mangle: false, codegen: { removeWhitespace: true } },
-                entryFileNames: 'assets/viewer-[hash].js',
-                chunkFileNames: 'assets/viewer-[name]-[hash].js',
-                assetFileNames: assetFileName,
+                sourcemapPathTransform: repoRelativeSource,
             },
         },
     },
@@ -190,19 +180,10 @@ export default defineConfig({
         tabWidth: 4,
         useTabs: false,
         endOfLine: 'lf',
-        ignorePatterns: [
-            'data/**',
-            'docs/**',
-            'ida/**',
-            '**/*.md',
-            '**/*.json',
-            'dist/**',
-            'node_modules/**',
-            'scripts/lib/level-table.ts',
-        ],
+        ignorePatterns: ['data/**', '**/*.json', 'dist/**', 'node_modules/**', 'scripts/lib/level-table.ts'],
     },
     lint: {
-        ignorePatterns: ['data/**', 'dist/**', 'ida/**', 'node_modules/**'],
+        ignorePatterns: ['data/**', 'dist/**', 'node_modules/**'],
         options: { typeAware: true, typeCheck: true },
         categories: { correctness: 'error', suspicious: 'error' },
         rules: {
@@ -220,15 +201,5 @@ export default defineConfig({
             // helpers stay next to the code that uses them
             'unicorn/consistent-function-scoping': 'off',
         },
-        overrides: [
-            {
-                // the type-aware rules the JavaScript scripts and tests are not held to
-                files: ['scripts/**/*.{js,ts}', 'tests/**/*.{js,ts}', 'vite.config.ts'],
-                rules: {
-                    'typescript/no-misused-spread': 'off',
-                    'typescript/require-array-sort-compare': 'off',
-                },
-            },
-        ],
     },
 });

@@ -173,13 +173,15 @@ describe('goals with spoilers hidden', () => {
         expect(PROG.levels.length).toBe(goalOfKind(model, 'completionist')!.progress![1]);
         // every ground tower under the first ending, its Antipode teleporters counted against the Sign
         const firstEnding = model.goals[0];
-        expect(firstEnding.children!.map((child) => child.tower).toSorted()).toEqual([...groundTowers()].toSorted());
+        const firstTowers = firstEnding.children!.map((child) => child.tower!);
+        expect(firstTowers.toSorted((a, b) => a - b)).toEqual([...groundTowers()].toSorted((a, b) => a - b));
         expect(firstEnding.progress).toEqual([0, 4]);
         // the second ending lists its stages: the towers whose Signs open Freezers, each followed by its Way, among the
         // places and levels, none under fog here
         const secondEnding = model.goals[1];
         const stageTowers = secondEnding.children!.filter((child) => child.kind === 'tower');
-        expect(stageTowers.map((child) => child.tower).toSorted()).toEqual([...freezerTowerSet()].toSorted());
+        const stageTowerIds = stageTowers.map((child) => child.tower!);
+        expect(stageTowerIds.toSorted((a, b) => a - b)).toEqual([...freezerTowerSet()].toSorted((a, b) => a - b));
         expect(secondEnding.children!.map((child) => child.label)).toEqual([
             'Crossroads High',
             'High Heroes',
