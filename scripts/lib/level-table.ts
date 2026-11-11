@@ -1141,8 +1141,8 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
     treadmill: { needs: [[{ level: 'easy_reset_small' }]] },
     recycling: { needs: [[{ level: 'treadmill' }]] },
     fall_reset_v2: { needs: [[{ level: 'treadmill' }]] },
-    reset_trio: { needs: [[{ level: 'treadmill' }]] },
     monster_spawn: { needs: [[{ level: 'treadmill' }]] },
+    reset_trio: { needs: [[{ level: 'fall_reset_v2' }, { level: 'monster_spawn' }]] },
 
     // Skipping, Misc Beams
     smash_midskip_simpler4: { needs: [[{ level: 'skip_purple_drop_alt' }]] },
