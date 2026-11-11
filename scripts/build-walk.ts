@@ -1,25 +1,29 @@
 // Writes data/walk.json: what the walk model works out from the level data alone, so the page does not redo it on
 // every load.
 //
-// Reads data/progress.json (the world cells come in through it from data/world.json); writes data/walk.json.
+// Reads data/progress.json (the world cells come in through it from data/world.json); writes data/walk.json and
+// data/rooms.json.
 //
 // Usage: node scripts/build-walk.ts [--game DIR]
 //
 // Output (docs/VIEWER.md "The walk model (viewer)" and "Level roles (viewer)"):
+//   walk.json, which the page loads:
 //   inputs: per input file name (in data/), the SHA-256 of its bytes, and the SHA-256 of the room search's sources
 //     (scripts/lib/walk-inputs.ts); tests/walk-data.test.ts fails when they no longer match. The full recompute of the
 //     room answers is opt-in there (WALK_FULL=1)
 //   roles: staticRoles() (src/model/static-roles.ts). need.l / need.g: one digit per level / Freezer, 2 Required, 1 Required as
-//     one of several, 0 Optional; bg.l / bg.g: per level / Freezer, the Freezers it sits behind
+//     one of several, 0 Optional; bg.g / bg.s: per Freezer / Sign, the Freezers it sits behind
 //   floors: floorHeights() (src/walk/reachability.ts), per map layer key a zlib stream (base64) of one byte per map column (row 0 =
 //     north): the highest z where the hero can stand there plus 128, 0 where he stands nowhere
-//   rooms: the push search of the screen rooms (src/walk/room-search.ts), run first on the level data alone: how many
-//     rooms it searched with every Freezer closed, how many with some Freezers open, how many answers it stores, the
-//     positions it visited, the first cell of each room that hit the cap, and the answers (packRooms in src/walk/room-answers.ts) as a zlib stream (base64) of JSON. The roles and the
-//     floors below are worked out with these answers in use, as the page does.
+//   rooms.json, for the scripts and the tests: the push search of the screen rooms (src/walk/room-search.ts), run first
+//     on the level data alone: how many rooms it searched with every Freezer closed, how many with some Freezers open,
+//     how many answers it stores, the positions it visited, the first cell of each room that hit the cap, and the
+//     answers (packRooms in src/walk/room-answers.ts) as a zlib stream (base64) of JSON. The roles and the floors are
+//     worked out with these answers in use.
 import { statSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';
-import { PROG, worldReady } from '../src/data.ts';
+import { PROG } from '../src/data.ts';
+import { worldReady } from '../src/world-data.ts';
 import { staticRoles } from '../src/model/static-roles.ts';
 import { NO_HISTORY, floorHeights } from '../src/walk/reachability.ts';
 import { packRooms, setRoomAnswers } from '../src/walk/room-answers.ts';
@@ -95,10 +99,10 @@ async function main(): Promise<void> {
         inputs: walkInputs(),
         roles: packedRoles(roles),
         floors: packedFloors(heights),
-        rooms: packed,
     };
     const walkPath = paths.data('walk.json');
     writeJsonAtomic(walkPath, out);
+    writeJsonAtomic(paths.data('rooms.json'), packed);
     const required = [...roles.need.l].filter((need) => need > 0).length;
     console.log(
         `levels ${roles.need.l.length} required ${required} gates ${roles.need.g.length} ` +

@@ -1,8 +1,9 @@
 // The level-data part of the walk: everything a walker's grid takes from data/progress.json and data/world.json alone,
 // which no save changes (VIEWER.md "The walk model (viewer)")
-import { PROG, WORLD } from '../data.ts';
-import type { WorldCells } from '../data.ts';
+import { PROG } from '../data.ts';
 import type { ExistenceGroup, Freezer, SpawnRow, Teleporter, World } from '../types.ts';
+import { WORLD, WORLD_FILE } from '../world-data.ts';
+import type { WorldCells } from '../world-data.ts';
 import { roomOf } from './beams.ts';
 import { BEAMSTOP, cellOf, keyOf, mod, sideColumnsOf, SOLID, SUPPORT, Z_BIAS } from './cells.ts';
 import type { GridDimensions, GridShape } from './cells.ts';
@@ -383,10 +384,15 @@ function sameLevelData(current: unknown[]): boolean {
 export function levelGeometry(): LevelGeometry {
     if (!WORLD) throw new Error('levelGeometry() needs the world cells: wait for worldReady');
 
-    const current = [PROG.world, WORLD.solid, WORLD.groups, WORLD.water, PROG.teleporters, PROG.freezers];
+    const source: LevelSource = {
+        world: WORLD_FILE.world,
+        teleporters: WORLD_FILE.teleporters,
+        freezers: PROG.freezers,
+    };
+    const current = [source.world, WORLD.solid, WORLD.groups, WORLD.water, source.teleporters, source.freezers];
     if (built && sameLevelData(current)) return built;
 
-    built = buildLevelGeometry(PROG, WORLD);
+    built = buildLevelGeometry(source, WORLD);
     builtFrom = current;
     return built;
 }

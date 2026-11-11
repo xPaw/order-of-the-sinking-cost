@@ -65,6 +65,18 @@ export function indicesWhere<Item>(items: Item[], keep: (item: Item, index: numb
     return indices;
 }
 
+// the html each element was last given by setHtml
+const writtenHtml = new WeakMap<Element, string>();
+
+/** Sets the element's html unless setHtml gave it the same last, so an unchanged list is not rebuilt; whether it was set. */
+export function setHtml(element: Element, html: string): boolean {
+    if (writtenHtml.get(element) === html) return false;
+
+    element.innerHTML = html;
+    writtenHtml.set(element, html);
+    return true;
+}
+
 /** Marks a segmented-control button as on or off. */
 export function setButtonPressed(button: HTMLElement, pressed: boolean): void {
     button.classList.toggle('on', pressed);

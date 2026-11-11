@@ -1,10 +1,14 @@
 // Entity diff blobs on small synthetic buffers, against the field lists in data/schema.json
+import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
 import type { DecodedBlob, FieldValue } from '../src/blob.ts';
-import { SCHEMA } from '../src/data.ts';
-import { decodeBlob } from '../src/save.ts';
-import type { SchemaField } from '../src/types.ts';
+import { createBlobDecoder } from '../src/blob.ts';
+import type { Schema, SchemaField } from '../src/types.ts';
 import { Writer } from './writer.ts';
+
+// the whole schema: the page's copy keeps only the entity types and field keys the page decodes
+const SCHEMA: Schema = JSON.parse(readFileSync(new URL('../data/schema.json', import.meta.url), 'utf8'));
+const decodeBlob = createBlobDecoder(SCHEMA);
 
 // a value as the writers below produce it and as `norm` shapes a decoded one: raw bytes as plain arrays
 interface PlainValue {

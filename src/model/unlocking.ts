@@ -2,7 +2,6 @@
 // (PROGRESSION.md "Level_Entry unlocking and state", VIEWER.md "Level states (viewer)")
 import { PROG } from '../data.ts';
 import type { Freezer, FreezerSign, ProgressLevel } from '../types.ts';
-import type { Reachability } from '../walk/reachability.ts';
 import type { Status } from '../status-file.ts';
 import type { TowerProgress } from './towers.ts';
 
@@ -11,6 +10,11 @@ export type LevelFlags = Array<number | undefined>;
 
 /** The state of a level: how far the player is in it, or what keeps them from it. */
 export type LevelState = 'solved' | 'partial' | 'visited' | 'unlocked' | 'blocked' | 'locked';
+
+/** Whether a level state shows the save in the level: solved, partially solved or entered. */
+export function isEntered(state: LevelState): boolean {
+    return state === 'solved' || state === 'partial' || state === 'visited';
+}
 
 const statusFlagCache = new WeakMap<object, Map<string, number>>();
 
@@ -111,24 +115,25 @@ function requirementsMet(level: ProgressLevel, levelFlags: LevelFlags): boolean 
     return level.req.every((required) => isSolved(levelFlags, required));
 }
 
-// a level enabled in the level data is open from the start whatever its gate; without a reachability model an open
-// level counts as reachable
+// a level enabled in the level data is open from the start whatever its gate; without `levelReached` an open level
+// counts as reachable
 function levelState(
     level: ProgressLevel,
     index: number,
     levelFlags: LevelFlags,
-    reach: Reachability | null,
+    levelReached: readonly boolean[] | null,
 ): LevelState {
     if (isSolved(levelFlags, index)) return 'solved';
     if (isPartlySolved(levelFlags, index)) return 'partial';
     if (levelFlags[index] !== undefined) return 'visited';
     if (!level.en && !requirementsMet(level, levelFlags)) return 'locked';
-    if (!reach || reach.level[index]) return 'unlocked';
+    if (!levelReached || levelReached[index]) return 'unlocked';
     return 'blocked';
 }
 
-export function levelStates(levelFlags: LevelFlags, reach: Reachability | null): LevelState[] {
-    return PROG.levels.map((level, index) => levelState(level, index, levelFlags, reach));
+/** Per level its state; `levelReached`: per level, whether its needs reach it, null when the save has no history. */
+export function levelStates(levelFlags: LevelFlags, levelReached: readonly boolean[] | null): LevelState[] {
+    return PROG.levels.map((level, index) => levelState(level, index, levelFlags, levelReached));
 }
 
 // Whether a level opens only once its requirements are met: not enabled from the start, and (for an OR level) no

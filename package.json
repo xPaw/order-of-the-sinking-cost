@@ -17,14 +17,15 @@
     "docs:check": "node scripts/check-docs.ts",
     "dump:model": "node scripts/dump-model.ts",
     "icons": "node scripts/build-icons.ts",
-    "data": "npm run data:levels && npm run data:areas && npm run data:fog && npm run data:world && npm run data:map && npm run data:progress && npm run data:walk",
+    "data": "npm run data:levels && npm run data:areas && npm run data:fog && npm run data:world && npm run data:map && npm run data:progress && npm run data:walk && npm run data:cells",
     "data:levels": "node scripts/build-levels.ts",
     "data:areas": "node scripts/build-areas.ts",
     "data:fog": "node scripts/build-fog.ts",
     "data:world": "node scripts/build-world.ts",
     "data:map": "node scripts/build-map.ts",
     "data:progress": "node scripts/build-progress.ts",
-    "data:walk": "node scripts/build-walk.ts"
+    "data:walk": "node scripts/build-walk.ts",
+    "data:cells": "node scripts/build-level-cells.ts"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

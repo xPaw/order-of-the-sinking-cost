@@ -1,8 +1,6 @@
-// Why the walk calls a level unreachable: the closed gates in front of it, the layer it is on, and the mechanics the
-// walk does not model near the way in, named while spoilers show or once the save has met them (their world's
-// achievement) (VIEWER.md "Pockets, leads and why", "The spoiler model (viewer)")
+// Why the level table does not reach a level: the closed Freezers in front of it and the layer it is on
+// (VIEWER.md "Ways in and leads", "The spoiler model (viewer)")
 import { PROG } from '../data.ts';
-import { hasAchievement } from '../model/achievements.ts';
 import { freezerNoun, freezersNoun } from '../model/freezer-names.ts';
 import { layerName, wayTo } from '../model/layers.ts';
 import type { ProgressModel } from '../model/progress-model.ts';
@@ -10,34 +8,24 @@ import type { ShownProgress } from '../model/progress.ts';
 import type { PanelContext } from './context.ts';
 
 /** The members of the panel context that the why text reads. */
-export interface WhyContext extends Pick<PanelContext, 'hide' | 'freezers' | 'iceOf' | 'gateShown' | 'gateArea'> {
-    status: Pick<PanelContext['status'], 'achievements'>;
-    progress: Pick<ShownProgress, 'wayIn' | 'wayInAll' | 'why' | 'access' | 'behind'>;
+export interface WhyContext extends Pick<PanelContext, 'freezers' | 'iceOf' | 'gateShown' | 'gateArea'> {
+    progress: Pick<ShownProgress, 'wayIn' | 'wayInAll' | 'access' | 'behind'>;
     model: Pick<ProgressModel, 'stepShown'>;
 }
 
 /**
- * The pieces of why a level is not reachable: its gates, the mechanics and the layer it needs, whether nothing is known,
- * whether the level data enters it from the sky (`skyEntry`) and whether that shows (`fromSky`), and the gates in front
- * of it that the level itself unlocks.
+ * The pieces of why a level is not reachable: its gates and the layer it needs, whether nothing is known, whether the
+ * level data enters it from the sky (`skyEntry`) and whether that shows (`fromSky`), and the gates in front of it that
+ * the level itself unlocks.
  */
 export interface WhyParts {
     gate: string;
-    mech: string;
     layer: string;
     none: boolean;
     skyEntry: boolean;
     fromSky: boolean;
     ownGates: string;
 }
-
-// the world's achievement that names a mechanic, and the mechanic in the game's words (it capitalises its objects)
-const MECHANICS: Record<string, [achievement: string, text: string]> = {
-    dragon: ['HEROES', 'Dragon fire'],
-    beam: ['PROMISE', 'Beams'],
-    mirror: ['MIRRORS', 'Mirrors'],
-    stones: ['SKIPPING', 'Skipping Stones'],
-};
 
 /** A level's way-in gates that fog does not hide. */
 export function wayIn(context: WhyContext, levelIndex: number): number[] {
@@ -80,18 +68,9 @@ function ownGatesText(context: WhyContext, levelIndex: number): string {
     return `only behind a ${freezerNoun(shown[0])} it unlocks${gateAreaSuffix(context, shown[0])}`;
 }
 
-function mechanicsText(context: WhyContext, mechanics: string[]): string {
-    if (!mechanics.length) return '';
-
-    const known = mechanics.filter((key) => !context.hide || hasAchievement(context.status, MECHANICS[key][0]));
-    if (!known.length) return 'may need something the map does not model';
-    return `may need ${known.map((key) => MECHANICS[key][1]).join(' / ')}`;
-}
-
-/** The pieces of why a level the walk cannot reach may still be reachable, as the panels word them. */
+/** The pieces of why the level table does not reach a level, as the panels word them. */
 export function whyParts(context: WhyContext, levelIndex: number): WhyParts {
     const progress = context.progress;
-    const mechanics = progress.why?.[levelIndex]?.mech ?? [];
     const layer = progress.access?.[levelIndex];
 
     // a layer the walk has not reached, named once its way onto it shows as a plan step
@@ -105,26 +84,21 @@ export function whyParts(context: WhyContext, levelIndex: number): WhyParts {
     const fromSky = skyEntry && context.model.stepShown({ t: 'a', id: 'sky' });
     return {
         gate: gateText(context, levelIndex, wayIn(context, levelIndex)),
-        mech: mechanicsText(context, mechanics),
         layer: layerText,
-        none: !progress.wayIn?.[levelIndex]?.length && !mechanics.length && !layer,
+        none: !progress.wayIn?.[levelIndex]?.length && !layer,
         skyEntry,
         fromSky,
         ownGates: ownGatesText(context, levelIndex),
     };
 }
 
-/** The tooltip that says the walk model is approximate, naming what it leaves out while spoilers show. */
-export function approxTip(context: WhyContext): string {
-    let leftOut = 'Mirrors, vertical Beams and Dragon fire';
-    if (context.hide) leftOut = 'some mechanics';
-    return `Approximate: the walk model leaves out ${leftOut}`;
-}
+/** The tooltip that says the way in is only what the level table and the Freezers behind a level show. */
+export const APPROX_TIP = 'Approximate: the level table may leave out ways in';
 
-/** Why the walk calls a level unreachable, in one line. */
+/** Why the level table does not reach a level, in one line. */
 export function whyText(context: WhyContext, levelIndex: number): string {
     const parts = whyParts(context, levelIndex);
-    const text = [parts.gate, parts.mech, parts.layer].filter(Boolean).join(' · ');
+    const text = [parts.gate, parts.layer].filter(Boolean).join(' · ');
     if (text) return text;
     if (!parts.none) return 'not reachable from where you have been';
 

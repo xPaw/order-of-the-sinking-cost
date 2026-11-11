@@ -79,7 +79,7 @@ const FOG_CHIP = 'Level under fog';
 export const FOG_TEXT = '<span class="muted">A level under fog</span>';
 
 export function levelChip(
-    progress: Pick<ShownProgress, 'hidden' | 'state' | 'reach'>,
+    progress: Pick<ShownProgress, 'hidden' | 'state' | 'reachKnown'>,
     levelIndex: number,
     attr = 'data-goto',
 ): string {

@@ -10,16 +10,20 @@ import type { TowerProgress } from '../src/model/towers.ts';
 import type { LevelState, SignRule } from '../src/model/unlocking.ts';
 import { SIGN_INDEX } from '../src/model/requirements.ts';
 import { gatesBehindThemselves, signWayInOf } from '../src/model/way-in.ts';
-import type { WhyBlocked } from '../src/model/way-in.ts';
 import type { RouteNeed } from '../src/types.ts';
-import type { Reachability } from '../src/walk/reachability.ts';
 import { level } from './fixtures.ts';
 
+vi.mock('../src/world-data.ts', () => import('./world-data-mock.ts'));
 vi.mock('../src/data.ts', async () => {
     const SCHEMA = (await import('../data/schema.json')).default;
     return { SCHEMA, PROG: {}, WORLD: {}, worldReady: Promise.resolve() };
 });
-vi.mock('../src/walk-data.ts', () => ({ STATIC_ROLES: null, FLOOR_HEIGHTS: null, walkReady: Promise.resolve() }));
+// Sign 0 sits behind Freezers 0 and 1 from the start
+vi.mock('../src/walk-data.ts', () => ({
+    STATIC_ROLES: { need: { l: new Uint8Array(), g: new Uint8Array() }, bg: { g: [], s: [[0, 1]] } },
+    FLOOR_HEIGHTS: null,
+    walkReady: Promise.resolve(),
+}));
 
 /** A progress with the plans and next steps built on it, which the tests set or clear. */
 interface PlannedProgress extends BaseProgress {
@@ -59,20 +63,20 @@ function progress({ state, wayIn = [], towers = [], rank = 0, extra = {} }: Prog
         if (sign.tower != null) return !!towerAt[sign.tower]?.active;
         return false;
     };
-    const blockedWhy = (): WhyBlocked => ({ gates: [], pad: [], via: [], viaTowers: [], mech: [] });
     const built: PlannedProgress = {
         state,
         unlocks: state.map(() => ({ levels: [] })),
         wayIn: state.map((levelState, i) => (levelState === 'blocked' ? wayIn[i] || [] : null)),
-        wayInChains: state.map(() => null),
-        wayInFixed: new Set(),
-        why: state.map((levelState) => (levelState === 'blocked' ? blockedWhy() : null)),
         behind: state.map((_, i) => wayIn[i] || []),
+        leads: [],
         access: state.map(() => null),
+        signFaced: [],
         signAccess: [],
         signWayIn: [],
         ice: [],
-        reach: null,
+        reachKnown: false,
+        doorReached: state.map(() => true),
+        layersReached: new Set(),
         lt: null,
         solved: 0,
         gateOpen: PROG.freezers.map(() => false),
@@ -138,46 +142,6 @@ describe('plans do not depend on the root', () => {
     });
 });
 
-describe('a doorway onto another closed gate', () => {
-    // level 1 sits behind gate 0, which opens onto nothing but gate 1; gate 0 needs level 0, gate 1 the locked level 2
-    test('the plan takes both gates', () => {
-        Object.assign(PROG, {
-            levels: [level('a'), level('b'), level('c', { req: [0] })],
-            freezers: [
-                { req: [0], signs: [] },
-                { req: [2], signs: [] },
-            ],
-            signs: [],
-            gold_rooms: [],
-        });
-        const wayInChains = [null, new Map([[0, [[0, 1]]]]), null];
-        const P = progress({ state: ['unlocked', 'blocked', 'locked'], wayIn: [null, [0]], extra: { wayInChains } });
-        expect(keys(P, ['level', 1]).toSorted()).toEqual(['g0', 'g1', 'l0', 'l1', 'l2']);
-    });
-    test('a gate beyond it that needs the level behind it drops the way through', () => {
-        Object.assign(PROG, {
-            levels: [level('b'), level('open')],
-            freezers: [
-                { req: [1], signs: [] },
-                { req: [0], signs: [] },
-            ],
-            signs: [],
-            gold_rooms: [],
-        });
-        const state: LevelState[] = ['blocked', 'unlocked'];
-        const behind = gatesBehindThemselves({
-            state,
-            wayIn: [[0], null],
-            chains: [new Map([[0, [[0, 1]]]]), null],
-            via: () => [],
-            ice: state.map(() => undefined),
-            gateOpen: [false, false],
-            met: () => false,
-        });
-        expect([...behind]).toEqual([1]);
-    });
-});
-
 describe('a gate that needs what sits behind it is no way in', () => {
     // gate 0 needs level 0, which sits behind gate 1; gate 1 needs level 1, which sits behind gate 0. Level 2 sits
     // behind gate 0 or gate 2, which needs the playable level 3.
@@ -197,7 +161,6 @@ describe('a gate that needs what sits behind it is no way in', () => {
         const behind = gatesBehindThemselves({
             state,
             wayIn,
-            via: () => [],
             ice: state.map(() => undefined),
             gateOpen: [false, false, false],
             met: () => false,
@@ -208,28 +171,6 @@ describe('a gate that needs what sits behind it is no way in', () => {
         expect(keys(P, ['level', 2])).toEqual(['l3', 'g2', 'l2']);
         expect(keys(P, ['level', 0])).toEqual(['l0']);
         expect(keys(P, ['level', 1])).toEqual(['l1']);
-    });
-    test('a cycle with a way out keeps its gates', () => {
-        Object.assign(PROG, {
-            levels: [level('zach1'), level('airmail'), level('open')],
-            freezers: [
-                { req: [0], signs: [] },
-                { req: [1], signs: [] },
-            ],
-            signs: [],
-            gold_rooms: [],
-        });
-        // level 1 is also reached by a pad from the playable level 2
-        const state: LevelState[] = ['blocked', 'blocked', 'unlocked'];
-        const behind = gatesBehindThemselves({
-            state,
-            wayIn: [[1], [0], null],
-            via: (i) => (i === 1 ? [2] : []),
-            ice: state.map(() => undefined),
-            gateOpen: [false, false],
-            met: () => false,
-        });
-        expect(behind.size).toBe(0);
     });
 });
 
@@ -281,12 +222,6 @@ describe('towers and the endgame chain', () => {
     test('a tower needs its cheapest levels, as many as it still needs', () => {
         expect(keys(setup(open), ['tower', 0])).toEqual(['l0', 'l1', 't0']);
     });
-    test('a level reached through a Tower pad needs that Tower', () => {
-        const P = setup(open);
-        P.wayIn[7] = [];
-        P.why[7] = { gates: [], pad: [], via: [], viaTowers: [0], mech: [] };
-        expect(keys(P, ['level', 7])).toEqual(['l0', 'l1', 't0', 'l7']);
-    });
     test('the gold Sign needs that many gold rooms, each its tower and a step onto its pad', () => {
         const plan = keys(setup(open), ['level', 6]);
         for (const key of ['t0', 'p0', 't1', 'p1', 'g0', 'l6']) expect(plan).toContain(key);
@@ -327,8 +262,8 @@ describe('towers and the endgame chain', () => {
     });
 });
 
-describe('a Sign the walk cannot face yet', () => {
-    // Sign 90 (rank 1) stands in a pocket behind gate 0 (needs level 0) and opens gate 1; level 1 is the ENDGAME1 level
+describe('a Sign a hero cannot face yet', () => {
+    // Sign 90 (rank 1) stands behind gates 0 (needs level 0) and 1, which it opens; level 1 is the ENDGAME1 level
     const setup = () => {
         Object.assign(PROG, {
             levels: [level('a'), level('end1', { a: 'ENDGAME1' })],
@@ -342,14 +277,13 @@ describe('a Sign the walk cannot face yet', () => {
         // requirements.ts reads the Signs' indices when it loads, before the test sets them
         SIGN_INDEX.set(90, 0);
         const gateOpen = PROG.freezers.map(() => false);
-        const reach = { signFaced: Uint8Array.of(0), signBehind: [[0, 1]] };
-        const signWayIn = signWayInOf(reach, gateOpen);
+        const signWayIn = signWayInOf([false], gateOpen);
         return { signWayIn, P: progress({ state: ['unlocked', 'unlocked'], extra: { signWayIn } }) };
     };
     afterEach(() => {
         SIGN_INDEX.delete(90);
     });
-    test('its way in is the gates whose opening lets the walk face it, less the gates that wait on it', () => {
+    test('its way in is the closed gates it sits behind, less the gates that wait on it', () => {
         expect(setup().signWayIn).toEqual([[0]]);
     });
     test('its plan takes one of those gates along with its rule', () => {
@@ -366,10 +300,6 @@ describe('a Sign the walk cannot face yet', () => {
         expect(plan).not.toContain('g0');
     });
 });
-
-// the parts of a reachability the Way reads: whether the walk faces a Sign, and the columns it reaches
-const isReachability = (value: unknown): value is Reachability =>
-    typeof value === 'object' && value !== null && 'signFaced' in value && 'cols' in value;
 
 describe('a sky Way', () => {
     // a sky tower of level 0 whose hub Sign 90 opens gate 0; the Way to its quarter (area 5) asks for level 1 and one
@@ -425,11 +355,8 @@ describe('a sky Way', () => {
         expect(plan).not.toContain('w5');
     });
 
-    test('the Way is met once the walk faces the Sign', () => {
-        const reach: unknown = { signFaced: Uint8Array.of(1), signBehind: [[]], cols: {} };
-        if (!isReachability(reach)) throw new Error('not a reachability');
-
-        const plan = keys(setup([[1]], { reach }), ['gate', 0]);
+    test('the Way is met once a hero can face the Sign', () => {
+        const plan = keys(setup([[1]], { signFaced: [true] }), ['gate', 0]);
         expect(plan).not.toContain('w5');
         expect(plan).toContain('s0');
     });

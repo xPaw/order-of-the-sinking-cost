@@ -10,6 +10,7 @@ import { level } from './fixtures.ts';
 // one cage that level 0 unlocks
 const FREEZERS = vi.hoisted((): Freezer[] => [{ pid: 1, p: [0, 0, 0], l: 0, req: [0] }]);
 
+vi.mock('../src/world-data.ts', () => import('./world-data-mock.ts'));
 vi.mock('../src/data.ts', async () => {
     const SCHEMA = (await import('../data/schema.json')).default;
     return { SCHEMA, PROG: { levels: [], freezers: FREEZERS }, WORLD: {}, worldReady: Promise.resolve() };
@@ -33,13 +34,10 @@ function context({ fromSky, skyShown, bumped = [], gateShown = true }: Stub): Wh
     return {
         progress: {
             wayIn: [[]],
-            why: [{ gates: [], pad: [], via: [], viaTowers: [], mech: [] }],
             access: [null],
             behind: [bumped],
         },
         model: { stepShown: (node: PlanStep) => node.t !== 'a' || node.id !== 'sky' || skyShown },
-        status: { achievements: 0n },
-        hide: true,
         iceOf: [],
         freezers: FREEZERS,
         gateShown: () => gateShown,

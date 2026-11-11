@@ -53,10 +53,8 @@ export type PlanStep = IndexedStep | NamedStep | SignStep | WayStep;
  *   level, solved: met. Playable now (entered, partly solved or reachable): a step with no parts (`front`).
  *   level, locked: its unsolved requirements (all, or the cheapest one for an OR gate), and a closed Freezer it is
  *     frozen in.
- *   level, not reachable: the cheapest of its way-in gates (progress.wayIn; for a doorway, the cheapest way through it,
- *     all of its gates: progress.wayInChains) and the levels by a pad that reveals one in its pocket; with none, on a
- *     layer the walk reaches nowhere, the way onto that layer (a); else, when it has none, or none has a plan and each
- *     gate only leads to such a pad, a step of its own.
+ *   level, not reachable: the cheapest of its way-in gates (progress.wayIn); with none, on a layer with no reached
+ *     level, the way onto that layer (a); else a step of its own.
  *   Freezer, open: met. Closed: its unmet levels and signs (all, or the cheapest one for an OR gate; an OR gate with one
  *     met opens at the next overworld load, a step with no parts).
  *   way (w): a sky Way of the pad routes (progress.json pad_routes): met once its tower's hub quarter is reached
@@ -135,10 +133,9 @@ export function requirementGraph(progress: BaseProgress): Graph {
     access.set('sky', graph.add('a:sky', { t: 'a', id: 'sky' }, 'and', [rankId.get(1)!]));
     access.set('underworld', graph.add('a:underworld', { t: 'a', id: 'underworld' }, 'and', [accessId('sky')]));
 
-    // the way onto a layer is met once the walk reaches a cell on it
+    // the way onto a layer is met once a level on it is reached
     for (const [layer, id] of access) {
-        const layerCols = progress.reach?.cols[layer];
-        if (layerCols?.some((value) => value)) graph.met[id] = true;
+        if (progress.layersReached.has(layer)) graph.met[id] = true;
     }
 
     for (const [name, rank, layer] of MARKER_RANKS) {
@@ -176,7 +173,7 @@ export function requirementGraph(progress: BaseProgress): Graph {
         wayOfRoute.set(route, id);
 
         const read = signIndex >= 0 && progress.signRead(PROG.signs[signIndex].pid);
-        const faced = signIndex >= 0 && !!progress.reach?.signFaced[signIndex];
+        const faced = signIndex >= 0 && progress.signFaced[signIndex];
         const padFound = hub !== undefined && progress.tst[hub].disc;
         if (read || faced || padFound) graph.met[id] = true;
     });
@@ -272,14 +269,6 @@ export function requirementGraph(progress: BaseProgress): Graph {
         if (!graph.met[wayId]) graph.parts[wayId] = needsParts(route.id, route.needs);
     }
 
-    // every way-in gate of a level the walk cannot reach only leads to a pad that reveals one in its pocket
-    const onlyPadGates = (levelIndex: number, gateIndices: number[]) => {
-        if (!gateIndices.length) return true;
-        if (!progress.behind[levelIndex].length) return false;
-        const padGates = new Set(progress.why[levelIndex]!.pad);
-        return gateIndices.every((freezerIndex) => padGates.has(freezerIndex));
-    };
-
     levels.forEach((level, levelIndex) => {
         const id = levelId[levelIndex];
         const levelState = progress.state[levelIndex];
@@ -328,43 +317,22 @@ export function requirementGraph(progress: BaseProgress): Graph {
         }
 
         const gateIndices = progress.wayIn[levelIndex] || [];
-        const viaLevels = progress.wayInFixed?.has(levelIndex) ? [] : progress.why[levelIndex]?.via || [];
-        const viaTowers = progress.wayInFixed?.has(levelIndex) ? [] : progress.why[levelIndex]?.viaTowers || [];
-        const levelChains = progress.wayInChains[levelIndex];
-
-        // a doorway is entered by one of the ways through it, each needing all of its gates
-        const wayParts = (freezerIndex: number) => {
-            const chains = levelChains?.get(freezerIndex);
-            if (!chains) return [gateId[freezerIndex]];
-
-            return chains.map((chain) => {
-                const key = 'w' + levelIndex + ':' + chain.join(',');
-                return graph.add(
-                    key,
-                    null,
-                    'and',
-                    chain.map((gate) => gateId[gate]),
-                );
-            });
-        };
-
         graph.kind[id] = 'or';
-        graph.parts[id] = [
-            ...gateIndices.flatMap(wayParts),
-            ...viaLevels.map((via) => levelId[via]),
-            ...viaTowers.map((tower) => towerId[tower]),
-        ];
+        graph.parts[id] = gateIndices.map((freezerIndex) => gateId[freezerIndex]);
 
         const layer = progress.access?.[levelIndex];
         if (!graph.parts[id].length && layer) {
-            // on a layer the walk reaches nowhere, with no gate leading in: it needs the way onto the layer
+            // on a layer with no reached level, with no gate leading in: it needs the way onto the layer
             graph.kind[id] = 'and';
             graph.parts[id] = [accessId(layer)];
             return;
         }
 
-        if (onlyPadGates(levelIndex, gateIndices)) graph.fallback[id] = true;
-        if (!graph.parts[id].length && graph.fallback[id]) graph.kind[id] = 'and';
+        // with no way in, the level is a step of its own
+        if (!graph.parts[id].length) {
+            graph.fallback[id] = true;
+            graph.kind[id] = 'and';
+        }
     });
 
     // a level that also asks for the gates of the endgame table (all of them together, besides its way in)

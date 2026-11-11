@@ -1,10 +1,12 @@
 // A hero who holds a skill fast-travels only between twins that a walk in the map room joins without a Wardrobe
 import { describe, expect, test, vi } from 'vitest';
-import { PROG, WORLD } from '../src/data.ts';
+import { PROG } from '../src/data.ts';
+import { WORLD } from '../src/world-data.ts';
 import { walker } from '../src/walk/walker.ts';
 import type { Walker } from '../src/walk/walker.ts';
 import { NONE, pad } from './fixtures.ts';
 
+vi.mock('../src/world-data.ts', () => import('./world-data-mock.ts'));
 vi.mock('../src/data.ts', async () => {
     const SCHEMA = (await import('../data/schema.json')).default;
     return { SCHEMA, PROG: {}, WORLD: {}, worldReady: Promise.resolve() };

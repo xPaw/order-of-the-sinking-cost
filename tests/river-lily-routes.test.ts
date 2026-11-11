@@ -1,8 +1,9 @@
 // The needs of the levels onto the wrapping river: past wrap_music the Lily is ridden to the five levels along it
 import { beforeAll, describe, expect, test } from 'vitest';
-import { PROG, worldReady } from '../src/data.ts';
+import { PROG } from '../src/data.ts';
+import { worldReady } from '../src/world-data.ts';
 import { computeProgress, setProgressCache } from '../src/model/progress.ts';
-import { syntheticCampaign } from './fixtures.ts';
+import { reachedByNeedsOf, syntheticCampaign } from './fixtures.ts';
 
 // Each river level with the level that unlocks it, if any
 const RIVER_LEVELS: Record<string, string | undefined> = {
@@ -23,7 +24,8 @@ function reachOf(solvedNames: string[]): boolean[] {
     const { status, history } = syntheticCampaign({ rank: 1 });
     const levels = solvedNames.map((name) => ({ name, flags: SOLVED }));
     const progress = computeProgress({ ...status, levels }, history);
-    return Object.keys(RIVER_LEVELS).map((name) => progress.reach!.level[indexOf(name)]);
+    const reached = reachedByNeedsOf(progress);
+    return Object.keys(RIVER_LEVELS).map((name) => reached[indexOf(name)]);
 }
 
 function gatesOf(...names: string[]): string[] {
@@ -43,11 +45,11 @@ describe('the Lily on the wrapping river', () => {
         }
     });
 
-    test('with wrap_music unsolved the walk reaches none of the river levels', () => {
+    test('with wrap_music unsolved the table reaches none of the river levels', () => {
         expect(reachOf(gatesOf(...Object.keys(RIVER_LEVELS)))).toEqual([false, false, false, false, false]);
     });
 
-    test('with wrap_music solved the walk reaches the levels whose unlocks are solved', () => {
+    test('with wrap_music solved the table reaches the levels whose unlocks are solved', () => {
         expect(reachOf(['wrap_music'])).toEqual([false, false, false, true, false]);
         expect(reachOf(['wrap_music', ...gatesOf(...Object.keys(RIVER_LEVELS))])).toEqual([
             true,

@@ -3,6 +3,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { capitalized, freezerNoun, freezersNoun, isDoorway, modelNoun } from '../src/model/freezer-names.ts';
 
 // Freezers 0 and 1 are pods, 2 and 3 doorways
+vi.mock('../src/world-data.ts', () => import('./world-data-mock.ts'));
 vi.mock('../src/data.ts', () => {
     const data = { freezers: [{ req: [] }, { req: [] }, { req: [], doorway: 1 }, { req: [], doorway: 1 }] };
     return { SCHEMA: {}, PROG: data, WORLD: {}, worldReady: Promise.resolve() };

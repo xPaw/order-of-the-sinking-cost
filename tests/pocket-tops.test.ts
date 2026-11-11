@@ -7,6 +7,7 @@ import { NO_HISTORY, reachability } from '../src/walk/reachability.ts';
 // Column 4: a pit holding Freezer 0, so a fall from the ledge lands on its top at z 1. Columns 5..7: a floor at z 1.
 // Column 8: Freezer 1 in the floor's way. Column 9: a high wall that keeps the hero (at column 10) out of it all;
 // columns 0 and 11 are high walls too.
+vi.mock('../src/world-data.ts', () => import('./world-data-mock.ts'));
 vi.mock('../src/data.ts', async () => {
     const SCHEMA = (await import('../data/schema.json')).default;
     const WIDTH = 12,

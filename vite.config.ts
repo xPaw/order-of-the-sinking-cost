@@ -1,7 +1,8 @@
 import { createReadStream, realpathSync, statSync } from 'node:fs';
 import { relative, resolve, sep } from 'node:path';
 import { defineConfig, type Plugin } from 'vite-plus';
-import type { Schema } from './src/types.ts';
+import { FOG_TYPE, LATEST_TYPES, PAGE_ENUMS } from './src/schema-types.ts';
+import type { Schema, SchemaField } from './src/types.ts';
 import { savesDir } from './scripts/saves.ts';
 
 const ROOT = import.meta.dirname;
@@ -42,24 +43,54 @@ function saves(): Plugin {
     };
 }
 
-// the schema's field notes and addresses are for the docs only
+// The page decodes only the entity types and reads only the enums of src/schema-types.ts, and only the field keys
+// of src/blob.ts; the schema's other types and enums, field notes, addresses and sizes are for the docs and scripts
+interface PageField {
+    n: string;
+    v: SchemaField['v'];
+    k: SchemaField['k'];
+    sz?: number;
+    t: string;
+    e?: PageField;
+}
+
+interface PageType {
+    version: number;
+    fields?: PageField[];
+    missing?: boolean;
+}
+
 function schemaForPage(): Plugin {
+    const pageTypes = new Set([...LATEST_TYPES, FOG_TYPE]);
+    const pageEnums = new Set(PAGE_ENUMS);
+
+    function pageField(field: SchemaField): PageField {
+        const kept: PageField = { n: field.n, v: field.v, k: field.k, t: field.t };
+        if (field.sz !== undefined) kept.sz = field.sz;
+        if (field.e) kept.e = pageField(field.e);
+        return kept;
+    }
+
     return {
         name: 'soko:schema',
         enforce: 'pre',
         transform(code, id) {
             if (!id.replace(/\\/g, '/').endsWith('/data/schema.json')) return null;
             const schema: Schema = JSON.parse(code);
-            const fieldLists = [schema.base.fields];
-            for (const type of Object.values(schema.types)) {
-                if (type.fields) fieldLists.push(type.fields);
+            const types: Record<string, PageType> = {};
+            for (const [name, type] of Object.entries(schema.types)) {
+                if (!pageTypes.has(name)) continue;
+                const pageType: PageType = { version: type.version };
+                if (type.fields) pageType.fields = type.fields.map(pageField);
+                if (type.missing) pageType.missing = type.missing;
+                types[name] = pageType;
             }
-            for (const lst of fieldLists)
-                for (const f of lst) {
-                    delete f.notes;
-                    delete f.at;
-                }
-            return { code: JSON.stringify(schema), map: null };
+            const enums: Schema['enums'] = {};
+            for (const [name, schemaEnum] of Object.entries(schema.enums)) {
+                if (pageEnums.has(name)) enums[name] = schemaEnum;
+            }
+            const base = { name: schema.base.name, fields: schema.base.fields.map(pageField) };
+            return { code: JSON.stringify({ base, types, enums }), map: null };
         },
     };
 }

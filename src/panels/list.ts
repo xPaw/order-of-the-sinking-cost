@@ -1,6 +1,6 @@
 // The results list: the goal's levels in groups or a search's matches, the chips that narrow it, its count, and showing a
 // level in it (VIEWER.md "The page (viewer)")
-import { $, escapeHtml } from '../util.ts';
+import { $, escapeHtml, setHtml } from '../util.ts';
 import { clearNarrowing } from '../shared.ts';
 import type { ProgressFilters } from '../shared.ts';
 import { areaEmblemHtml, roleDot, ROLES, towerEmblemHtml } from '../map/icons.ts';
@@ -14,7 +14,7 @@ import { refreshSideGoals } from '../sidebar/goals.ts';
 import type { ListedLevel, PanelContext } from './context.ts';
 import { drawFindList, rankCageGroupHtml } from './find-list.ts';
 import { layerTagHtml, levelPadHtml, NEAR, wrappable } from './plan-chips.ts';
-import { approxTip, whyText } from './why.ts';
+import { APPROX_TIP, whyText } from './why.ts';
 
 type ListGroup = ListedLevel['group'];
 
@@ -114,15 +114,15 @@ function layoutRows(context: PanelContext): RowBlock[] {
     return blocks;
 }
 
-function groupHead(context: PanelContext, group: ListGroup): string {
-    if (group === 'blocked') return `<span title="${approxTip(context)}">${GROUP_HEADS[group]}</span>`;
+function groupHead(group: ListGroup): string {
+    if (group === 'blocked') return `<span title="${APPROX_TIP}">${GROUP_HEADS[group]}</span>`;
     return GROUP_HEADS[group];
 }
 
 function rowsHtml(context: PanelContext, blocks: RowBlock[], tab: number | undefined): string {
     return blocks
         .map((block) => {
-            const title = groupHead(context, block.group);
+            const title = groupHead(block.group);
             const head = `<div class="rg">${title} <span class="c muted">· ${block.shown.length}</span></div>`;
             const rows = block.shown.map((levelIndex) => rowHtml(context, levelIndex, levelIndex === tab));
             return head + rows.join('');
@@ -240,9 +240,9 @@ function drawGoalList(context: PanelContext): void {
     let foot = '';
     if (moreFogged) foot = `<div class="foot muted">More levels under fog</div>`;
 
-    $('#pgRows').innerHTML = (rows || emptyHtml(context)) + cages + foot;
-    $('#pgCount').innerHTML = countHtml(context);
-    $('#pgChips').innerHTML = chipsHtml(context);
+    setHtml($('#pgRows'), (rows || emptyHtml(context)) + cages + foot);
+    setHtml($('#pgCount'), countHtml(context));
+    setHtml($('#pgChips'), chipsHtml(context));
 }
 
 // the list shows the goal's levels, or the items of the kind of mark the sidebar named
@@ -262,7 +262,10 @@ function drawList(context: PanelContext): void {
         drawFindList(context, kind);
     }
 
-    if (refocus) document.getElementById(refocus)?.focus({ preventScroll: true });
+    // an untouched element keeps its focus; a rebuilt one lost it with the replaced nodes
+    if (refocus && document.activeElement?.id !== refocus) {
+        document.getElementById(refocus)?.focus({ preventScroll: true });
+    }
 }
 
 /** Marks the map's selected level in the list and scrolls it into view there. */

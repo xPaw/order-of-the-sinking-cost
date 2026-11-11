@@ -15,12 +15,15 @@ import type {
     FreezerSign,
     LevelSet,
     MapObjects,
+    NamedArea,
     ObjectRow,
     Position,
     Progress,
     ProgressFog,
     ProgressLevel,
     ProgressMap,
+    ProgressTeleporter,
+    ProgressWorld,
     Schema,
     Sign,
     Teleporter,
@@ -468,9 +471,9 @@ function wrapDistance(delta: number, size: number | null): number {
     return Math.min(modulo(delta, size), modulo(-delta, size));
 }
 
-function buildAreas(areaData: LevelAreasFile, levels: ProgressLevel[], worldMap: ProgressMap | null): Area[] {
+function buildAreas(areaData: LevelAreasFile, levels: ProgressLevel[], worldMap: ProgressMap | null): NamedArea[] {
     const names = Object.keys(areaData.areas);
-    const areas = Object.entries(areaData.areas).map(([name, area]): Area => {
+    const areas = Object.entries(areaData.areas).map(([name, area]): NamedArea => {
         // Areas are grouped by layer (name prefix g_/s_/u_)
         const prefix = name.split('_')[1].slice(0, 1);
         return {
@@ -503,7 +506,7 @@ function buildAreas(areaData: LevelAreasFile, levels: ProgressLevel[], worldMap:
         }
     }
     // Within a layer, areas are ordered by distance from that layer's crossroads hub
-    const byName = new Map<string, Area>();
+    const byName = new Map<string, NamedArea>();
     for (const area of areas) byName.set(area.local_area_name, area);
     // the world wraps around at its edges (map.json size)
     let width: number | null = null;
@@ -586,6 +589,31 @@ function buildObjects(freezers: Freezer[], world: World, schema: Schema): MapObj
     return { icons, rows };
 }
 
+/** The keys of data/world.json `world` the page reads. */
+function progressWorld(world: World): ProgressWorld {
+    return { grid: world.grid, area_pins: world.area_pins, movables: world.movables };
+}
+
+/** The keys of a data/world.json pad the page reads. */
+function progressTeleporter(pad: Teleporter): ProgressTeleporter {
+    return {
+        pid: pad.pid,
+        p: pad.p,
+        l: pad.l,
+        major: pad.major,
+        target: pad.target,
+        en: pad.en,
+        disc: pad.disc,
+        gold: pad.gold,
+    };
+}
+
+/** An area without the name that only the data build looks it up by. */
+function progressArea(area: NamedArea): Area {
+    const { local_area_name: _name, ...rest } = area;
+    return rest;
+}
+
 function main(): void {
     paths.parseCommandLine();
     const levelData: LevelsFile = JSON.parse(readFileSync(paths.data('levels.json'), 'utf8'));
@@ -617,7 +645,6 @@ function main(): void {
 
     const out: Partial<Progress> = {
         levels,
-        sets,
         towers,
         freezers,
         signs: signRows,
@@ -627,13 +654,11 @@ function main(): void {
     // voice logs (heard once a played change is recorded; `d` when the level data starts them heard) and the map scrolls
     out.voice_logs = entitiesOf(overworld, 'Voice_Log').map((log) => {
         const p = roundedPosition(log.fields);
-        const author = get(log.fields, 'author', '');
         return {
             pid: log.pid,
             p,
             name: get(log.fields, 'name', ''),
             l: layerOf(p[2]),
-            author: author || undefined,
             d: flag(Boolean(log.fields.played)),
         };
     });
@@ -642,7 +667,8 @@ function main(): void {
         return { pid: giver.pid, p, l: layerOf(p[2]) };
     });
     out.pad_routes = [];
-    if (areaData) out.areas = buildAreas(areaData, levels, worldMap);
+    const areas = areaData ? buildAreas(areaData, levels, worldMap) : undefined;
+    if (areas) out.areas = areas.map(progressArea);
     if (fog) out.fog = buildFogSummary(fog);
     if (worldMap) {
         out.map = worldMap;
@@ -650,21 +676,26 @@ function main(): void {
     }
     pkg.close();
     const worldText = readTextIfPresent(paths.data('world.json'));
+    let pads: Teleporter[] | undefined;
     if (worldText !== null) {
         const world: WorldFile = JSON.parse(worldText);
         for (const room of world.gold_rooms) room.tower = towers.findIndex((tower) => tower.pid === room.tower);
         addTowerPads(overworld, towers, world.teleporters);
-        Object.assign(out, world);
+        pads = world.teleporters;
+        out.world = progressWorld(world.world);
+        out.teleporters = pads.map(progressTeleporter);
+        out.treasure_displays = world.treasure_displays;
+        out.gold_rooms = world.gold_rooms;
         addFreezerContents(freezers, world.world, pkg.schema);
         out.objects = buildObjects(freezers, world.world, pkg.schema);
     }
-    if (out.areas && out.teleporters) {
+    if (areas && pads) {
         // the hand-written table (scripts/lib/level-table.ts): sets the needs of `levels` and returns the pad routes
         out.pad_routes = resolveLevelTable({
             levels,
             signs: signRows,
-            areas: out.areas,
-            teleporters: out.teleporters,
+            areas,
+            teleporters: pads,
             skyTower: (flagName) => {
                 const towerFlags = FLAG_BITS[flagName] + FLAG_BITS.UPSTAIRS;
                 const found = towers.findIndex((candidate) => candidate.t === towerFlags);
@@ -674,7 +705,7 @@ function main(): void {
             positionOf: (pid) => entityPosition(overworld, pid),
         });
     }
-    out.ending_stages = buildEndingStages(out, FLAG_BITS);
+    out.ending_stages = buildEndingStages({ ...out, areas, teleporters: pads }, FLAG_BITS);
     const progressPath = paths.data('progress.json');
     writeJsonAtomic(progressPath, out);
     const gated = levels.filter((level) => level.req.length).length;

@@ -1,9 +1,11 @@
 // Where the hero has been and can go: the reached cells, the levels behind closed Freezers and the floor heights
-// (VIEWER.md "Seeds and the reached cells", "Pockets, leads and why")
-import { PROG, WORLD } from '../data.ts';
+// (VIEWER.md "The walk model (viewer)")
+import { PROG } from '../data.ts';
+import { reachedByNeeds } from '../model/route-needs.ts';
 import { heroesWithSkill, latestFlag, PROTECTION_FLAG, TELEPORT_FLAG, TRANSMUTE_FLAG } from '../save.ts';
 import type { History, LatestValues } from '../save.ts';
 import type { PadRoute } from '../types.ts';
+import { WORLD, WORLD_FILE } from '../world-data.ts';
 import { addTo, gridCol, STEP, Z_BIAS } from './cells.ts';
 import type { FloodOptions, Seed } from './flood.ts';
 import { ICE } from './freezers.ts';
@@ -200,7 +202,7 @@ function restLevelsIn(context: ReachContext, cells: Set<number>): number[] {
  * Returns how many lie inside a wall no beam runs through.
  */
 function addKeptHeroSeeds(walk: Walker, history: History, seeds: Seed[]): number {
-    const guy = PROG.world.guy || [0, 0];
+    const guy = WORLD_FILE.world.guy || [0, 0];
     const protectionKeys = heroesWithSkill(history, guy, PROTECTION_FLAG);
     const wizards = heroesWithSkill(history, guy, TELEPORT_FLAG);
     const druids = heroesWithSkill(history, guy, TRANSMUTE_FLAG);
@@ -243,23 +245,6 @@ function routeCell(walk: Walker, route: PadRoute): number {
 function enteredSeed(walk: Walker, levelCell: number): Seed {
     if (walk.fire.has(levelCell)) return [levelCell, PROTECTED];
     return walk.land(levelCell);
-}
-
-/**
- * Per level, whether it is reached by what its data lists: it is when the save entered it, or its needs hold and it is
- * not frozen in a closed Freezer. Undefined for a level with no needs in the data, which the walk decides.
- */
-function reachedByNeeds(
-    needsHold: ReadonlyArray<boolean | undefined>,
-    entered: readonly boolean[],
-    frozenIn: Array<number | undefined>,
-): Array<boolean | undefined> {
-    return PROG.levels.map((_, levelIndex) => {
-        const hold = needsHold[levelIndex];
-        if (hold === undefined) return undefined;
-        if (entered[levelIndex]) return true;
-        return hold && frozenIn[levelIndex] === undefined;
-    });
 }
 
 /**

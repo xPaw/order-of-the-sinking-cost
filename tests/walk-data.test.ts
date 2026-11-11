@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { inflateSync } from 'node:zlib';
 import { beforeAll, expect, test } from 'vitest';
+import { roomsFile, storedRooms } from '../scripts/lib/stored-rooms.ts';
 import { walkInputs } from '../scripts/lib/walk-inputs.ts';
 import { PROG } from '../src/data.ts';
 import type { WalkFile } from '../src/types.ts';
@@ -22,6 +23,7 @@ const FULL_SEARCH = process.env.WALK_FULL === '1';
 
 beforeAll(async () => {
     await walkReady;
+    setRoomAnswers(storedRooms());
 });
 
 test('walk.json was built from the current inputs', () => {
@@ -36,6 +38,13 @@ test('the stored static roles are the ones the walk works out', () => {
     expect([...STATIC_ROLES.need.l]).toEqual([...live.need.l]);
     expect([...STATIC_ROLES.need.g]).toEqual([...live.need.g]);
     expect(STATIC_ROLES.bg).toEqual(live.bg);
+});
+
+test('every Sign has an entry in the stored roles: the Freezers it sits behind, or null', () => {
+    expect(STATIC_ROLES.bg.s).toHaveLength(PROG.signs.length);
+    for (const behind of STATIC_ROLES.bg.s) {
+        for (const freezerIndex of behind ?? []) expect(PROG.freezers[freezerIndex]).toBeDefined();
+    }
 });
 
 test('a level the table needs is Required, as one of several when its group has several options', () => {
@@ -82,15 +91,16 @@ test.skipIf(!FULL_SEARCH)(
             const walkGrid = buildWalkGrid(NO_HISTORY, teleporterStatesOf(null), allFreezersClosed);
             const result = searchRooms(walkGrid);
 
-            const storedJson = inflateSync(Buffer.from(stored.rooms.data, 'base64')).toString();
+            const rooms = roomsFile();
+            const storedJson = inflateSync(Buffer.from(rooms.data, 'base64')).toString();
             expect(JSON.stringify(packRooms(result.rooms))).toBe(storedJson);
-            expect(stored.rooms.searched).toBe(result.searched);
-            expect(stored.rooms.variants).toBe(result.variants);
+            expect(rooms.searched).toBe(result.searched);
+            expect(rooms.variants).toBe(result.variants);
             const answered = result.rooms.filter((room) => room.entries.length > 0).length;
-            expect(stored.rooms.answered).toBe(answered);
-            expect(stored.rooms.empty).toBe(result.rooms.length - answered);
-            expect(stored.rooms.states).toBe(result.states);
-            expect(stored.rooms.capped).toEqual(result.capped);
+            expect(rooms.answered).toBe(answered);
+            expect(rooms.empty).toBe(result.rooms.length - answered);
+            expect(rooms.states).toBe(result.states);
+            expect(rooms.capped).toEqual(result.capped);
         } finally {
             setRoomAnswers(used);
         }

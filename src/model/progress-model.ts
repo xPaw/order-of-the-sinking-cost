@@ -15,9 +15,23 @@ import type { EndingStatus, GoalLevel, GoalView } from './goals-view.ts';
 import { FOG_LAYER_KEYS, mapLayerOf, wrapDelta } from './layers.ts';
 import { computeProgress, progressCached } from './progress.ts';
 import type { ShownProgress } from './progress.ts';
+import { isEntered } from './unlocking.ts';
+import type { LevelState } from './unlocking.ts';
 import type { PlanStep } from './requirements.ts';
 import { totalsOf } from './totals.ts';
 import type { ShownAt, TotalsMarks, TotalsStats, TreasureTotals } from './totals.ts';
+
+/** How the Reachable overlay marks a level's cells: entered by the save (solved or visited), reachable, or not. */
+export type LevelReach = 'entered' | 'reachable' | null;
+
+/** Per level, entered when its state shows the save in it, else reachable when its door is reached, else null. */
+export function levelReachOf(states: readonly LevelState[], doorReached: readonly boolean[]): LevelReach[] {
+    return states.map((state, levelIndex): LevelReach => {
+        if (isEntered(state)) return 'entered';
+        if (doorReached[levelIndex]) return 'reachable';
+        return null;
+    });
+}
 
 // added to the distance to a level on another layer, so every level on the layer is nearer than any on another
 const OTHER_LAYER_DISTANCE = 1e6;
@@ -39,6 +53,8 @@ export interface ProgressModel {
     areaShown: (area: number) => boolean;
     /** Per level, the area it is in while that area is named; null for none. */
     levelArea: Array<number | null>;
+    /** Per level, whether the Reachable overlay marks its cells entered or reachable. */
+    levelReach: LevelReach[];
     shownAt: ShownAt;
     teleporters: Teleporter[];
     padDisc: (teleporter: number) => boolean;
@@ -122,7 +138,7 @@ export function progressModel(camp: string): ProgressModel {
     const hidden = levels.map((level, i) => {
         if (!hide || i === inLevel || revealedLevels.has(i) || progress.state[i] === 'solved') return false;
         if (fogData) return fog.levelHidden(level.n, level.p);
-        return progress.state[i] !== 'visited' && progress.state[i] !== 'partial';
+        return !isEntered(progress.state[i]);
     });
 
     const towerHidden = progress.towers.map(
@@ -301,6 +317,7 @@ export function progressModel(camp: string): ProgressModel {
         noFog: !fogData,
         areaShown,
         levelArea,
+        levelReach: levelReachOf(progress.state, progress.doorReached),
         shownAt,
         teleporters: totals.teleporters,
         padDisc: totals.padDisc,

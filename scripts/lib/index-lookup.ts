@@ -1,5 +1,5 @@
 // Finds a row of the progress data by name or pid; a row the data lacks fails the build with the caller's prefix
-import type { Area, Freezer, ProgressLevel, Sign, Teleporter } from '../../src/types.ts';
+import type { Freezer, NamedArea, ProgressLevel, Sign, Teleporter } from '../../src/types.ts';
 
 function foundOrThrow(index: number, prefix: string, what: string): number {
     if (index < 0) throw new Error(`${prefix}: no ${what}`);
@@ -14,7 +14,7 @@ export function levelByName(levels: ProgressLevel[], name: string, prefix: strin
     );
 }
 
-export function areaByName(areas: Area[], name: string, prefix: string): number {
+export function areaByName(areas: NamedArea[], name: string, prefix: string): number {
     return foundOrThrow(
         areas.findIndex((area) => area.local_area_name === name),
         prefix,

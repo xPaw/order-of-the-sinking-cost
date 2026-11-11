@@ -5,6 +5,7 @@ import { NO_HISTORY, reachability } from '../src/walk/reachability.ts';
 
 // A row of 8 on the implicit ground floor, with no wall. A goblin in the air at (5, 0, 3) attacks the cell (4, 0, 3),
 // where level X has its entrance; nothing holds up a hero there but PROTECTION.
+vi.mock('../src/world-data.ts', () => import('./world-data-mock.ts'));
 vi.mock('../src/data.ts', async () => {
     const SCHEMA = (await import('../data/schema.json')).default;
     const WIDTH = 8,

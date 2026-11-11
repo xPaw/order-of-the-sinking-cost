@@ -1,12 +1,12 @@
 // The hand-written stages of the endings after the first, in the order a run takes them (VIEWER.md "Goals (viewer)"),
 // and the resolving of their names and pids to the indices data/progress.json holds.
 import type {
-    Area,
     EndingStage,
     EndingStageDone,
     EndingStageName,
     EndingStages,
     Freezer,
+    NamedArea,
     PadRoute,
     Progress,
     ProgressLevel,
@@ -169,7 +169,7 @@ const ENDING_SOURCES: EndingSource[] = [
 interface EndingStageData {
     levels: ProgressLevel[];
     towers: Tower[];
-    areas: Area[];
+    areas: NamedArea[];
     freezers: Freezer[];
     teleporters: Teleporter[];
     routes: PadRoute[];
@@ -238,12 +238,18 @@ function resolveStage(data: EndingStageData, source: StageSource): EndingStage {
     };
 }
 
+/** The rows of the data build that the stages resolve against. */
+export type EndingStageRows = Pick<Partial<Progress>, 'levels' | 'towers' | 'freezers' | 'pad_routes'> & {
+    areas?: NamedArea[];
+    teleporters?: Teleporter[];
+};
+
 /**
  * The hand-written stages of the endings with their names resolved to indices; a name the data lacks fails the build.
  * Empty until the progress rows hold the areas and the pads.
  */
-export function buildEndingStages(progress: Partial<Progress>, flagBits: Record<string, number>): EndingStages[] {
-    const { levels, towers, areas, freezers, teleporters, pad_routes: routes } = progress;
+export function buildEndingStages(rows: EndingStageRows, flagBits: Record<string, number>): EndingStages[] {
+    const { levels, towers, areas, freezers, teleporters, pad_routes: routes } = rows;
     if (!levels || !towers || !areas || !freezers || !teleporters || !routes) return [];
 
     const data: EndingStageData = { levels, towers, areas, freezers, teleporters, routes, flagBits };

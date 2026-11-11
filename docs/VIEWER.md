@@ -6,11 +6,12 @@ reach.
 
 ## The walk model (viewer)
 
-The viewer's own approximation of where the hero can go: `walker()` and `reachability()`, data from
-`data/world.json` and `data/progress.json` ([Derived data files](DATAFILES.md#derived-data-files)). What the walk
-gives on the level data alone (the static roles, the map's floor heights and the room answers) is worked out at build time and stored in
-`data/walk.json` ([data/walk.json](DATAFILES.md#datawalkjson)). It is fitted to the game's rules but is not the game's
-walk code. Every simplification is listed at the end of this section.
+The viewer's own approximation of where the hero can go: `walker()`, data from `data/world.json` and
+`data/progress.json` ([Derived data files](DATAFILES.md#derived-data-files)). It runs at build time only: what the walk
+gives on the level data alone (the static roles and the map's floor heights) is stored in `data/walk.json`
+([data/walk.json](DATAFILES.md#datawalkjson)) and the room answers in `data/rooms.json`, which the page does not load.
+The page runs no walk: the level table decides which levels are reached ([Reached levels and ways in](#reached-levels-and-ways-in)).
+The walk is fitted to the game's rules but is not the game's walk code. Every simplification is listed at the end of this section.
 
 ### Level geometry and the walker
 
@@ -18,7 +19,7 @@ walk code. Every simplification is listed at the end of this section.
 
 - The level geometry (`levelGeometry()`, `src/walk/geometry.ts`) is everything the grid takes from the level data
   alone, which no save changes. It is built once per page load or program run, from `data/progress.json` and
-  `data/world.json`, and is plain data (numbers, strings, arrays, typed arrays, Maps and Sets of those):
+  `data/world.json` (through `src/world-data.ts`), and is plain data (numbers, strings, arrays, typed arrays, Maps and Sets of those):
   - the grid's size, corner and fast-travel box, and the grid's cell count;
   - the static solid voxels and the level data's beam stops, one byte per cell;
   - the Wall_Sets' voxel cells, the existence Groups and their member pids;
@@ -73,7 +74,7 @@ re-derived inside it.
 
 ### Support and open cells
 
-- Supported (`supported`): SOLID in the cell itself, as the game holds an entity inside a wall voxel ([Support](MOVEMENT.md#support)); such a cell is entered only as a THRU cell, along a THROUGH beam, so a hero who steps into a floating wall voxel stays in it, over water or air; FLOOR in the cell; a cell of a Lily's drift ([Cells](#cells)); a cell over the track of a Rover under water ([Moves](#moves)); in a pocket flood, a cell of a skip lane's ride of more than the landing cell ([Skip lanes and the TELEPORT swap](#skip-lanes-and-the-teleport-swap)); a notted Gate the flood has shut in the cell below; a closed Freezer in the cell below, except in the floods of pockets, where only a fall lands on one ([Pockets, leads and why](#pockets-leads-and-why)); SUPPORT in the cell below, unless that is a Gate the flood has opened; a living Monster in the cell below (not one the flood has pushed to its death, [Moves](#moves)) or a movable there, a Gem, Promesst_Light, Rover, Friendly_Dragon or vertical Mirror, which hold up whatever stands above them as a Rock does, wherever the walk leaves them ([Support](MOVEMENT.md#support)); a flat Mirror holds up nothing; a bridged water cell ([Moves](#moves)), and in a pocket flood every rock bridge's water cell; a powered DOUBLE beam cell over water with z within 0.6 of the surface; else the implicit ground floor, ground layer only: z ≤ 0 on a dry column, z < 0 in water. The map rooms' implicit floor is left out: a fall that starts in a map room lands inside that room's layer or nowhere.
+- Supported (`supported`): SOLID in the cell itself, as the game holds an entity inside a wall voxel ([Support](MOVEMENT.md#support)); such a cell is entered only as a THRU cell, along a THROUGH beam, so a hero who steps into a floating wall voxel stays in it, over water or air; FLOOR in the cell; a cell of a Lily's drift ([Cells](#cells)); a cell over the track of a Rover under water ([Moves](#moves)); in a pocket flood, a cell of a skip lane's ride of more than the landing cell ([Skip lanes and the TELEPORT swap](#skip-lanes-and-the-teleport-swap)); a notted Gate the flood has shut in the cell below; a closed Freezer in the cell below, except in the floods of pockets, where only a fall lands on one ([Reached levels and ways in](#reached-levels-and-ways-in)); SUPPORT in the cell below, unless that is a Gate the flood has opened; a living Monster in the cell below (not one the flood has pushed to its death, [Moves](#moves)) or a movable there, a Gem, Promesst_Light, Rover, Friendly_Dragon or vertical Mirror, which hold up whatever stands above them as a Rock does, wherever the walk leaves them ([Support](MOVEMENT.md#support)); a flat Mirror holds up nothing; a bridged water cell ([Moves](#moves)), and in a pocket flood every rock bridge's water cell; a powered DOUBLE beam cell over water with z within 0.6 of the surface; else the implicit ground floor, ground layer only: z ≤ 0 on a dry column, z < 0 in water. The map rooms' implicit floor is left out: a fall that starts in a map room lands inside that room's layer or nowhere.
 - The walk does not model the column mask ([Support](MOVEMENT.md#support)). On the overworld the Annihilator makes every column count as inside, so the mask makes no cell solid, and the ground floor above is the game's implicit-floor rule.
 - Blocked: SOLID or GATE, unless the cell is a THROUGH beam's wall cell (THRU); a GATE without SOLID also passes when a switch press has opened it or a hero in an OPEN beam has bumped it open ([Moves](#moves)). An open notted Gate that a switch press has shut is blocked. A closed Freezer is always blocked.
 - Open = not blocked and supported.
@@ -95,6 +96,8 @@ re-derived inside it.
 - A horizontal THROUGH light that is unpowered only because an existence Group keeps it, or a Gem_Slot or Gem of its room, from existing, casts its beam inside `withGroups` for that Group ([Existence](#existence)).
 
 ### Moves
+
+The flood, pockets and leads described from here on are a build and test model that writes `data/walk.json`; the page does not run them.
 
 Six layers per cell: 0 = the default skill or another one with a push (the hero pushes), 1 = PROTECTION, 2 =
 TELEPORT (from a TELEPORT Wardrobe's door), 3 = TRANSMUTE (from a TRANSMUTE Wardrobe's door), 4 = no push skill (from
@@ -121,7 +124,7 @@ After the four sides:
    - a pad in k or the cell below, enabled: a MINOR pad reaches its target pad's landing cell, or for a Marker target (`to`) a search down from the Marker's cell inside its ground layer (no fall cap): a blocked cell, a THRU cell entered from a cell that is not a BEAM cell (the pad's cell first) or water deeper than 0.1 ends it with no landing; an attacked cell ends it, with the hero standing there in layer 1 (support not needed) and nowhere in layer 0; else the first open cell. A trip enables the target pad for the rest of the flood, as discovering the sending pad does in the game ([Teleporter pads and fast travel](MOVEMENT.md#teleporter-pads-and-fast-travel)): a MINOR pad that the save leaves disabled sends the hero on once a trip has brought him to it, and a hero already standing on it from earlier in the flood takes it then. A target held by a closed Freezer stays disabled, since the hero stays on his pad;
    - a discovered, enabled, existing MAJOR pad reaches every other such MAJOR pad (once per layer in layer 0). A hero in another layer reaches only the pads with a twin that a walk on foot from the source pad's twin joins without a map-room Wardrobe, since entering a Wardrobe through its door resets the skill ([Wardrobes](SKILLS.md#wardrobes));
    - an enabled MAJOR pad also reaches the world pads its discovery reveals ([Pads revealed through the map rooms](#pads-revealed-through-the-map-rooms)), a hero in another layer only those the same walk joins.
-   Every pad's trip keeps the layer ([Wardrobes](SKILLS.md#wardrobes)). A pad frozen in a closed Freezer leads nowhere while the Freezer stays closed: a hero on the Freezer's top doesn't take it, and a pad that sends the hero to it (a MINOR pad's target, a MAJOR pad, a reveal) leaves him where he is, since a target cell holding a frozen Freezer keeps him on his pad ([Teleporter pads and fast travel](MOVEMENT.md#teleporter-pads-and-fast-travel)). A discovered pad in a closed Freezer seeds no walk ([Seeds and the reached cells](#seeds-and-the-reached-cells)).
+   Every pad's trip keeps the layer ([Wardrobes](SKILLS.md#wardrobes)). A pad frozen in a closed Freezer leads nowhere while the Freezer stays closed: a hero on the Freezer's top doesn't take it, and a pad that sends the hero to it (a MINOR pad's target, a MAJOR pad, a reveal) leaves him where he is, since a target cell holding a frozen Freezer keeps him on his pad ([Teleporter pads and fast travel](MOVEMENT.md#teleporter-pads-and-fast-travel)). A discovered pad in a closed Freezer seeds no walk ([Reached levels and ways in](#reached-levels-and-ways-in)).
 
 Rock bridges (`world.bridges`, rows of [rock or Gem, push cell, water cell]): a non-SKIPPABLE Rock or a spare Gem on
 support, still at its level-data cell, that the hero pushes in a straight line from a standable push cell over
@@ -132,8 +135,8 @@ Gem_Slots: its room has no Promesst_Light with a beam, or more such free Gems th
 pushes](#beams-moved-by-pushes)). When the queue drains, each rock whose push cell was reached bridges once: its water cell becomes supported and the walk resumes
 from the reached cells beside its column, at its height and above, up to the first cell over it that a step from the
 side would stop in or bump into. A bridge is one-way: only the push side can make it. A pocket flood
-([Pockets, leads and why](#pockets-leads-and-why)) looks for the ways into its pocket, so there every bridge's water
-cell holds the hero from the start, whichever side the push cell is on.
+looks for the ways into its pocket, so there every bridge's water cell holds the hero from the start, whichever side
+the push cell is on.
 
 Rocks a Spawner puts back (`world.rock_spawns`). An Activator resets what its Spawners respawn ([Activators and
 Spawners](MOVEMENT.md#activators-and-spawners)), so a Rock the save left anywhere but at its Spawner's cell, sunk in
@@ -523,8 +526,8 @@ these out as lanes once per walker.
 
 The walk's searches for Rocks, Switch objects, Gems and Monsters push one object at a time and take the hero's push
 cells from the cells the flood reached ([Moves](#moves)), with caps on the cells they visit. The build searches every
-screen room of the level data exhaustively instead, with all its objects moving, and `data/walk.json` `rooms` stores what
-it finds (`searchRooms()`, `src/walk/room-search.ts`; [data/walk.json](DATAFILES.md#datawalkjson)). A walker uses the
+screen room of the level data exhaustively instead, with all its objects moving, and `data/rooms.json` stores what
+it finds (`searchRooms()`, `src/walk/room-search.ts`; [data/rooms.json](DATAFILES.md#dataroomsjson)). A walker uses the
 answer of a room whose save leaves it as the level data has it, and runs the same search on its own grid for every other
 room that holds an object (`searchTouchedRooms()`); only the inputs differ.
 
@@ -603,43 +606,38 @@ stands in no cell of the grid the room search reads, so the answer holds nothing
 - A revealed pad q counts for MAJOR pad i only when q exists and a walk on foot (no pads, no elevators) joins i's twin (its `target`) to some twin targeting q, with the Groups of the four pads (`g` own Group, `ag` = `also_exist_this_group_id`) made to exist (`withGroups`). Twins are not asked to exist: discovery makes them. Twins in different ground layers are never joined: a walk on foot never changes ground layer (a step keeps z, a fall from the fast-travel box stays in its layer, and a walk from the world never reaches the fast-travel box), so a map-room pad, whose `target` lies in the world, reveals nothing, and the walk is not run for it. The walk from i's twin ends as soon as it reaches the twin it looks for.
 - Twin `also_discover` links walkable this way: most in the level data, nearly all with every twin Group on.
 
-### Seeds and the reached cells
+### Reached levels and ways in
 
-`reachability()` floods once from every place the save shows the hero has been:
+The page decides reach from the level table alone ([Level needs and pad routes](#level-needs-and-pad-routes)) and runs
+no flood.
 
-- the current hero position, in one layer: 1 when the latest Guy `skill_flags` hold PROTECTION, else 2 when they hold TELEPORT, else 0. In layer 1 inside an attacked cell, that cell; else `land` (not above); none if inside a wall no THROUGH beam runs through;
-- every kept hero position: a protected one (the PROTECTION rule in [Overworld state from the save](STATE.md#overworld-state-from-the-save)) inside an attacked cell seeds that cell in layer 1; otherwise `land` (not above), in layer 1 for a protected one, else in layer 0 and, where he held TELEPORT, in layer 2 as well; dropped when it lands in water deeper than 0.1 or inside a wall no beam runs through (a dead seed);
-- every Level_Entry with Status state (`land`); one inside an attacked cell seeds that cell in layer 1, since the hero who entered it was held there by PROTECTION;
-- every activated Area_Pin (`land`, not above: a pin is touched, not stood on, and the new-game pin stands inside a wall);
-- every discovered teleporter (its pad cell), unless it is frozen in a closed Freezer;
-- the target of every pad route whose needs the save meets ([Level needs and pad routes](#level-needs-and-pad-routes)):
-  a pad's cell, or `land` (not above) of a position;
-- every level whose needs hold (same section): its `land`.
-
-The result R is the set of reached cells. A level is reached when its cell or `land` of it is in R and it is not frozen
-in a closed Freezer (its Level_Entry on the Freezer's square). A frozen level is reached only once that Freezer opens.
-A level with needs in the data is reached exactly when they hold, or the save entered it, whatever R holds.
-
-### Pockets, leads and why
-
-- Leads: each closed Freezer the walk bumped into (`front`) is opened alone; the levels not entered that a walk from it (outside R) reaches are its leads. A level frozen in another Freezer is left out. A Freezer that holds a stone launched with CHARM ([Moves](#moves)) is a lead too: the walk from the seeds is run with it open, and the levels not entered that it reaches are its leads.
-- A level not reached sits in its own pocket: a walk from it that never enters R (no reveals). The closed gates that walk bumps into are the gates it sits behind. This pocket flood walks the one-way edges backwards, since it looks for the ways in: every rock bridge holds the hero from either side ([Moves](#moves)), and skip lanes run from the landing back to the push side ([Skip lanes and the TELEPORT swap](#skip-lanes-and-the-teleport-swap)). Magic-mirror hops stay one-way, but for the landings of two facing Mirrors, which lead back to their arm cell ([Hops between two facing Mirrors](#hops-between-two-facing-mirrors)).
-- A walk from one level can reach another level not reached across a one-way edge (a fall, a hop), so that level lies in more than one pocket. A way into any of them leads on to it: it sits behind the gates of every pocket that holds it and takes the mechanics and the pad ways (`viaPads`, less the gates and levels any of those pockets holds itself) of each. A level that an earlier pocket holds starts no walk of its own.
-- A level frozen in a closed Freezer starts its pocket walk in the Freezer's own cell, where the hero stands once the Freezer opens; a level in a shut Gate's cell starts it in the Gate's cell, not on its top. The pocket's gates and levels go to the other levels in it; the frozen level itself sits behind its own Freezer alone.
-- A pocket holding a pad that another pad reveals is also entered from the revealing pad's pocket: its gates and levels join (`viaPads`).
-- A pocket walk takes no pad: a pad sends the hero one way, out of the pocket. A MINOR pad that lands the hero outside the reached cells (in its target pad's cell, or the cell a search down from its target point stops in, [Moves](#moves)) is a way into every level he walks on to from the landing, with the pads but not the pads' reveals: the closed gates on the edge of the pocket that reaches the pad on foot, and that pocket's levels, join (`viaPads`), less what the level's own pockets hold. A level frozen in a closed Freezer takes none. A MINOR pad the save leaves disabled counts only when it is a ground Tower's `teleporter_id`, which the Tower's activation enables ([Teleporter pads and fast travel](MOVEMENT.md#teleporter-pads-and-fast-travel)): the Tower joins (`viaPads` towers) while it is inactive, and the pad's own pocket too while the pad lies outside the reached cells.
-- A closed Freezer holding a Rover that a pocket bumps into is walked once from its own cell with it open: the Rover then ferries the hero over water the pocket's own walk does not cross ([Moves](#moves)), and the levels that walk holds, other than those frozen in a Freezer, sit behind the Freezer, whichever pocket bumps it. Only a Freezer that holds a Rover is opened this way; a Freezer that holds anything else leads only to the pocket's own levels.
-- A closed Freezer holding a powered Promesst_Light casts no beam, so a hero in the beam it would cast cannot be carried by it ([Beams](#beams)). Each such Freezer whose beam runs through a cell the walk reached is opened alone with that beam laid, and a walk from the beam's reached cells (and from the Freezer's own cell too when it is on the edge of the reached cells) shows where the beam takes the hero: the levels not entered that it reaches, less those the Freezer already leads to or holds (`lightLeads`), sit behind the Freezer. The beam is the one [Beams](#beams) describes, whatever its colour, and Mirror reflections are not followed.
-- Doorways (`chains`): a closed Freezer a pocket bumps into that opens onto nothing but more closed Freezers leads in only with one of those open too. A Freezer is a doorway for a pocket when it is not on the edge of the reached cells, no pocket holding a level outside this one bumps into it, and the walk from its cell with it open, the pocket's cells counted as reached, holds no level and bumps into closed Freezers the pocket does not. Each of those Freezers gives one way through: the doorway and that Freezer, both needed. The walk from all of a pocket's candidates at once comes first; only when it bumps into a new Freezer is each candidate walked alone. A level whose pockets bump into a Freezer as a doorway in every one of them takes the ways through of all of them; one that any of its pockets bumps into plainly leads in alone.
-- `from`: for a level a closed gate needs, the levels behind that gate a walk from the level reaches.
-- `mech`: per pocket, the mechanics the walk leaves out (world.mechs: 0 dragon, 1 beam, 2 mirror, 3 skipping stone), marked in the 3 × 3 × 3 cells around each existing one (a Mirror or MIRRORABLE Rock at its latest cell, a smashed or destroyed one not at all; a stone at its latest cell unless it sank: FLIPPING_TARGET or under the surface; beams: lit cells; dragons: fire cells). A pocket has one when a marked cell is in it or next to one of its cells.
-- Why (per blocked level): its gates (those that lead in, without the ones `inner()` rules out), the gates leading only to a revealing pad (`pad`), the levels by such a pad (`via`), the inactive Towers whose pad leads in (`viaTowers`), and the mechanics. A level with no gate and no mechanic has "no known route", even when it carries an access mark (below). The page reads "from High" instead when the level has no access mark and the level data enters it from the sky (`drop`, [Level needs and pad routes](#level-needs-and-pad-routes)), once fog shows the sky; under fog it reads as for a hidden layer ([The spoiler model (viewer)](#the-spoiler-model-viewer)). With no way in from the sky either, a level whose pocket bumps only into closed gates that it unlocks itself, all shown, reads "only behind a cage it unlocks" (or "cages", "gates"): `inner()` rules those out as ways in.
-- `inner(gate, level)`: a closed gate is no way in when what it still needs is the level itself, levels from which the walk reaches the level without it, or levels whose own requirements need the level. For an OR gate with more than one option: every remaining option is such a level, and it has no Sign.
+- Door reached (`P.doorReached`): a level's door is reachable when the save entered the level, or its needs hold, a need
+  on a level of its own `req` counting once that level is reached, and it is not frozen in a closed Freezer. A level
+  with no needs in the data counts as reached. Without a history (`P.reachKnown` false) every open level reads "Not
+  entered".
+- Behind (`P.behind`): per level not reached, the closed Freezers to act on next, from the level table's needs. A need
+  level stands for the Freezer it opens; when it opens several, the one nearest to the level (wrapped distance in x and
+  y), and when it opens none, no Freezer. The walk back along the level's unmet needs, through the levels not reached,
+  keeps the closed Freezers whose opener level is reached; with none, the closed Freezers the walk meets first. A group
+  with a solved need adds none.
+- Leads (`P.leads`): per closed Freezer, the levels not reached with an unmet need that stands for it.
+- `inner(gate, level)`: a closed gate is no way in when what it still needs is the level itself or levels whose own requirements need the level. For an OR gate with more than one option: every remaining option is such a level, and it has no Sign.
 - Levels whose requirements need level L (`levelsNeedingLevel`): walking back along `unlocked_by`, every unsolved level still waiting on its requirements (not enabled in the level data, and for an OR level no option solved) that requires L or such a level. An AND level needs L through any one requirement; an OR level with more than one option only once every option is L or such a level. A gate that waits on them waits on L: a requirement cycle, no way in.
-- Way in (`P.wayIn`): per blocked level, its why-gates; when no gate leads in, the closed gates it sits behind in the static roles ([Level roles (viewer)](#level-roles-viewer)), minus the `inner` ones. When that leaves none, a gate that `inner` ruled out only because it waits on a level the walk reaches the level from stays a way in if that level has a way in of its own (a why-gate that is no gate the level sits behind): the walk leads on from that level to this one. Gates that wait on the level itself, on levels that need it, or on levels with no way in of their own stay ruled out. A doorway keeps the ways through it whose Freezer beyond it `inner` does not rule out (`P.wayInChains`), and is no way in once it has none. In the endgame areas the level data's table stands in for these or fills in where there are none ([Endgame way-in gates](#endgame-way-in-gates)). Last, the gates behind themselves are dropped ([Next steps](#next-steps)).
-- A pocket flood never walks a fall backwards: a pocket that the hero enters only by falling into it from outside gets no way in from that fall.
-- The pocket floods, of a level and of a revealing pad, take no step onto a closed Freezer's top from the side, which would walk the hero across the Freezer as if it were floor and so leave it no gate between the two halves. A fall does land on a top: the hero drops from the pocket onto it and off it again, and what he reaches that way (a strip below a row of Freezers, say) belongs to the pocket, so the Freezers on its edge are ways in. The walk does not check that the way past the top leads back to the pocket. The other floods walk the tops ([Support and open cells](#support-and-open-cells)).
-- Access (`P.access`): a blocked level on a layer where the walk reaches no cell at all (the sky or the underworld) is marked with that layer. A blocked level the level data enters from the sky (`drop`, [Level needs and pad routes](#level-needs-and-pad-routes)) is marked with the sky while the walk reaches no sky cell, so its plan waits on the way onto the sky ([The requirement graph](#the-requirement-graph)).
+- Way in (`P.wayIn`): per blocked level, the closed Freezers it sits behind, minus the `inner` ones. In the endgame areas
+  the level data's table stands in for these or fills in where there are none ([Endgame way-in gates](#endgame-way-in-gates)). Last, the gates behind themselves are dropped ([Next steps](#next-steps)).
+- Why (per blocked level): its way-in gates. A level with no gate and no access mark has "no known route". The page reads
+  "from High" instead when the level has no access mark and the level data enters it from the sky (`drop`, [Level needs
+  and pad routes](#level-needs-and-pad-routes)), once fog shows the sky; under fog it reads as for a hidden layer ([The
+  spoiler model (viewer)](#the-spoiler-model-viewer)). With no way in from the sky either, a level that sits behind only
+  closed gates that it unlocks itself, all shown, reads "only behind a cage it unlocks" (or "cages", "gates"): `inner()`
+  rules those out as ways in.
+- Access (`P.access`): a blocked level on a layer that holds no reached level (the sky or the underworld) is marked with
+  that layer. A blocked level the level data enters from the sky (`drop`) is marked with the sky while no level on the sky
+  is reached, so its plan waits on the way onto the sky ([The requirement graph](#the-requirement-graph)).
+- Signs (`P.signFaced`): a Sign is faced when every Freezer it sits behind from the start (`bg.s` in the static roles) is
+  open; a Sign the build walk never reaches is not faced. A Sign not faced takes the closed Freezers it sits behind as its
+  way in (`P.signWayIn`), less a Freezer that waits on the Sign itself, and its layer as its access (`P.signAccess`) when
+  no level on that layer is reached.
 
 ### What the walk leaves out
 
@@ -655,12 +653,6 @@ not say.
   layer 0, so a push cell that only the push itself opens is not used. Pushing a Mirror out of a room does not make the
   Mirror left in it alone there, and a hop's landing is not checked against Wardrobe door edges. A pushed Mirror is not
   placed, so nothing else sees it in its new cell (rays, lanes, swaps), and its cell is not a Switch press.
-- Doorways ([Pockets, leads and why](#pockets-leads-and-why)): one Freezer beyond a doorway is looked at, so a way in
-  three or more closed Freezers deep asks for the first two only, and the Freezer beyond is not checked to lead in from
-  the reached cells.
-- Pocket floods ([Pockets, leads and why](#pockets-leads-and-why)): one-way edges are walked backwards for rock bridges,
-  skip lanes and facing-Mirror hops only, and no pad is taken. A drop into a pocket from the wall tops beside it is no
-  way in.
 - Rocks sunk with turns ([Moves](#moves)): one bridge per Rock, so a Rock that could bridge either of two gaps bridges
   one. A gap of four or more water cells never closes, and neither does one that needs a Rock pushed in a row with
   another or pulled. How many Gems of a room may sink is not counted: with one Gem more than the open slots, two can
@@ -776,10 +768,6 @@ not say.
   room, is not among the Freezers around the room, so a stored answer does not read its state. Across several objects
   the answer holds facts that are each reachable but not always together. The walk's searches are kept for the rooms
   that have an answer too: leaving them out loses ways in that the answer lacks.
-- Pads as ways into a pocket ([Pockets, leads and why](#pockets-leads-and-why)): the level data does not link the Low
-  towers' pad pairs to their Towers, so they lead in through nothing. A Tower pad outside the reached cells adds its
-  Tower and its pocket's gates as alternatives, where the game needs both. A pad leads in through its own pocket only: a
-  way that takes several pads is not followed.
 - `FastTravelEnableGroup` Markers ([Teleporter pads and fast travel](MOVEMENT.md#teleporter-pads-and-fast-travel)): a
   Marker the hero touches makes its Group exist, which the walk does not do; a save already holds the Groups touched so
   far. The lift's Marker enables the map-room copy of the ruby lift, which would change nothing in the walk. The page
@@ -788,14 +776,10 @@ not say.
   its base, z 78, 89 and 104 ([Ground layers](WORLD.md#ground-layers)), so a dry fall there ends inside the layer, never
   nowhere. Also left out: the DOUBLE support probe 2 cells down, the Elevator_Platform drowning exemption and
   PLAYER_BLOCKING_ONLY maps in the drown check.
-- Reading a Sign ([Sign `rank_satisfied`](PROGRESSION.md#sign-rank_satisfied)): `reach.signFaced` is 1 when a reached
-  cell stands on one of the Sign's four sides with no Fence between and no closed Freezer in the Sign's cell; it does not
-  check that the hero can turn to face the Sign. A Sign no reached cell stands beside gets its way in from the pocket
-  floods the closed Freezers already have (`reach.signBehind`): the Freezers whose lead, pocket or light lead reaches a
-  cell beside it, and the one in its own cell. It has no other way in the plans, except the way onto its layer when the
-  walk reaches nothing there (the sky, the underworld) and no Freezer leads to it. Only the levels' pockets are flooded,
-  so a Sign far from every level not reached has none. A Freezer that waits on the Sign itself is no way in; one that
-  waits on a level only the Sign leads to is kept, and the plans leave the cycle without a plan.
+- Reading a Sign ([Sign `rank_satisfied`](PROGRESSION.md#sign-rank_satisfied)): a Sign counts as faced once the
+  Freezers it sits behind from the start are open; it is not checked that a hero can stand beside it and turn to face it.
+  Only the Signs the build walk reaches have those Freezers. A Freezer that waits on the Sign itself is no way in; one
+  that waits on a level only the Sign leads to is kept, and the plans leave the cycle without a plan.
 - The four sky Ways to the hub quarters ([Level needs and pad routes](#level-needs-and-pad-routes)): the walk follows
   none of them; the pad routes carry the hero over them to the hub pads.
   - The Heroic Way: dragons that kill each other outside monster-gate rooms, fire turned up by a pushed plain Mirror,
@@ -816,11 +800,11 @@ Per overworld level, first match wins:
 | partial | flags & PARTIALLY_SOLVED |
 | visited (Entered) | any Status entry |
 | locked | not enabled in the level data (`enabled_t_target` 0) and its unlock gate is not met ([Level_Entry unlocking and state](PROGRESSION.md#level_entry-unlocking-and-state)) |
-| unlocked (Reachable) | the walk reaches it, or there is no walk (no history) |
-| blocked | the walk does not reach it |
+| unlocked (Reachable) | the level table reaches it, or there is no history |
+| blocked | the level table does not reach it |
 
 Freezers are open when listed in Status list A or satisfied now
-([Level_Entry unlocking and state](PROGRESSION.md#level_entry-unlocking-and-state)). Without a history file there is no walk and
+([Level_Entry unlocking and state](PROGRESSION.md#level_entry-unlocking-and-state)). Without a history file there is no reach and
 "unlocked" reads "Not entered".
 
 ## Level roles (viewer)
@@ -855,9 +839,9 @@ that alone opens new cells ("one of" when several Freezers of the round open the
 step up whose far side the walk never sees.
 
 These are the static roles: `staticRoles()`, run at build time by `scripts/build-walk.ts` and
-stored in `data/walk.json` (`need`, and `bg`: the Freezers each level and Freezer sits behind). The page reads them
-synchronously at load, so they are there from the first draw. They feed the way-in fallback (`bg`, [Pockets, leads and
-why](#pockets-leads-and-why)) and the Next steps label ([Next steps](#next-steps)), and stand in for the roles of a
+stored in `data/walk.json` (`need`, and `bg`: the Freezers each Freezer and Sign sits behind). The page reads them
+synchronously at load, so they are there from the first draw. They feed the Signs' ways in (`bg.s`, [Reached levels and ways in](#reached-levels-and-ways-in)),
+the Next steps label ([Next steps](#next-steps)), and stand in for the roles of a
 goal that has none.
 The lists and the map go by the selected goal's roles ([Goal roles (viewer)](#goal-roles-viewer)).
 
@@ -882,12 +866,9 @@ known sky Ways (w).
 - Level, solved: met. Playable now (entered, partly solved or reachable): a step with no parts, a front.
 - Level, locked: its unsolved requirements, all of them, or for an OR gate of more than one the cheapest of them; and
   the closed Freezer it is frozen in.
-- Level, not reachable: the cheapest of its way-in gates (`P.wayIn`; for a doorway, the cheapest of the ways through
-  it, a part needing all of its gates), the levels by a pad that leads into its pocket
-  (`why.via`) and the Towers whose pad does (`why.viaTowers`); none of the last two where the endgame table replaces
-  the walk. With none of them and an access mark (`P.access`:
-  its layer, which the walk reaches nowhere, or the sky the level data enters it from): the way onto that layer. With none of them, or when every way-in gate only leads to such a pad,
-  it may become a step of its own (below). A level that also asks for the endgame table's gates (`P.wayInAll`, the end2
+- Level, not reachable: the cheapest of its way-in gates (`P.wayIn`). With none of them and an access mark (`P.access`:
+  its layer, which holds no reached level, or the sky the level data enters it from): the way onto that layer. With none of
+  them it is a step of its own (below). A level that also asks for the endgame table's gates (`P.wayInAll`, the end2
   room's levels) needs all of those gates together, besides the cheapest of the rest. A level with needs in the data whose
   needs are not met ([Level needs and pad routes](#level-needs-and-pad-routes)) asks for all its unmet needs together
   in place of the walk's way-in gates. Such a level has a way in, so it gets no access mark's step.
@@ -942,9 +923,8 @@ positions ([Endings](PROGRESSION.md#endings)):
 
 - `end1`: the gold-room Sign's gates, in place of the walk's.
 - The end2 room's levels: the four Freezers ringing the sky hub elevator under the room, one per sky tower
-  ([Second Endgame](PROGRESSION.md#second-endgame)), all four needed together (an AND), besides the walk's way in, so
-  the walk's pockets inside the room stay. Where the walk finds no way in, the four are the way in. Gates already open
-  are left out.
+  ([Second Endgame](PROGRESSION.md#second-endgame)), all four needed together (an AND), besides the room's own way in.
+  Where there is none, the four are the way in. Gates already open are left out.
 - `all_together_now`: every gate the set's other levels open, all needed together (an AND).
 - The `endgame3` levels: one chain in set order, in place of the walk's. A level sits behind the gates opened only by
   levels before it in the set (the latest of those), leaving out a gate whose levels need the level itself. The first
@@ -966,9 +946,9 @@ so its row lists none.
 A level with `needs` is decided by them: it is reachable when they hold and not reachable otherwise, whatever the walk
 finds, except that a level the save solved or entered stays reached. A level frozen in a closed Freezer is reached only
 once it opens. A level with no `needs`, because the table adds nothing to its unlocks, is as the walk finds it. When a level's needs hold, the walk seeds its flood at
-the level ([Seeds and the reached cells](#seeds-and-the-reached-cells)), so the levels, pads, Signs and leads beyond it
+the level ([Reached levels and ways in](#reached-levels-and-ways-in)), so the levels, pads, Signs and leads beyond it
 are reached with it, in the same pass. `drop` marks a blocked level entered from the sky, worded as for the
-sky ([Pockets, leads and why](#pockets-leads-and-why)).
+sky ([Reached levels and ways in](#reached-levels-and-ways-in)).
 
 A pad route has `to`, the pad or the cell of another overworld entity (a Sign, a Level_Entry) where the hero lands once
 its needs hold, and, for a sky Way only, `area` (the Way area) and `tower` (the sky tower whose hub quarter it leads
@@ -1057,8 +1037,8 @@ when what it needs is held that way. This generalises `inner()`: a gate whose re
 behind it is the shortest such cycle. The Freezers beyond a doorway are looked at the same way: a way through that
 holds a gate behind itself is dropped, and a doorway with no way through left is dropped from `P.wayIn`.
 
-A way-in gate is ruled out when its unsolved requirements need the level itself: `inner()` in [Pockets, leads and
-why](#pockets-leads-and-why).
+A way-in gate is ruled out when its unsolved requirements need the level itself: `inner()` in [Reached levels and ways
+in](#reached-levels-and-ways-in).
 
 ## Goals (viewer)
 
@@ -1252,6 +1232,13 @@ fog has uncovered; a campaign opens on the hero's layer and later redraws keep t
 the layer's image is decoded, the pill dimmed meanwhile), the Reachable switch
 and the zoom pill (+ | −). A view the map frames keeps clear of them.
 
+The Reachable switch washes the cells of each level the save can reach, and dims the rest of the layer. A level's cells
+are the ones nearest to its door by walking ([data/level-cells.json](DATAFILES.md#datalevel-cellsjson)). A level is
+reachable when its door is reached: its needs hold, a level of its own door lock counting once reached rather than
+solved, and it is not frozen in a closed Freezer. One the save entered or solved is washed more
+strongly, reachable or not. A soft line runs along the edge of the washed cells. The overlay reads no walk at run time,
+and the fog clears by the history alone.
+
 Working out a save holds the page still for a moment: a save opened, a change the live folder brings, a campaign
 picked for the first time. Before that starts, a still note in the same dark glass shows at the centre of the map,
 "Working out your save…" or, for a change to the campaign shown, "Updating…", and the header's live dot turns to a
@@ -1383,7 +1370,6 @@ type or enum name ([Localisation and display names](GAMEDATA.md#localisation-and
 | Achievements | "Antipode HxM", "High Mirrors", "Low SxB", "Gold HxB", "Ascend", "Endgame High", "Completionist", "Beamcasters", ... | Steam's English achievement names, a table by the `Achievement` value name |
 | Endings | "Endgame", "Endgame High", "Endgame Low" | the names of their achievements |
 | Worlds | Heroes, Mirror Isles, Skipping Stones, Beamcasters; a pair by its letters joined by x ("HxB", B for Beamcasters) | Steam's achievement names; an area the localization calls "The Mirror Isles" is "Mirror Isles" |
-| Mechanics in "why" | Dragon fire, Beams, Mirrors, Skipping Stones | the game's words, capitalised as the game capitalises its objects |
 | Towers | "Antipode HxM", "High Heroes", "Low HxM" | Steam's name of the tower's achievement; "tower" is the plain word for the kind, since the game has none |
 | Levels | `simplify_skipping` | the level name: levels have no display names |
 | Level sets, voice logs | not named: a voice log is "Voice log" | the level data's names are internal and some name a layer or an ending |
@@ -1430,6 +1416,5 @@ names. Fog is the game's own ([Fog of war](STATE.md#fog-of-war)), read from the 
 - Goals ([Goals (viewer)](#goals-viewer)): every count is over what fog leaves (an ending's plan steps, the towers and achievements not hidden, the levels not under fog), and a count with more under fog carries a `+`. Endgame lists the ground towers not hidden; its Antipode teleporter count is the visited ones (known, as the totals know them) of the Sign's need, shown only while that Sign is not under fog, else its plan steps. A goal with nothing to show says "Nothing to show yet; more is under fog." No `leadsTo` names a fogged level, gate, tower or hidden achievement, and its route count leaves out the routes under fog.
 - A sky Way ([Level needs and pad routes](#level-needs-and-pad-routes)), as a plan step and as a stage of Endgame High, shows with the tower it leads to, so it is left out while that tower is under fog, and listed once the tower is, although its Sign may still be under fog. It names its area while the area is named (the same rule as the Completionist area list; the plan step links to it on the map); else it reads "Way to the High Mirrors sign", with the tower's name. The stages of Endgame High and Endgame Low that are areas or levels follow the area and level rules above, and Endgame Low is listed only once Endgame High is earned.
 - Plan steps without a chip of their own: a gold room shows where the totals show it (once visited; its tower's row under Endgame names it before, as above); the way onto a layer only once that layer has cleared fog; ASCEND and DESCEND only while their achievement is not hidden.
-- Mechanics in a level's "why" are named only once the save has that world's achievement (Dragon fire: HEROES, Beams: PROMISE, Mirrors: MIRRORS, Skipping Stones: SKIPPING); else "may need something the map does not model".
-- A level's "why" names a layer (its way onto it, or "from High") only once that layer has cleared fog; else it reads "not reachable from where you have been" ([Pockets, leads and why](#pockets-leads-and-why)).
+- A level's "why" names a layer (its way onto it, or "from High") only once that layer has cleared fog; else it reads "not reachable from where you have been" ([Reached levels and ways in](#reached-levels-and-ways-in)).
 - The page source may hold spoilers: only what the page shows must be spoiler-free.

@@ -1,6 +1,7 @@
 // Save files: Status.sokoban_status, overworld.history and entity diff blobs
 import { SCHEMA } from './data.ts';
 import { createBlobDecoder } from './blob.ts';
+import { LATEST_TYPES } from './schema-types.ts';
 import type { DecodedBlob } from './blob.ts';
 import type { History, OceanChange } from './history-file.ts';
 import type { SchemaField } from './types.ts';
@@ -33,33 +34,6 @@ interface Keyed<Value> {
 }
 
 // Latest value per (pid, field) of the entity state the overworld views use, and per (pid, square) of ocean changes
-const LATEST_TYPES = new Set([
-    'Wall_Set',
-    'Teleporter',
-    'Freezer',
-    'Rock',
-    'Area_Pin',
-    'Fence',
-    'Gate',
-    'Lily',
-    'Switch',
-    'Ocean_Map',
-    'Voice_Log',
-    'View_Giver',
-    'Monster',
-    'Guy',
-    'Wardrobe',
-    'Promesst_Light',
-    'Tree',
-    'Gem',
-    'Gem_Slot',
-    'Mirror',
-    'Rover',
-    'Friendly_Dragon',
-    'Group',
-    'Sign',
-]);
-
 const LATEST_FIELDS = [
     'base.entity_flags',
     'base.position.x',

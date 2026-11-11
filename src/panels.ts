@@ -60,7 +60,7 @@ function startMap(context: PanelContext): void {
         hero: context.model.hero,
         style: (marker) => markerStyle(context, marker),
         fog,
-        reach: progress.reach?.cols,
+        reach: context.model.levelReach,
         overlays: context.overlays(),
         keep: (overlay) => {
             const doneShown = context.filters.show !== 'todo';
@@ -100,7 +100,7 @@ export function renderProgress(model: ProgressModel): void {
     let mapFog: Fog | null = null;
     if (context.hide) mapFog = context.fog;
     $('#banner').innerHTML = bannerHtml(model);
-    $('#main').innerHTML = PROG.map ? mapHtml('pgMap', mapFog, !!progress.reach) : '';
+    $('#main').innerHTML = PROG.map ? mapHtml('pgMap', mapFog) : '';
     $('#results').innerHTML = RESULTS_HTML;
     markPanelOpen(context);
     $('#bnOpen')?.addEventListener('click', () => void folderAction());

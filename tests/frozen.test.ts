@@ -6,6 +6,7 @@ import { NO_HISTORY, reachability } from '../src/walk/reachability.ts';
 // A row of 10 at z 0 on the implicit ground floor: the hero at 0..2; walls at z 0 in columns 3..6 (a ledge at z 1)
 // and a high wall in column 9. Freezer 0 holds level X in the wall cell (3, 0, 0); Freezer 1 sits in the air at
 // (2, 0, 1), next to the ledge; level W stands in the pocket 7..8, which the ledge drops into.
+vi.mock('../src/world-data.ts', () => import('./world-data-mock.ts'));
 vi.mock('../src/data.ts', async () => {
     const SCHEMA = (await import('../data/schema.json')).default;
     const WIDTH = 10,

@@ -1,6 +1,7 @@
 // The table's needs over the real data: no level's route loops back on itself
 import { beforeAll, describe, expect, test } from 'vitest';
-import { PROG, worldReady } from '../src/data.ts';
+import { PROG } from '../src/data.ts';
+import { worldReady } from '../src/world-data.ts';
 import { mapLayerOf } from '../src/model/layers.ts';
 import { needChain } from '../src/model/need-chain.ts';
 import type { ChainWorld } from '../src/model/need-chain.ts';

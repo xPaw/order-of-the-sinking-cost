@@ -1,10 +1,10 @@
 // Falls, TELEPORT swaps, lily rides, gates that hold the hero up and plan searches through cycles, on tiny synthetic
 // overworlds
 import { describe, expect, test, vi } from 'vitest';
-import { PROG, WORLD } from '../src/data.ts';
+import { PROG } from '../src/data.ts';
+import { WORLD } from '../src/world-data.ts';
 import { unlockPlan } from '../src/model/plans.ts';
 import type { BaseProgress } from '../src/model/progress.ts';
-import type { WhyBlocked } from '../src/model/way-in.ts';
 import type { LatestValues } from '../src/save.ts';
 import type { Freezer, WorldGrid } from '../src/types.ts';
 import { walker } from '../src/walk/walker.ts';
@@ -12,6 +12,7 @@ import type { Walker } from '../src/walk/walker.ts';
 import { f32, NONE } from './fixtures.ts';
 import type { Columns, Rows } from './fixtures.ts';
 
+vi.mock('../src/world-data.ts', () => import('./world-data-mock.ts'));
 vi.mock('../src/data.ts', async () => {
     const SCHEMA = (await import('../data/schema.json')).default;
     return { SCHEMA, PROG: {}, WORLD: {}, worldReady: Promise.resolve() };
@@ -914,20 +915,20 @@ describe('unlock plans through cycles', () => {
             freezers: [[2], [0], [1]].map((req) => ({ req, signs: [] })),
             signs: [],
         });
-        const blockedWhy = (): WhyBlocked => ({ gates: [], pad: [], via: [], viaTowers: [], mech: [] });
         return {
             state: ['unlocked', 'blocked', 'blocked'],
             unlocks: [{ levels: [] }, { levels: [] }, { levels: [] }],
             wayIn: [[], [0, 1], [2]],
-            wayInChains: [null, null, null],
-            wayInFixed: new Set(),
-            why: [null, blockedWhy(), blockedWhy()],
             behind: [[], [0, 1], [2]],
+            leads: [],
             access: [null, null, null],
+            signFaced: [],
             signAccess: [],
             signWayIn: [],
             ice: [],
-            reach: null,
+            reachKnown: false,
+            doorReached: [true, false, false],
+            layersReached: new Set(),
             lt: null,
             solved: 0,
             gateOpen: [false, false, false],

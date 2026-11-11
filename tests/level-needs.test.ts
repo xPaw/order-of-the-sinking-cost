@@ -11,6 +11,7 @@ import { NO_HISTORY, reachability } from '../src/walk/reachability.ts';
 // A row of 10 at z 0 on the implicit ground floor: the hero at 0..2; walls at z 0 in columns 3..6 (a ledge at z 1)
 // and a high wall in column 9. Level A stands where the hero does, level V and level W in the pocket 7..8, which the
 // walk from the hero does not reach.
+vi.mock('../src/world-data.ts', () => import('./world-data-mock.ts'));
 vi.mock('../src/data.ts', async () => {
     const SCHEMA = (await import('../data/schema.json')).default;
     const WIDTH = 10,

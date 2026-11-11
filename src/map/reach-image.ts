@@ -1,9 +1,10 @@
-// The Reachable overlay image of one map layer, from the walk's reached columns (VIEWER.md "Seeds and the reached
-// cells"), and the fogged rectangles it hatches
+// The Reachable overlay image of one map layer, from the cells nearest to the levels the save can reach (VIEWER.md "The
+// page (viewer)")
 import { PROG } from '../data.ts';
-import type { Fog, FogRect } from '../fog.ts';
+import type { Fog } from '../fog.ts';
+import { LEVEL_CELLS } from '../level-cells.ts';
+import type { LevelReach } from '../model/progress-model.ts';
 import type { MapLayer } from '../types.ts';
-import { mapCol } from '../walk/cells.ts';
 import { INK_RGB, REACH_EDGE_RGB, REACH_RGB } from './colors.ts';
 import type { Rgb } from './colors.ts';
 
@@ -39,38 +40,61 @@ const putPixel = (pixels: Uint8ClampedArray, offset: number, color: Rgb, alpha: 
 const pixelOffset = (width: number, i: number, j: number, x: number, y: number): number =>
     ((j * MAP_SCALE + y) * width * MAP_SCALE + i * MAP_SCALE + x) * 4;
 
-// the alpha of a reached square's wash, of its edge line and of an unreached square's dimming
+// the alpha of a reachable square's wash, of an entered level's wash, of the edge line and of an unreached square's
+// dimming
 const REACH_FILL = 0.32;
 
+const ENTERED_FILL = 0.5;
 const REACH_EDGE = 0.8;
 const REACH_DIM = 0.18;
 
-// per square of the overlay: left out (fogged), reached, dimmed
+// per square of the overlay: left out (fogged), reachable, entered, dimmed
 const LEFT_OUT = 0;
 
-const REACHED = 1;
-const DIMMED = 2;
+const REACHABLE = 1;
+const ENTERED = 2;
+const DIMMED = 3;
 
-// a pixel's colour and alpha byte: the edge line, a reached square's wash or an unreached square's dimming
+// a pixel's colour and alpha byte: the edge line, a reachable square's wash, an entered level's wash or an unreached
+// square's dimming
 const EDGE_PIXEL: ReachPixel = [REACH_EDGE_RGB, Math.round(255 * REACH_EDGE)];
 
-const REACHED_PIXEL: ReachPixel = [REACH_RGB, Math.round(255 * REACH_FILL)];
+const REACHABLE_PIXEL: ReachPixel = [REACH_RGB, Math.round(255 * REACH_FILL)];
+const ENTERED_PIXEL: ReachPixel = [REACH_RGB, Math.round(255 * ENTERED_FILL)];
 const DIMMED_PIXEL: ReachPixel = [INK_RGB, Math.round(255 * REACH_DIM)];
 
 function reachPixel(onEdge: boolean, kind: number): ReachPixel {
     if (onEdge) return EDGE_PIXEL;
-    if (kind === REACHED) return REACHED_PIXEL;
+    if (kind === REACHABLE) return REACHABLE_PIXEL;
+    if (kind === ENTERED) return ENTERED_PIXEL;
     return DIMMED_PIXEL;
 }
 
+// whether a square kind is marked: reachable or entered
+const isMarked = (kind: number): boolean => kind === REACHABLE || kind === ENTERED;
+
 /**
- * The Reachable overlay of one layer, MAP_SCALE pixels per square: squares where cols[layer.key], a column bitmap from
- * reachability(), is set get a light --reach wash with a soft --reach-edge line inside them along the sides that face
- * unreached squares; every other square is dimmed a little. With fog given, fogged squares are left out, so the image
- * holds nothing the fog hides. null when no square is reached.
+ * The overlay square kind of a level's cell: ENTERED where the save entered the level, REACHABLE where it can reach it,
+ * DIMMED otherwise.
  */
-export function reachImage(layer: MapLayer, cols: Record<string, Uint8Array>, fog?: Fog | null): string | null {
-    const reachedColumns = cols[layer.key];
+function kindOf(level: number, reach: readonly LevelReach[]): number {
+    // NO_LEVEL is past the last level, so it reads as unreached
+    const levelReach = reach[level];
+    if (levelReach === 'entered') return ENTERED;
+    if (levelReach === 'reachable') return REACHABLE;
+    return DIMMED;
+}
+
+/**
+ * The Reachable overlay of one layer, MAP_SCALE pixels per square: squares nearest to a level that `reach` marks get a
+ * light --reach wash (a stronger one when the level is entered) with a soft --reach-edge line inside them along the
+ * sides that face unmarked squares; every other square is dimmed a little. With fog given, fogged squares are left out,
+ * so the image holds nothing the fog hides. null when no square is marked, or the level cells are not unpacked.
+ */
+export function reachImage(layer: MapLayer, reach: readonly LevelReach[], fog?: Fog | null): string | null {
+    const levelCells = LEVEL_CELLS?.[layer.key];
+    if (!levelCells) return null;
+
     const [width, height] = PROG.map.size;
     const [cornerX, cornerY] = PROG.map.corner;
     const kinds = new Uint8Array(width * height);
@@ -81,19 +105,21 @@ export function reachImage(layer: MapLayer, cols: Record<string, Uint8Array>, fo
             if (fog?.cover(layer.key, cornerX + i, cornerY + height - 1 - j)) continue;
 
             const square = j * width + i;
-            if (reachedColumns[square]) {
-                kinds[square] = REACHED;
-                anyReached = true;
-            } else {
-                kinds[square] = DIMMED;
-            }
+            kinds[square] = kindOf(levelCells[square], reach);
+            if (kinds[square] !== DIMMED) anyReached = true;
         }
     }
 
     if (!anyReached) return null;
 
-    const reached = (i: number, j: number): boolean =>
-        i >= 0 && j >= 0 && i < width && j < height && kinds[j * width + i] === REACHED;
+    const reached = (i: number, j: number): boolean => {
+        if (i < 0 || j < 0 || i >= width || j >= height) return false;
+
+        return isMarked(kinds[j * width + i]);
+    };
+
+    // per side (west, east, north, south) of the square drawn: whether a reached square faces an unreached one there
+    const edges = [false, false, false, false];
 
     return imageUrl((pixels) => {
         for (let j = 0; j < height; j++) {
@@ -101,11 +127,11 @@ export function reachImage(layer: MapLayer, cols: Record<string, Uint8Array>, fo
                 const kind = kinds[j * width + i];
                 if (kind === LEFT_OUT) continue;
 
-                // per side (west, east, north, south): whether a reached square faces an unreached one there
-                let edges = [false, false, false, false];
-                if (kind === REACHED) {
-                    edges = [!reached(i - 1, j), !reached(i + 1, j), !reached(i, j - 1), !reached(i, j + 1)];
-                }
+                const marked = isMarked(kind);
+                edges[0] = marked && !reached(i - 1, j);
+                edges[1] = marked && !reached(i + 1, j);
+                edges[2] = marked && !reached(i, j - 1);
+                edges[3] = marked && !reached(i, j + 1);
 
                 for (let y = 0; y < MAP_SCALE; y++) {
                     for (let x = 0; x < MAP_SCALE; x++) {
@@ -119,22 +145,5 @@ export function reachImage(layer: MapLayer, cols: Record<string, Uint8Array>, fo
                 }
             }
         }
-    });
-}
-
-/**
- * The fogged rectangles (world [x, y, w, h], from fog.rects()) holding a square whose column is set in cols, a column
- * bitmap from reachability() taken before any fog is applied.
- */
-export function reachedRects(cols: Uint8Array | null | undefined, rects: FogRect[]): FogRect[] {
-    if (!cols) return [];
-
-    return rects.filter(([x, y, width, height]) => {
-        for (let squareY = Math.ceil(y); squareY < y + height; squareY++) {
-            for (let squareX = Math.ceil(x); squareX < x + width; squareX++) {
-                if (cols[mapCol(squareX, squareY)]) return true;
-            }
-        }
-        return false;
     });
 }

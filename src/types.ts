@@ -30,7 +30,7 @@ export interface ProgressLevel {
     d?: number;
     /** Its achievement name. */
     a?: string;
-    /** [index into `sets`, place in the set from 1]. */
+    /** [index into the level sets in build order, place in the set from 1]. */
     set?: [setIndex: number, place: number];
     /** Index into `areas`. */
     area?: number;
@@ -47,7 +47,7 @@ export interface ProgressLevel {
     drop?: Position;
 }
 
-/** One row of data/progress.json `sets`. */
+/** A level set of the overworld, as the data build lists it. */
 export interface LevelSet {
     name: string;
     /** The number of levels in the set that exist. */
@@ -126,7 +126,6 @@ export interface VoiceLog {
     p: Position;
     l: number;
     name: string;
-    author?: string;
     /** 1 when it is already played in the level data. */
     d?: number;
 }
@@ -154,7 +153,6 @@ export interface AreaBox {
 
 /** One row of data/progress.json `areas`. */
 export interface Area {
-    local_area_name: string;
     display: string;
     /** The emblem texture's name (`OverworldIcon_Soko_Prom`), empty for an area with none. */
     image: string;
@@ -165,6 +163,11 @@ export interface Area {
     boxes: AreaBox[];
     layer: string;
     order: number;
+}
+
+/** An area as the data build holds it, with the Area_Pin's `local_area_name` that data/level_areas.json is keyed by. */
+export interface NamedArea extends Area {
+    local_area_name: string;
 }
 
 /** data/progress.json `fog`. */
@@ -555,10 +558,19 @@ export interface WorldFile {
     gold_rooms: GoldRoom[];
 }
 
+/** data/progress.json `world`: the keys of data/world.json `world` the page reads. */
+export type ProgressWorld = Pick<World, 'grid' | 'area_pins' | 'movables'>;
+
+/** One row of data/progress.json `teleporters`: the keys of a data/world.json pad the page reads. */
+export type ProgressTeleporter = Pick<Teleporter, 'pid' | 'p' | 'l' | 'major' | 'target' | 'en' | 'disc' | 'gold'>;
+
 /** data/progress.json. */
-export interface Progress extends WorldFile {
+export interface Progress {
+    world: ProgressWorld;
+    teleporters: ProgressTeleporter[];
+    treasure_displays: TreasureDisplay[];
+    gold_rooms: GoldRoom[];
     levels: ProgressLevel[];
-    sets: LevelSet[];
     towers: Tower[];
     freezers: Freezer[];
     objects: MapObjects;
@@ -577,6 +589,9 @@ export interface Progress extends WorldFile {
 /** Per map layer key, one value per map column. */
 export type MapLayerValues<Value> = Record<MapLayerKey, Value>;
 
+/** The value of a data/level-cells.json cell that no level's door reaches. */
+export const NO_LEVEL = 0xffff;
+
 /** data/walk.json: what the walk works out from the level data alone. */
 export interface WalkFile {
     /** The SHA-256 (hex) of each input file. */
@@ -584,28 +599,31 @@ export interface WalkFile {
     roles: {
         /** One digit per level and per Freezer: 2 Required, 1 Required as one of several, 0 Optional. */
         need: { l: string; g: string };
-        /** Per level and per Freezer, the indices into `freezers` of the Freezers it sits behind. */
-        bg: { l: number[][]; g: number[][] };
+        /**
+         * Per Freezer and per Sign, the indices into `freezers` of the Freezers it sits behind; a Sign the walk never
+         * faces is null.
+         */
+        bg: { g: number[][]; s: Array<number[] | null> };
     };
 
     /** Per map layer key, zlib + base64 of the highest z where the walk stands the hero, plus 128. */
     floors: MapLayerValues<string>;
+}
 
-    /**
-     * The push search of the screen rooms: how many rooms it searched with every Freezer closed, how many with some
-     * Freezers open, how many answers it stores that have something to tell, how many it stores for rooms with nothing
-     * to tell, no start or too many positions, how many positions it visited, the first cell of each room that hit the
-     * cap, and zlib + base64 of the answers as JSON.
-     */
-    rooms: {
-        searched: number;
-        variants: number;
-        answered: number;
-        empty: number;
-        states: number;
-        capped: number[];
-        data: string;
-    };
+/**
+ * data/rooms.json: the push search of the screen rooms, for the build and the tests; the page does not load it. How many
+ * rooms it searched with every Freezer closed, how many with some Freezers open, how many answers it stores that have
+ * something to tell, how many it stores for rooms with nothing to tell, no start or too many positions, how many
+ * positions it visited, the first cell of each room that hit the cap, and zlib + base64 of the answers as JSON.
+ */
+export interface RoomsFile {
+    searched: number;
+    variants: number;
+    answered: number;
+    empty: number;
+    states: number;
+    capped: number[];
+    data: string;
 }
 
 /** One field of an entity type in data/schema.json: k is p plain (sz bytes), s string, r resource name or a array of `e`. */

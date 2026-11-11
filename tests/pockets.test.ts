@@ -7,6 +7,7 @@ import { NO_HISTORY, reachability } from '../src/walk/reachability.ts';
 // at z 0 in columns 2..4 and 8..10 make two ledges at z 1, level A on the west one and level C on the east one; both
 // drop into the pit 5..7, where level B stands and from which no step climbs back. A beam blocker Rock at (2, 0, 2)
 // marks the cells around the west ledge.
+vi.mock('../src/world-data.ts', () => import('./world-data-mock.ts'));
 vi.mock('../src/data.ts', async () => {
     const SCHEMA = (await import('../data/schema.json')).default;
     const WIDTH = 14,

@@ -10,7 +10,7 @@ import { FOG_LAYER_KEYS, mapLayerOf } from '../model/layers.ts';
 import type { GoalLevel, GoalView } from '../model/goals-view.ts';
 import type { ProgressModel } from '../model/progress-model.ts';
 import type { ShownProgress } from '../model/progress.ts';
-import type { Area, Freezer, GoldRoom, Position, ProgressLevel, Sign, Teleporter, Tower } from '../types.ts';
+import type { Area, Freezer, GoldRoom, Position, ProgressLevel, ProgressTeleporter, Sign, Tower } from '../types.ts';
 import { panelHash, panelKeep, setHash } from './hash.ts';
 
 /** A level of the goal as the list shows it: the goal's levels by group, and the solved ones. */
@@ -33,7 +33,7 @@ export class PanelContext {
     status: ProgressModel['status'];
     progress: ShownProgress;
     levels: ProgressLevel[];
-    teleporters: Teleporter[];
+    teleporters: ProgressTeleporter[];
     fog: Fog;
     hide: boolean;
     filters: ProgressFilters;

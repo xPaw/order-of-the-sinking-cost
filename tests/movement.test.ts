@@ -1,6 +1,7 @@
 // Fire, pushes, elevators and rock bridges on tiny synthetic overworlds (one row of cells)
 import { describe, expect, test, vi } from 'vitest';
-import { PROG, WORLD } from '../src/data.ts';
+import { PROG } from '../src/data.ts';
+import { WORLD } from '../src/world-data.ts';
 import type { LatestValues } from '../src/save.ts';
 import type { Position } from '../src/types.ts';
 import type { FloodOptions } from '../src/walk/flood.ts';
@@ -9,6 +10,7 @@ import type { Walker } from '../src/walk/walker.ts';
 import { freezerAt, NONE, padAt } from './fixtures.ts';
 import type { Columns, Rows } from './fixtures.ts';
 
+vi.mock('../src/world-data.ts', () => import('./world-data-mock.ts'));
 vi.mock('../src/data.ts', async () => {
     const SCHEMA = (await import('../data/schema.json')).default;
     return { SCHEMA, PROG: {}, WORLD: {}, worldReady: Promise.resolve() };

@@ -1,7 +1,8 @@
 // The Signs row of the sidebar's Find on the map: the signs that open Freezers, found when read, over the ones not
 // under fog, and the ones ready to read (their rule holds); and a campaign at rank 1 with the ground shown
 import { beforeAll, describe, expect, test, vi } from 'vitest';
-import { PROG, worldReady } from '../src/data.ts';
+import { PROG } from '../src/data.ts';
+import { worldReady } from '../src/world-data.ts';
 import type { Sign } from '../src/types.ts';
 import { setProgressCache } from '../src/model/progress.ts';
 import type { BaseProgress } from '../src/model/progress.ts';
@@ -42,14 +43,15 @@ function totalsAtRank(rank: number, shownAt: ShownAt, known: string[] | null, re
             levelSolved: () => false,
             signRead: () => false,
         },
+        signFaced: [],
         signAccess: [],
         signWayIn: [],
-        reach: null,
+        reachKnown: false,
+        doorReached: [],
+        layersReached: new Set(),
         behind: [],
-        why: [],
+        leads: [],
         wayIn: [],
-        wayInChains: [],
-        wayInFixed: new Set(),
         access: [],
         ice: [],
         lt: null,

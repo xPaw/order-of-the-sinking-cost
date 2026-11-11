@@ -1,6 +1,6 @@
 // The list of one kind of mark in the results column, in place of the goal's levels: what is left to do first, then the
 // done ones when asked for (VIEWER.md "The page (viewer)")
-import { $, compareText, escapeHtml } from '../util.ts';
+import { $, compareText, escapeHtml, setHtml } from '../util.ts';
 import type { PanelKey } from '../shared.ts';
 import { iconHtml } from '../map/icons.ts';
 import type { IconName } from '../map/icons.ts';
@@ -264,7 +264,7 @@ export function drawFindList(context: PanelContext, kind: FindKind): void {
 
     const back = '<button class="plain lnk" data-find-back title="Back to the goal\'s levels">‹ Back</button>';
     const left = `<b>${escapeHtml(findLabel(kind))}</b> · ${todo.length} left`;
-    $('#pgCount').innerHTML = `<span class="fh">${back}<span>${left}</span></span>`;
+    setHtml($('#pgCount'), `<span class="fh">${back}<span>${left}</span></span>`);
 
     let pressedClass = '';
     if (filters.findDone) pressedClass = ' on';
@@ -274,11 +274,11 @@ export function drawFindList(context: PanelContext, kind: FindKind): void {
 
     const chipAttributes = `data-find-done aria-pressed="${filters.findDone}"${disabled}`;
     const count = `<span class="n">${done.length}</span>`;
-    $('#pgChips').innerHTML = `<button class="plain chip st${pressedClass}" ${chipAttributes}>Done ${count}</button>`;
+    setHtml($('#pgChips'), `<button class="plain chip st${pressedClass}" ${chipAttributes}>Done ${count}</button>`);
 
     let html = '';
     if (todo.length) html += groupHtml(context, 'Still to do', todo, true);
     if (filters.findDone && done.length) html += groupHtml(context, 'Done', done, !todo.length);
     if (!html) html = `<div class="none muted">Nothing left to find here.</div>`;
-    $('#pgRows').innerHTML = html;
+    setHtml($('#pgRows'), html);
 }

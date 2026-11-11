@@ -1,7 +1,8 @@
 // The cages that rank Signs open: the closed ones whose rank is reached, the ones holding a Promesst_Light or a Mirror
 // first
 import { beforeAll, describe, expect, test } from 'vitest';
-import { PROG, worldReady } from '../src/data.ts';
+import { PROG } from '../src/data.ts';
+import { worldReady } from '../src/world-data.ts';
 import { rankCages } from '../src/model/rank-cages.ts';
 import type { RankCageInput } from '../src/model/rank-cages.ts';
 

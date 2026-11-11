@@ -1,7 +1,7 @@
 // Resolves the names and pids of the hand-written table (level-table.ts) to the indices data/progress.json holds
 // (VIEWER.md "Level needs and pad routes")
 import type {
-    Area,
+    NamedArea,
     PadRoute,
     Position,
     ProgressLevel,
@@ -20,7 +20,7 @@ const PREFIX = 'level_table';
 export interface TableData {
     levels: ProgressLevel[];
     signs: Sign[];
-    areas: Area[];
+    areas: NamedArea[];
     teleporters: Teleporter[];
     /** The index into `towers` of the sky tower with this flag name. */
     skyTower: (flagName: string) => number | undefined;

@@ -1,31 +1,40 @@
-// Completion progress of a campaign from its saves: level states, towers, Freezers, the walk's reach, the ways into
-// the levels it cannot reach and the plans built on them (rules: PROGRESSION.md "Level_Entry unlocking and state", the
+// Completion progress of a campaign from its saves: level states, towers, Freezers, the levels the level table reaches,
+// the ways into the others and the plans built on them (rules: PROGRESSION.md "Level_Entry unlocking and state", the
 // viewer's model: VIEWER.md "Level states (viewer)", data: data/progress.json)
-import { PROG, WORLD } from '../data.ts';
+import { PROG } from '../data.ts';
 import { latestFlag, latestOf } from '../save.ts';
 import type { History, LatestValues } from '../save.ts';
 import type { Status } from '../status-file.ts';
-import type { PadRoute } from '../types.ts';
-import { reachability } from '../walk/reachability.ts';
-import type { Reachability } from '../walk/reachability.ts';
 import { teleporterStatesOf } from '../walk/teleporters.ts';
 import type { TeleporterState } from '../walk/teleporters.ts';
 import type { StoredRoles } from '../walk-data.ts';
 import { goalLadder } from './goals.ts';
 import type { LadderGoal } from './goals.ts';
+import type { BehindState } from './level-freezers.ts';
 import { ROLE } from './level-roles.ts';
 import { nextSteps } from './next-steps.ts';
 import type { NextStep } from './next-steps.ts';
 import { planAll } from './plans.ts';
 import type { Plans } from './plans.ts';
-import { levelNeedsMet, metPadRoutes } from './route-needs.ts';
+import { needsReach } from './route-needs.ts';
 import type { NeedsView } from './route-needs.ts';
 import { towerProgress } from './towers.ts';
 import type { TowerProgress } from './towers.ts';
 import { freezersOpen, isSolved, levelFlagsOf, levelStates, signRuleMet } from './unlocking.ts';
-import type { LevelFlags, LevelState, SignRule } from './unlocking.ts';
-import { accessOf, gatesBehind, signAccessOf, signWayInOf, unlocksOf, wayInModel } from './way-in.ts';
-import type { LevelUnlocks, WhyBlocked } from './way-in.ts';
+import type { LevelState, SignRule } from './unlocking.ts';
+import {
+    accessOf,
+    frozenInOf,
+    gatesBehind,
+    layersReachedOf,
+    leadsOf,
+    signAccessOf,
+    signsFacedOf,
+    signWayInOf,
+    unlocksOf,
+    wayInFor,
+} from './way-in.ts';
+import type { LevelUnlocks } from './way-in.ts';
 
 export const RANKS = ['Visitor', 'Egressant', 'Pusher', 'Arranger', 'Intrepid', 'Sokoban'];
 
@@ -59,31 +68,30 @@ export interface BaseProgress {
     signRead: (pid: number) => boolean;
     /** What the save says about the things a level need or pad route can ask for. */
     needsView: NeedsView;
-    /** Per Sign, the layer the walk reaches nowhere that a hero must get onto to read it; null for the others. */
+    /** Per Sign, whether a hero can face it: every Freezer it sits behind from the start is open. */
+    signFaced: boolean[];
+    /** Per Sign, the layer with no reached level that a hero must get onto to read it; null for the others. */
     signAccess: Array<string | null>;
-    /** Per Sign the hero cannot face yet, the closed Freezers whose opening lets the walk face it. */
+    /** Per Sign the hero cannot face yet, the closed Freezers it sits behind. */
     signWayIn: number[][];
-    /** The walk over the overworld state; null for the empty save. */
-    reach: Reachability | null;
-    /** Per level, the closed gates whose leads or pocket hold it. */
+    /** Whether the save has a history to say which levels are reached; without one an open level is only known to be not entered. */
+    reachKnown: boolean;
+    /** Per level, whether the hero can walk up to its door: its needs hold, a level of its own `req` counting once reached. */
+    doorReached: boolean[];
+    /** The map layers that hold a reached level. */
+    layersReached: ReadonlySet<string>;
+    /** Per level its needs do not reach, the closed Freezers it sits behind from the start. */
     behind: number[][];
-    /** Per level the walk cannot reach, why it may still be; null for the others. */
-    why: Array<WhyBlocked | null>;
-    /** Per level the walk cannot reach, its way-in gates; null for the others. */
+    /** Per Freezer, the levels its needs do not reach that sit behind it while it is closed. */
+    leads: number[][];
+    /** Per level its needs do not reach, its way-in gates; null for the others. */
     wayIn: Array<number[] | null>;
     /**
-     * Per level the walk cannot reach, its way-in gates that open onto nothing but more closed Freezers, each with the
-     * ways through it: the gates all needed together; null for a level with none.
-     */
-    wayInChains: Array<Map<number, number[][]> | null>;
-    /**
-     * Per level the walk cannot reach, the closed gates the endgame table asks for besides its way in, all of them
+     * Per level its needs do not reach, the closed gates the endgame table asks for besides its way in, all of them
      * together (the end2 room's levels: the sky hub's Freezers).
      */
     wayInAll?: Map<number, number[]>;
-    /** The levels whose way in is the level data's alone. */
-    wayInFixed: Set<number>;
-    /** Per level the walk cannot reach, the layer it needs a way onto; null for the others. */
+    /** Per level its needs do not reach, the layer it needs a way onto; null for the others. */
     access: Array<string | null>;
     /** Per level, the closed Freezer it is frozen in. */
     ice: Array<number | undefined>;
@@ -103,19 +111,18 @@ export interface CampaignProgress extends BaseProgress {
 /** The progress with what the fog hides: per level and per tower. */
 export type ShownProgress = CampaignProgress & { hidden: boolean[]; towerHidden: boolean[] };
 
-/** The label of a level state; without a reachability model an open level is only known to be not entered yet. */
-export const stateLabel = (progress: { reach: Reachability | null }, state: LevelState): string => {
-    if (state === 'unlocked' && !progress.reach) return 'Not entered';
+/** The label of a level state; without a history an open level is only known to be not entered yet. */
+export const stateLabel = (progress: { reachKnown: boolean }, state: LevelState): string => {
+    if (state === 'unlocked' && !progress.reachKnown) return 'Not entered';
     return STATE_LABELS[state];
 };
 
-// per status: the history, the progress, the ROLE it was computed under and how to redo progress.wayIn and
-// progress.wayInChains under another
+// per status: the history, the progress, the ROLE it was computed under and how to redo progress.wayIn under another
 interface CachedProgress {
     history: History | null;
     progress: CampaignProgress;
     role: StoredRoles | null;
-    wayIn: () => Pick<BaseProgress, 'wayIn' | 'wayInChains' | 'wayInAll'>;
+    wayIn: () => Pick<BaseProgress, 'wayIn' | 'wayInAll'>;
 }
 
 let progressCache = new WeakMap<object, CachedProgress>();
@@ -128,23 +135,6 @@ export const setProgressCache = (cache: WeakMap<object, CachedProgress>): void =
 export const progressCached = (status: ProgressStatus, history: History | null): boolean =>
     progressCache.get(status)?.history === history;
 
-// the walk over the overworld state; null for the empty save, which has no walked places to start the fill from
-function reachOf(
-    history: History | null,
-    latest: LatestValues | null,
-    teleporterStates: TeleporterState[],
-    gateOpen: boolean[],
-    levelFlags: LevelFlags,
-    padRoutes: PadRoute[],
-    needsHold: Array<boolean | undefined>,
-): Reachability | null {
-    if (!history || !latest || !WORLD || !PROG.world || history.demo) return null;
-
-    const closed = gateOpen.map((open) => !open);
-    const entered = levelFlags.map((flags) => flags !== undefined);
-    return reachability(history, latest, teleporterStates, closed, entered, padRoutes, needsHold);
-}
-
 /** The completion progress of a campaign from its status and history; the result is reused while both stay the same. */
 export function computeProgress(status: ProgressStatus, history: History | null): CampaignProgress {
     const cached = progressCache.get(status);
@@ -152,9 +142,8 @@ export function computeProgress(status: ProgressStatus, history: History | null)
         // roles computed since: only the parts built on them change
         if (cached.role !== ROLE) {
             cached.role = ROLE;
-            const { wayIn, wayInChains, wayInAll } = cached.wayIn();
+            const { wayIn, wayInAll } = cached.wayIn();
             cached.progress.wayIn = wayIn;
-            cached.progress.wayInChains = wayInChains;
             cached.progress.wayInAll = wayInAll;
             cached.progress.plans = planAll(cached.progress);
             cached.progress.needed = nextSteps(cached.progress, status);
@@ -178,23 +167,20 @@ export function computeProgress(status: ProgressStatus, history: History | null)
         levelSolved: solved,
         signRead,
     };
-    const padRoutes = metPadRoutes(needsView);
-    const needsHold = levelNeedsMet(needsView);
-    const reach = reachOf(history, latest, teleporterStates, gateOpen, levelFlags, padRoutes, needsHold);
-    const state = levelStates(levelFlags, reach);
+    const entered = levelFlags.map((flags) => flags !== undefined);
+    const ice = frozenInOf(gateOpen);
+    // a level with no needs in the level data is open from the start
+    const { reached: levelReached, doorReached } = needsReach(needsView, entered, ice);
+    const reachKnown = !!history && !history.demo;
+    const knownReach = reachKnown ? levelReached : null;
+    const state = levelStates(levelFlags, knownReach);
     const unlocks = unlocksOf();
-    const behind = gatesBehind(reach);
-    const { why, wayInOf, wayInFixed, ice } = wayInModel({
-        levelFlags,
-        solved,
-        state,
-        reach,
-        unlocks,
-        behind,
-        gateOpen,
-        towers,
-    });
-    const { wayIn, wayInChains, wayInAll } = wayInOf();
+    const behindState: BehindState = { levelReached, levelSolved: solved, gateOpen };
+    const behind = gatesBehind(behindState);
+    const layersReached = layersReachedOf(knownReach);
+    const signFaced = signsFacedOf(gateOpen);
+    const wayInOf = wayInFor({ levelFlags, solved, state, unlocks, behind, gateOpen, ice });
+    const { wayIn, wayInAll } = wayInOf();
 
     const baseProgress: BaseProgress = {
         state,
@@ -206,16 +192,17 @@ export function computeProgress(status: ProgressStatus, history: History | null)
         signOk,
         signRead,
         needsView,
-        signAccess: signAccessOf(reach),
-        signWayIn: signWayInOf(reach, gateOpen),
-        reach,
+        signFaced,
+        signAccess: signAccessOf(signFaced, layersReached),
+        signWayIn: signWayInOf(signFaced, gateOpen),
+        reachKnown,
+        doorReached,
+        layersReached,
         behind,
-        why,
+        leads: leadsOf(behindState),
         wayIn,
-        wayInChains,
         wayInAll,
-        wayInFixed,
-        access: accessOf(state, reach),
+        access: accessOf(state, layersReached),
         ice,
         lt: latest,
         solved: state.filter((levelState) => levelState === 'solved').length,

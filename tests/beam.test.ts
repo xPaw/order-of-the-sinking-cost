@@ -1,13 +1,15 @@
 // THROUGH beams on a tiny synthetic overworld: a hero walks through walls only inside a powered beam
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { PROG, WORLD } from '../src/data.ts';
+import { PROG } from '../src/data.ts';
 import type { History } from '../src/history-file.ts';
 import type { LatestValues } from '../src/save.ts';
 import type { Position, World } from '../src/types.ts';
+import { WORLD, WORLD_FILE } from '../src/world-data.ts';
 import { NO_HISTORY, reachability } from '../src/walk/reachability.ts';
 import { walker } from '../src/walk/walker.ts';
 import type { Walker } from '../src/walk/walker.ts';
 
+vi.mock('../src/world-data.ts', () => import('./world-data-mock.ts'));
 vi.mock('../src/data.ts', async () => {
     const SCHEMA = (await import('../data/schema.json')).default;
     return { SCHEMA, PROG: {}, WORLD: {}, worldReady: Promise.resolve() };
@@ -111,15 +113,15 @@ describe('THROUGH beam', () => {
         }
     });
     test('the save overrides the level-data slot flags', () => {
-        PROG.world.gem_slots[0][4] = 1;
+        WORLD_FILE.world.gem_slots[0][4] = 1;
         expect(walk(undefined).beam.size).toBe(7);
         expect(walk(0).beam.size).toBe(0);
     });
     test("the room powers the light, whatever the light's own powered says", () => {
-        PROG.world.lights[0][7] = 1;
+        WORLD_FILE.world.lights[0][7] = 1;
         expect(walk(undefined).beam.size).toBe(0);
         world({ extra: { gem_slots: [] } });
-        PROG.world.lights[0][7] = 1;
+        WORLD_FILE.world.lights[0][7] = 1;
         expect(walk(undefined).beam.size).toBe(0);
     });
     test('a free Gem on the slot fills it; a held one or one elsewhere does not', () => {
@@ -232,7 +234,7 @@ describe('Promesst_Light in a closed Freezer', () => {
     const reach = (closed: boolean) => reachability(history, latest(1), [], [closed], [false]);
     beforeEach(() => {
         world({ width: 9, walls, extra });
-        PROG.world.lights[0][8] = ENDPOINT;
+        WORLD_FILE.world.lights[0][8] = ENDPOINT;
         Object.assign(PROG, {
             levels: [{ n: 'beyond', p: [6, 1, 0], req: [] }],
             freezers: [{ pid: 9, p: [0, 1, 0], req: [] }],
@@ -246,12 +248,12 @@ describe('Promesst_Light in a closed Freezer', () => {
         expect(reach(true).lightLeads.get(0)).toEqual([0]);
     });
     test('is no lead when its beam carries the hero nowhere new', () => {
-        PROG.world.lights[0][8] = OPEN;
+        WORLD_FILE.world.lights[0][8] = OPEN;
         expect(reach(true).lightLeads.size).toBe(0);
     });
     test('is no lead when the light is unpowered', () => {
         world({ width: 9, walls, extra: { ...extra, gem_slots: [] } });
-        PROG.world.lights[0][8] = ENDPOINT;
+        WORLD_FILE.world.lights[0][8] = ENDPOINT;
         expect(reach(true).lightLeads.size).toBe(0);
     });
     test('leaves the Freezer closed and no beam laid after the lead walk', () => {
@@ -270,9 +272,9 @@ describe('vertical beam', () => {
     const zOf = (walkGrid: Walker, cell: number) => Math.floor(cell / (walkGrid.width * 3)) - 80;
     beforeEach(() => {
         world();
-        PROG.world.lights = [[LIGHT, 0, 1, 0, -1, 1, 0, 0, 0]];
-        PROG.world.zlayer = Array.from({ length: 256 }, (_, z) => (z - Z_OFFSET >= 5 ? 1 : 0));
-        PROG.world.grid.ft = { z: 10, size: [8, 3], corner: [0, 0] };
+        WORLD_FILE.world.lights = [[LIGHT, 0, 1, 0, -1, 1, 0, 0, 0]];
+        WORLD_FILE.world.zlayer = Array.from({ length: 256 }, (_, z) => (z - Z_OFFSET >= 5 ? 1 : 0));
+        WORLD_FILE.world.grid.ft = { z: 10, size: [8, 3], corner: [0, 0] };
     });
     test('leaves its layer and climbs to half a cell under the map rooms', () => {
         const zValues = [...walk(1).openBeam].map((cell) => zOf(walk(1), cell));

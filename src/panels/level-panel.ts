@@ -42,7 +42,7 @@ import {
 import type { Chain } from './plan-chips.ts';
 import { fullChainSection, panelFootHtml, routeSection } from './route.ts';
 import type { RouteSection } from './route.ts';
-import { approxTip, wayIn, whyParts, whyText } from './why.ts';
+import { APPROX_TIP, wayIn, whyText } from './why.ts';
 
 /** The unlock plan section of a level's panel, and what the sections after it need from the plan. */
 interface PlanSection {
@@ -77,7 +77,7 @@ function stateChipsHtml(context: PanelContext, levelIndex: number): string {
     const level = context.levels[levelIndex];
     const levelState = context.progress.state[levelIndex];
     let tip = '';
-    if (levelState === 'blocked') tip = ` title="${approxTip(context)}"`;
+    if (levelState === 'blocked') tip = ` title="${APPROX_TIP}"`;
 
     let role: Role | null = null;
     if (levelState !== 'solved') role = roleFor(context.goal, 'l', levelIndex);
@@ -153,13 +153,13 @@ function behindGatesHtml(context: PanelContext, behind: number[], gateIds: numbe
     return heading + gates.join('');
 }
 
-// why the walk calls the level unreachable; with a gate in front of it (or the Freezer it is frozen in holding it
-// back) only the mechanics are named
+// why the level table does not reach the level; with a gate in front of it (or the Freezer it is frozen in holding it
+// back) the gate is named elsewhere
 function whyHtml(context: PanelContext, levelIndex: number, behind: number[], ice: number | undefined): string {
     const heldByGate = ice !== undefined && context.progress.behind[levelIndex].includes(ice);
-    let text = whyText(context, levelIndex);
-    if (behind.length || heldByGate) text = whyParts(context, levelIndex).mech;
+    if (behind.length || heldByGate) return '';
 
+    const text = whyText(context, levelIndex);
     if (!text) return '';
     return `<div class="muted">${escapeHtml(text[0].toUpperCase() + text.slice(1))}</div>`;
 }

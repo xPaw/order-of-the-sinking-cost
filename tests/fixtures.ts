@@ -4,6 +4,9 @@ import type { Campaign } from '../scripts/lib/walk-fingerprint.ts';
 import { PROG } from '../src/data.ts';
 import { FOG_LAYER_KEYS } from '../src/model/layers.ts';
 import { computeProgress } from '../src/model/progress.ts';
+import type { CampaignProgress } from '../src/model/progress.ts';
+import { needsReach } from '../src/model/route-needs.ts';
+import { isEntered } from '../src/model/unlocking.ts';
 import { latestOf, overrideLatest } from '../src/save.ts';
 import { state } from '../src/shared.ts';
 import type { LatestValues } from '../src/save.ts';
@@ -106,6 +109,12 @@ export function syntheticCampaign(options: CampaignOptions = {}): Campaign {
     });
 
     return built;
+}
+
+/** Per level, whether its needs reach it (the entered levels and the closed Freezers taken from the progress). */
+export function reachedByNeedsOf(progress: CampaignProgress): boolean[] {
+    const entered = progress.state.map(isEntered);
+    return needsReach(progress.needsView, entered, progress.ice).reached;
 }
 
 /** Lists the campaign's status and history among the loaded files under the campaign name `name`. */

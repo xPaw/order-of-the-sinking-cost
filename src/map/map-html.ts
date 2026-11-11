@@ -1,5 +1,6 @@
 // The map's markup before it is drawn (VIEWER.md "The page (viewer)"): the holder of the layer images under the svg, the
-// fog and hatch groups, the repeated copies, the buttons over the map; the overlay switches and the view kept per campaign
+// fog group, the repeated copies of the terrain, the overlay group (its copies are made as the view reaches them), the
+// buttons over the map; the overlay switches and the view kept per campaign
 import { PROG } from '../data.ts';
 import type { Fog } from '../fog.ts';
 import { AREA_LAYERS, layerName, mapLayerOf } from '../model/layers.ts';
@@ -74,34 +75,23 @@ try {
 } catch {}
 
 // the terrain group: the changed water, the Reachable images and the fog, clipped to the map
-function terrainHtml(id: string, layers: MapLayer[], reach: boolean): string {
+function terrainHtml(id: string, layers: MapLayer[]): string {
     const [width, height] = PROG.map.size;
     const size = `width="${width}" height="${height}"`;
 
-    let reachImages = '';
-    let hatch = '';
-    if (reach) {
-        reachImages = layers
-            .map((layer) => `<image class="reach" data-layer="${layer.key}" x="0" y="0" ${size} style="display:none"/>`)
-            .join('');
-        const hatchAttributes = [
-            'class="hatch"',
-            'patternUnits="userSpaceOnUse"',
-            'width="1" height="1"',
-            'patternTransform="rotate(45)"',
-        ].join(' ');
-        hatch = `<pattern id="${id}-hatch" ${hatchAttributes}><rect width="0.2" height="1"/></pattern>`;
-    }
+    const reachImages = layers
+        .map((layer) => `<image class="reach" data-layer="${layer.key}" x="0" y="0" ${size} style="display:none"/>`)
+        .join('');
 
     const cloudBox = `x="${-2 * width}" y="${-2 * height}" width="${5 * width}" height="${5 * height}"`;
     const blur = '<feGaussianBlur stdDeviation="2.2"/>';
     const cloud = `<filter id="${id}-cloud" filterUnits="userSpaceOnUse" ${cloudBox}>${blur}</filter>`;
     const clip = `<clipPath id="${id}-clip"><rect x="0" y="0" ${size}/></clipPath>`;
     const cloudGroup = `<g class="fog" filter="url(#${id}-cloud)" style="stroke: var(--fog)"></g>`;
-    const fogGroups = `${cloudGroup}<g class="fogc"></g><g class="rfog" fill="url(#${id}-hatch)"></g>`;
+    const fogGroups = `${cloudGroup}<g class="fogc"></g>`;
     const fog = `${clip}<g clip-path="url(#${id}-clip)">${fogGroups}</g>`;
     const waterGroup = `<g class="wtr" fill="rgb(${WATER_RGB.join(',')})" shape-rendering="crispEdges"></g>`;
-    return `<g id="${id}-w" class="mw">${waterGroup}${reachImages}<defs>${cloud}${hatch}</defs>${fog}</g>`;
+    return `<g id="${id}-w" class="mw">${waterGroup}${reachImages}<defs>${cloud}</defs>${fog}</g>`;
 }
 
 // the buttons floating over the map: the layers as one segmented pill in area order, the Reachable switch and the zoom
@@ -118,22 +108,22 @@ function controlsHtml(layers: MapLayer[]): string {
     const layersHidden = layers.length < 2 ? ' hidden' : '';
 
     const layerGroup = `<span class="keys" data-role="layers"${layersHidden}>${layerButtons}</span>`;
-    const reachGroup = `<span class="seg ovl" data-role="ovl" hidden>${reachButton}</span>`;
+    const reachGroup = `<span class="seg ovl">${reachButton}</span>`;
     const zoomGroup = `<span class="keys zoom">${zoomIn}${zoomOut}</span>`;
     return `<div class="ctl">${layerGroup}${reachGroup}${zoomGroup}</div>`;
 }
 
 /**
- * The markup of the map `id`. `fog`: the fog to hide; layers it has not uncovered get no image and no button. `reach`:
- * whether to include the Reachable overlay images (hidden until mapInit gets the bitmaps in opts.reach).
+ * The markup of the map `id`. `fog`: the fog to hide; layers it has not uncovered get no image and no button. The
+ * Reachable overlay images start hidden, until mapInit sets their bitmaps.
  */
-export function mapHtml(id: string, fog: Fog | null | undefined, reach: boolean): string {
+export function mapHtml(id: string, fog: Fog | null | undefined): string {
     const [width, height] = PROG.map.size;
     const known = knownLayers(fog);
     const layers = PROG.map.layers.filter((layer) => !known || known.includes(layer.key));
 
-    const terrain = `${terrainHtml(id, layers, reach)}${wrapCopies(id, 'w', width, height)}`;
-    const overlay = `<g id="${id}-o" class="mw"><g class="ov"></g></g>${wrapCopies(id, 'o', width, height)}`;
+    const terrain = `${terrainHtml(id, layers)}${wrapCopies(id, width, height)}`;
+    const overlay = `<g id="${id}-o" class="mw"><g class="ov"></g></g>`;
     const svgOpen = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet">`;
     const svg = `${svgOpen}${terrain}${overlay}<g class="mw lbl"></g></svg>`;
 

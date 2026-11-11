@@ -1,6 +1,7 @@
 // CREATION_OR_DESTRUCTION records and the teleporter discovery chain on tiny synthetic overworlds
 import { describe, expect, test, vi } from 'vitest';
-import { PROG, WORLD } from '../src/data.ts';
+import { PROG } from '../src/data.ts';
+import { WORLD } from '../src/world-data.ts';
 import type { Creation, LatestValues } from '../src/save.ts';
 import type { Position, Teleporter, World } from '../src/types.ts';
 import { NO_HISTORY } from '../src/walk/reachability.ts';
@@ -10,6 +11,7 @@ import { walker } from '../src/walk/walker.ts';
 import type { Walker } from '../src/walk/walker.ts';
 import { f32, pad } from './fixtures.ts';
 
+vi.mock('../src/world-data.ts', () => import('./world-data-mock.ts'));
 vi.mock('../src/data.ts', async () => {
     const SCHEMA = (await import('../data/schema.json')).default;
     return { SCHEMA, PROG: {}, WORLD: {}, worldReady: Promise.resolve() };

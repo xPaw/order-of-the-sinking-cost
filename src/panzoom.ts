@@ -28,24 +28,19 @@ export interface PanZoomKeep {
 
 /**
  * insets(): the pixels covered by overlaid controls. home(): the box of the reset view (Escape; else the cap box).
- * cap(): the cap box (default: the whole content). pick(event): the element a pointer event is on (default: its target;
- * a marker under a double click does not zoom). onView(view): after every view change, with the view as view() gives it.
- * onIdle(): when a drag, pinch or eased
- * zoom ends. scaled: the elements whose --px follows the zoom (default: the svg). onPixelScale(scale, closest): after --px
- * is set to the squares per pixel `scale`; `closest` is that value at the closest zoom. reach(group, scale): how far past the
- * content box the drawn content of a repeated group (the href of its copies) reaches, in content units at `scale` per
- * pixel (default: 130 pixels and 2 units).
+ * cap(): the cap box (default: the whole content). onView(view): after every view change, with the view as view() gives
+ * it. onIdle(): when a drag, pinch or eased zoom ends. scaled: the elements whose --px follows the zoom (default: the
+ * svg). onPixelScale(scale, closest): after --px is set to the squares per pixel `scale`; `closest` is that value at the
+ * closest zoom.
  */
 export interface PanZoomOptions {
     insets?: () => Insets;
     home?: () => Box | null;
     cap?: () => Box | null;
-    pick?: (event: PointerEvent) => EventTarget | null;
     onView?: (view: ViewCorner | null) => void;
     onIdle?: () => void;
     scaled?: ElementCSSInlineStyle[];
     onPixelScale?: (scale: number, closest: number) => void;
-    reach?: (group: string | null, scale: number) => number;
 }
 
 /** The svg's box on the page and the squares per pixel of the view. */
@@ -71,10 +66,10 @@ export interface ViewCorner extends ViewScale {
 export interface PanZoom {
     scale: () => ViewScale;
     toWorld: (event: MouseEvent) => WorldPoint;
-    /** Shows the copies again after the reach of a group changed. */
-    showCopies: () => void;
     /** A drag, pinch or eased zoom is running. */
     readonly busy: boolean;
+    /** A drag or pinch has moved the map and the pointer is still down. */
+    readonly dragging: boolean;
     /** Whether the pointer gesture that is running or ended last moved the map. */
     readonly wasDragged: boolean;
     /** The world coordinates of the view's top-left corner and squares per pixel; null while the svg has no size. */
@@ -143,11 +138,66 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 // the whole number of lengths n nearest the offset d (half a length rounds up): the shift to the copy nearest a point d away
 const nearestCopy = (offset: number, length: number): number => Math.round(offset / length) * length;
 
-// client rects move with any scroll or window resize; a map measures its svg again after one
-let rectEpoch = 0;
+/**
+ * The client rect of an element, measured once and kept until its box can change: a window resize, a scroll of the
+ * element's page or of an ancestor, or a resize of the element or its container. A scroll of any other element (a list
+ * beside the map) leaves it, so reading it after style writes does not force a style recalc.
+ */
+export class RectCache {
+    private rect: DOMRect | null = null;
+    private readonly element: Element;
+    private readonly observer: ResizeObserver;
 
-addEventListener('scroll', () => rectEpoch++, { capture: true, passive: true });
-addEventListener('resize', () => rectEpoch++);
+    constructor(element: Element) {
+        this.element = element;
+        addEventListener('scroll', this.onScroll, { capture: true, passive: true });
+        addEventListener('resize', this.onResize);
+
+        this.observer = new ResizeObserver(this.invalidate);
+        this.observer.observe(element);
+        if (element.parentElement) this.observer.observe(element.parentElement);
+    }
+
+    /** The element's rect; an empty one is measured again, as the element may not have been laid out. */
+    get(): DOMRect {
+        if (!this.rect || !(this.rect.width > 0)) this.rect = this.element.getBoundingClientRect();
+        return this.rect;
+    }
+
+    /** Forgets the rect; the next get measures. */
+    readonly invalidate = (): void => {
+        this.rect = null;
+    };
+
+    /** Measures now, where style is clean, so a later get does not force a recalc. */
+    refresh(): void {
+        this.rect = this.element.getBoundingClientRect();
+    }
+
+    // whether the element is on the page; the listeners of one that left stop with their next event
+    private attached(): boolean {
+        if (this.element.isConnected) return true;
+
+        removeEventListener('scroll', this.onScroll, { capture: true });
+        removeEventListener('resize', this.onResize);
+        this.observer.disconnect();
+        return false;
+    }
+
+    private readonly onScroll = (event: Event): void => {
+        if (!this.attached()) return;
+
+        const target = event.target;
+        if (target instanceof Node && target.contains(this.element)) this.invalidate();
+    };
+
+    private readonly onResize = (): void => {
+        if (this.attached()) this.invalidate();
+    };
+}
+
+// how long the view's scale must hold still before the markers are restyled to it
+const PIXEL_SCALE_SETTLE_MS = 120;
 
 // what a wheel event is (see the wheel handling in panZoom): 'wheel', 'pinch' or 'pan'; lastPan is the time of the last
 // trackpad scroll
@@ -195,7 +245,6 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
     const base = svg.viewBox.baseVal;
     const content: Box = { x: base.x, y: base.y, w: base.width, h: base.height };
     const scaled = options.scaled || [svg];
-    const reach = options.reach || ((_group: string | null, scale: number) => 130 * scale + 2);
 
     const keptView = keep?.vb;
     let viewBox: Box = keptView ? { ...keptView } : { ...content };
@@ -204,8 +253,8 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
     let zoomTarget: ZoomTarget | null = null;
     let zoomFrame = 0;
     let pixelScale = 0;
-    let clientRect: DOMRect | null = null;
-    let clientRectEpoch = -1;
+    const clientRect = new RectCache(svg);
+    let pixelTimer: ReturnType<typeof setTimeout> | undefined;
     let wasDragged = false;
 
     // the content shifts by whole widths and heights when the view's centre is moved back into the first copy, so a
@@ -213,7 +262,7 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
     const shift = { x: 0, y: 0 };
     const copies = [...svg.querySelectorAll<SVGUseElement>('use[data-kx][data-ky]')].map((element) => ({
         element,
-        group: element.getAttribute('href'),
+        group: element.dataset.group ?? '',
         kx: Number(element.dataset.kx),
         ky: Number(element.dataset.ky),
         shown: element.style.display !== 'none',
@@ -227,16 +276,8 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
 
     const touch = (): void => setMoved(true);
 
-    const rect = (): DOMRect => {
-        if (!clientRect || !(clientRect.width > 0) || clientRectEpoch !== rectEpoch) {
-            clientRect = svg.getBoundingClientRect();
-            clientRectEpoch = rectEpoch;
-        }
-        return clientRect;
-    };
-
     const scale = (): ViewScale => {
-        const svgRect = rect();
+        const svgRect = clientRect.get();
         return { rect: svgRect, scale: Math.max(viewBox.w / svgRect.width, viewBox.h / svgRect.height) };
     };
 
@@ -246,36 +287,40 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
         y: viewBox.y - (svgRect.height * viewScale - viewBox.h) / 2,
     });
 
-    // A copy is shown when the view, widened by how far the drawn content of its group reaches past the content box,
-    // reaches it. The browser paints and layers a shown copy whole, even where it lies outside the view.
-    const showCopies = (): void => {
-        const { rect: svgRect, scale: viewScale } = scale();
-        const topLeft = corner(svgRect, viewScale);
+    // A copy is shown when the view reaches it. The browser paints and layers a shown copy whole, even where it lies
+    // outside the view.
+    const showCopies = ({ rect: svgRect, scale: viewScale }: ViewScale, topLeft: Point): void => {
         const right = topLeft.x + svgRect.width * viewScale;
         const bottom = topLeft.y + svgRect.height * viewScale;
 
         for (const copy of copies) {
-            const margin = reach(copy.group, viewScale);
             const copyX = content.x + copy.kx * content.w;
             const copyY = content.y + copy.ky * content.h;
             const shown =
-                copyX - margin < right &&
-                copyX + content.w + margin > topLeft.x &&
-                copyY - margin < bottom &&
-                copyY + content.h + margin > topLeft.y;
+                copyX < right && copyX + content.w > topLeft.x && copyY < bottom && copyY + content.h > topLeft.y;
             if (shown !== copy.shown) {
                 copy.shown = shown;
-                copy.element.style.display = shown ? '' : 'none';
+                if (shown) {
+                    copy.element.setAttribute('href', copy.group);
+                    copy.element.style.display = '';
+                } else {
+                    // a hidden use still keeps a clone of its group up to date, so it drops the reference
+                    copy.element.removeAttribute('href');
+                    copy.element.style.display = 'none';
+                }
             }
         }
     };
 
-    const currentView = (): ViewCorner | null => {
-        const { rect: svgRect, scale: viewScale } = scale();
+    const cornerView = ({ rect: svgRect, scale: viewScale }: ViewScale, topLeft: Point): ViewCorner | null => {
         if (!(viewScale > 0 && isFinite(viewScale))) return null;
 
-        const topLeft = corner(svgRect, viewScale);
         return { x0: topLeft.x, y0: topLeft.y, scale: viewScale, rect: svgRect };
+    };
+
+    const currentView = (): ViewCorner | null => {
+        const view = scale();
+        return cornerView(view, corner(view.rect, view.scale));
     };
 
     const applyView = (): void => {
@@ -287,20 +332,39 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
         viewBox.y -= copyShiftY;
         shift.x -= copyShiftX;
         shift.y -= copyShiftY;
-        showCopies();
 
-        const viewScale = scale().scale;
+        const view = scale();
+        const topLeft = corner(view.rect, view.scale);
+        showCopies(view, topLeft);
+
+        const viewScale = view.scale;
         svg.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
         if (keep) keep.vb = { ...viewBox };
 
         // markers follow the zoom through --px; a change under 2% is not worth restyling them. A custom property
         // restyles every element under the one it is set on, so it goes on the groups that use it, not the whole svg.
+        // The first value is set at once; later ones wait until the scale holds still, as every step of a zoom would
+        // restyle every marker and the viewBox already scales them meanwhile.
         if (viewScale > 0 && isFinite(viewScale) && !(Math.abs(viewScale - pixelScale) <= pixelScale * 0.02)) {
-            pixelScale = viewScale;
-            for (const element of scaled) element.style.setProperty('--px', String(viewScale));
-            options.onPixelScale?.(viewScale, closestScale(rect()));
+            if (pixelScale === 0) {
+                applyPixelScale(viewScale);
+            } else {
+                clearTimeout(pixelTimer);
+                pixelTimer = setTimeout(settlePixelScale, PIXEL_SCALE_SETTLE_MS);
+            }
         }
-        options.onView?.(currentView());
+        options.onView?.(cornerView(view, topLeft));
+    };
+
+    const applyPixelScale = (viewScale: number): void => {
+        pixelScale = viewScale;
+        for (const element of scaled) element.style.setProperty('--px', String(viewScale));
+        options.onPixelScale?.(viewScale, closestScale(clientRect.get()));
+    };
+
+    const settlePixelScale = (): void => {
+        const viewScale = scale().scale;
+        if (viewScale > 0 && isFinite(viewScale)) applyPixelScale(viewScale);
     };
 
     // cancels the eased pan and the eased zoom
@@ -313,7 +377,7 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
     // view that puts the box in the middle of the area left free by the pixel insets (top, right, bottom and the margin
     // m); fixedScale keeps the zoom
     const place = (box: Box, insets: Insets = {}, fixedScale?: number): Box => {
-        const svgRect = rect();
+        const svgRect = clientRect.get();
         const top = insets.top || 0;
         const margin = insets.m || 0;
         const freeWidth = Math.max(40, svgRect.width - (insets.right || 0) - 2 * margin);
@@ -406,7 +470,7 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
     // the widest view (keeping the aspect of the current one) that is the zoom-out cap: the cap box shows whole on both
     // axes, and along the axis with room to spare the neighbouring copies show
     const capWidth = (): number => {
-        const svgRect = rect();
+        const svgRect = clientRect.get();
         const cap = capBox();
         if (!(svgRect.width > 0 && svgRect.height > 0)) return viewBox.w;
 
@@ -449,7 +513,7 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
         clientX: number,
         clientY: number,
     ): boolean => {
-        const svgRect = rect();
+        const svgRect = clientRect.get();
         if (!(svgRect.width > 0 && svgRect.height > 0)) return false;
 
         const height = (width * viewBox.h) / viewBox.w;
@@ -574,7 +638,7 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
                 touch();
                 panBy(event.deltaX, event.deltaY);
             } else {
-                const unitPixels = [1, 33, rect().height][event.deltaMode];
+                const unitPixels = [1, 33, clientRect.get().height][event.deltaMode];
                 const wheelDelta = Math.max(-300, Math.min(300, event.deltaY * unitPixels));
                 zoomBy(event.clientX, event.clientY, Math.exp(wheelDelta * 0.0015));
             }
@@ -589,6 +653,21 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
     let drag: Drag | null = null;
     let pinch: Pinch | null = null;
     let lastTap: { time: number; x: number; y: number } | null = null;
+
+    // The grabbing cursor is on a childless element over the svg that is shown while the map is dragged: a cursor set on
+    // the svg is inherited, so changing it would restyle every element of the map.
+    const grabShield = document.createElement('div');
+    grabShield.className = 'grab';
+    grabShield.style.display = 'none';
+    svg.after(grabShield);
+    let dragging = false;
+
+    const setDragging = (value: boolean): void => {
+        if (value === dragging) return;
+
+        dragging = value;
+        grabShield.style.display = value ? 'block' : 'none';
+    };
 
     // distance and midpoint of the two pointers
     const pointerPair = (): { distance: number; x: number; y: number } => {
@@ -620,7 +699,7 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
         } else if (drag && drag.pointerId === event.pointerId) {
             if (Math.abs(event.clientX - drag.startX) + Math.abs(event.clientY - drag.startY) > 3) {
                 wasDragged = true;
-                svg.classList.add('drag');
+                setDragging(true);
                 touch();
             }
             panBy(drag.x - event.clientX, drag.y - event.clientY);
@@ -642,7 +721,7 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
 
         if (pointers.size) return;
 
-        svg.classList.remove('drag');
+        setDragging(false);
         removeEventListener('pointermove', pointerMove);
         removeEventListener('pointerup', pointerEnd);
         removeEventListener('pointercancel', pointerEnd);
@@ -655,8 +734,7 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
         if (closeInTime && closeInSpace) {
             lastTap = null;
 
-            const tapTarget = options.pick ? options.pick(event) : event.target;
-            if (!isMarker(tapTarget)) zoomBy(event.clientX, event.clientY, 0.5);
+            if (!isMarker(event.target)) zoomBy(event.clientX, event.clientY, 0.5);
         } else {
             lastTap = { time: now, x: event.clientX, y: event.clientY };
         }
@@ -666,7 +744,7 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
         if (event.button || pointers.size >= 2) return;
 
         stop();
-        clientRect = null;
+        clientRect.refresh();
 
         const point = { x: event.clientX, y: event.clientY };
         if (!pointers.size) {
@@ -691,7 +769,7 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
             };
             drag = null;
             wasDragged = true;
-            svg.classList.add('drag');
+            setDragging(true);
             touch();
         }
     });
@@ -699,9 +777,11 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
     return {
         scale,
         toWorld: (event) => worldAt(event.clientX, event.clientY),
-        showCopies,
         get busy() {
             return pointers.size > 0 || !!zoomTarget;
+        },
+        get dragging() {
+            return dragging;
         },
         get wasDragged() {
             return wasDragged;
@@ -716,7 +796,7 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
             animTo(nearest(box));
         },
         resize() {
-            clientRect = null;
+            clientRect.invalidate();
             if (!moved) {
                 cancelAnimationFrame(panFrame);
                 viewBox = home();
@@ -724,7 +804,7 @@ export function panZoom(svg: SVGSVGElement, keep?: PanZoomKeep, options: PanZoom
             applyView();
         },
         zoom(factor) {
-            const svgRect = rect();
+            const svgRect = clientRect.get();
             zoomBy(svgRect.left + svgRect.width / 2, svgRect.top + svgRect.height / 2, factor);
         },
         fit(box, insets) {

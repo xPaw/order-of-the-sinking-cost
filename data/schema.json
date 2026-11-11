@@ -4757,7 +4757,7 @@
    ]
   },
   "Freezer": {
-   "version": 10,
+   "version": 11,
    "size": 880,
    "fields": [
     {
@@ -4963,6 +4963,17 @@
      "n": "hide_requirements",
      "v": [
       10,
+      -1
+     ],
+     "k": "p",
+     "sz": 1,
+     "t": "bool"
+    },
+    {
+     "i": 19,
+     "n": "dont_save_in_campaign_state",
+     "v": [
+      11,
       -1
      ],
      "k": "p",
@@ -6820,8 +6831,8 @@
      ],
      "k": "p",
      "sz": 1,
-     "t": "enum ?",
-     "enum": "Inanimate.overhead_map_flags",
+     "t": "enum Overhead_Map_Flags",
+     "enum": "Overhead_Map_Flags",
      "enum_t": "u8"
     }
    ]
@@ -12592,8 +12603,8 @@
    ]
   },
   "Procedurally_Animating": {
-   "version": 2,
-   "size": 1168,
+   "version": 3,
+   "size": 1064,
    "fields": [
     {
      "i": 0,
@@ -12891,6 +12902,19 @@
      "k": "p",
      "sz": 4,
      "t": "f32"
+    },
+    {
+     "i": 27,
+     "n": "overhead_map_flags",
+     "v": [
+      3,
+      -1
+     ],
+     "k": "p",
+     "sz": 1,
+     "t": "enum Overhead_Map_Flags",
+     "enum": "Overhead_Map_Flags",
+     "enum_t": "u8"
     }
    ]
   },
@@ -18283,23 +18307,6 @@
     ]
    ]
   },
-  "Inanimate.overhead_map_flags": {
-   "flags": true,
-   "values": [
-    [
-     "HIDDEN_IN_MAP_VIEW",
-     1
-    ],
-    [
-     "HIDDEN_IN_LOCAL_AREA_VIEW",
-     2
-    ],
-    [
-     "HIDDEN_IN_CLOSE_UP_VIEW",
-     4
-    ]
-   ]
-  },
   "Inventory_Flags": {
    "flags": true,
    "values": [
@@ -18734,6 +18741,23 @@
     [
      "XXX_DEPRECATED_FIRST_PRISM_USE",
      64
+    ]
+   ]
+  },
+  "Overhead_Map_Flags": {
+   "flags": true,
+   "values": [
+    [
+     "HIDDEN_IN_MAP_VIEW",
+     1
+    ],
+    [
+     "HIDDEN_IN_LOCAL_AREA_VIEW",
+     2
+    ],
+    [
+     "HIDDEN_IN_CLOSE_UP_VIEW",
+     4
     ]
    ]
   },

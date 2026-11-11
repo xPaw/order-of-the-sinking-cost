@@ -189,7 +189,7 @@ function gateOverlay(context: PanelContext, freezerIndex: number): MapOverlay {
     const isOpen = progress.gateOpen[freezerIndex];
 
     // levels behind the gate that fog hides are left out of the count, not out of Next steps
-    const leads = progress.reach?.leads.get(freezerIndex)?.filter((level) => !progress.hidden[level]).length;
+    const leads = progress.leads[freezerIndex].filter((level) => !progress.hidden[level]).length;
 
     const mode = gateMode(freezer);
     const options = [

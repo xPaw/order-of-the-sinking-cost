@@ -29,21 +29,14 @@ test('a level its gate waits on a level with a way in for, from which the walk r
     expect(progress.wayIn[level]!.length).toBeGreaterThan(0);
 });
 
-test('levels whose gates wait on each other in one pocket keep no way in', () => {
-    for (const name of ['invisible_hand', 'wizard_finesse_1', 'be_aggro_alt_2']) {
-        const index = levelIndex(name);
+test('levels with the same needs have the same way in: the frontier Freezers behind their needs', () => {
+    const indices = ['invisible_hand', 'wizard_finesse_1', 'be_aggro_alt_2'].map(levelIndex);
+
+    for (const index of indices) {
         expect(progress.state[index]).toBe('blocked');
-        expect(progress.wayIn[index]).toEqual([]);
+        expect(progress.wayIn[index]).toEqual([155, 372]);
+        expect(progress.behind[index]).toEqual([155, 372]);
     }
-});
-
-test('a level a swap onto a stone on a frozen Lily leads to has the Lily Freezers and the stone Freezer as its way in', () => {
-    const lilyFreezerPids = [135519641, 90187135, 90187141];
-    const level = levelIndex('wizard_with_a_capital_w_2_v2');
-    const wayInPids = progress.wayIn[level]!.map((freezerIndex) => PROG.freezers[freezerIndex].pid);
-
-    expect(progress.state[level]).toBe('blocked');
-    expect(wayInPids.toSorted()).toEqual(lilyFreezerPids.toSorted());
 });
 
 test("the end2 room's levels also need all four hub Freezers, one per sky tower", () => {
@@ -80,10 +73,10 @@ test('each sky tower hub Sign of a fresh campaign needs its Way', () => {
         if (wayNode?.t === 'w') ways.push(wayNode.id);
     });
 
-    expect(ways.map((area) => PROG.areas[area].local_area_name).toSorted()).toEqual([
-        'area_s_beam_way',
-        'area_s_heroes_way',
-        'area_s_mirror_way',
-        'area_s_skipping_way',
+    expect(ways.map((area) => PROG.areas[area].display).toSorted()).toEqual([
+        'The Beam Way',
+        'The Heroic Way',
+        'The Mirror Way',
+        'The Skipping Way',
     ]);
 });

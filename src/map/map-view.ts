@@ -3,6 +3,7 @@
 // labels, the selection panel, the toolbar and the tooltip, over panZoom's view of the wrapping map
 import { PROG } from '../data.ts';
 import type { Fog, FogRect } from '../fog.ts';
+import type { LevelReach } from '../model/progress-model.ts';
 import type { FindKind } from '../model/find-kinds.ts';
 import { AREA_LAYERS, mapLayerOf, wrapDelta } from '../model/layers.ts';
 import { panZoom } from '../panzoom.ts';
@@ -19,9 +20,9 @@ import type { OceanSquares } from './ocean-water.ts';
 import { isOverlayKind, knownLayers, mapKeep, overlayOn, startLayer, switchOf } from './map-html.ts';
 import type { MapKeep, OverlayKind } from './map-html.ts';
 import { LayerMarks } from './mark-pool.ts';
-import type { MarkAttributes } from './mark-pool.ts';
-import { reachedRects, reachImage } from './reach-image.ts';
-import { mapXY, rawXY, torusBox, wrapRect } from './torus.ts';
+import type { MarkAttributes, ObjectImage } from './mark-pool.ts';
+import { reachImage } from './reach-image.ts';
+import { copyRange, mapXY, newCopyRange, rawXY, torusBox, wrapRect } from './torus.ts';
 import type { Rect } from './torus.ts';
 
 /** The overlay of a Freezer on a level's entrance: the overlay id of the Freezer, its model and whether it is open. */
@@ -158,8 +159,8 @@ export interface MapPoint {
  * panel: the element that holds the selection's html (it is hidden while there is none); markers: the level markers;
  * style(marker): how one is drawn; towers; labels: the area labels; hero; fog (shown and
  * framed as the home view when given); onOpen() and onClose(): after a selection is made or cleared; keep(overlay): whether the list filter keeps an
- * overlay (the selection's overlays are drawn whatever it says); reach: the column bitmap of the reached squares per
- * layer key (the Reachable overlay; without it the toggle is hidden); overlays: the marks of the overlay group;
+ * overlay (the selection's overlays are drawn whatever it says); reach: per level, whether it is entered or reachable
+ * (the Reachable overlay); overlays: the marks of the overlay group;
  * onLayer(key); water: the squares of changed water per layer key.
  */
 export interface MapOptions {
@@ -173,7 +174,7 @@ export interface MapOptions {
     onClose?: () => void;
     onOpen?: () => void;
     keep?: (overlay: MapOverlay) => boolean;
-    reach?: Record<string, Uint8Array>;
+    reach: LevelReach[];
     overlays: MapOverlay[];
     onLayer?: (key: string) => void;
     water?: OceanSquares;
@@ -192,26 +193,12 @@ interface StyledMarker {
     style: MarkerStyle;
 }
 
-/** An interactive element of the first copy of the map and its position in map pixels. */
-interface HitTarget {
-    element: SVGGeometryElement;
-    x: number;
-    y: number;
-}
-
 /** An area label placed on the map: its text, position and box width in pixels at the smallest label size. */
 interface PlacedLabel {
     text: string;
     x: number;
     y: number;
     width: number;
-}
-
-/** An object drawn as an image on the map: the centre of its square on the map and its image. */
-interface ObjectImage {
-    x: number;
-    y: number;
-    url: string;
 }
 
 /** The marks of the overlays: the discs, the icons on them and the images of what the cages hold. */
@@ -228,11 +215,33 @@ interface DrawnMarker {
     levelIndex: number;
 }
 
-/** The two ends of a drawn link with the radii of the markers on them: x1, y1, start radius, x2, y2, end radius. */
-type LinkEndpoints = [x1: number, y1: number, startRadius: number, x2: number, y2: number, endRadius: number];
+/** A drawn link: its kind, the two ends and the radii of the markers on them, in mark units. */
+interface DrawnLink {
+    kind: MapLink[2];
+    x1: number;
+    y1: number;
+    startRadius: number;
+    x2: number;
+    y2: number;
+    endRadius: number;
+}
 
 /** A box in screen pixels: left, top, right, bottom. */
 type PixelRect = [left: number, top: number, right: number, bottom: number];
+
+function sameImages(first: readonly ObjectImage[], second: readonly ObjectImage[]): boolean {
+    if (first.length !== second.length) return false;
+
+    for (let index = 0; index < first.length; index++) {
+        if (first[index] !== second[index]) return false;
+    }
+
+    return true;
+}
+
+function overlaps(first: PixelRect, second: PixelRect): boolean {
+    return first[0] < second[2] && first[2] > second[0] && first[1] < second[3] && first[3] > second[1];
+}
 
 /** The pixels of the map covered by its controls. */
 interface MapInsets {
@@ -253,9 +262,6 @@ export function onGestureEnd(listener: () => void): void {
 }
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
-
-// the elements a pointer event can be on, found by geometry in the copies of the map
-const INTERACTIVE = '[data-i],[data-tw],[data-gate],[data-sign],[data-gtw],[data-tip]';
 
 // the smallest box a selection or a set of points is framed in, in squares; an unlock chain's steps get a closer one
 const MIN_BOX = 24;
@@ -356,9 +362,6 @@ function padBox(box: Box, min = MIN_BOX): Box {
     return { x: box.x - (width - box.w) / 2, y: box.y - (height - box.h) / 2, w: width, h: height };
 }
 
-const greatestCommonDivisor = (first: number, second: number): number =>
-    second ? greatestCommonDivisor(second, first % second) : first;
-
 function mapLayer(key: string): MapLayer {
     const layer = PROG.map.layers.find((candidate) => candidate.key === key);
     if (!layer) throw new Error(`The map has no layer ${key}`);
@@ -430,7 +433,7 @@ export class MapView {
     // the level markers of the last draw, for the tooltip of overlapping ones
     private drawnMarkers: DrawnMarker[] = [];
 
-    private linkEnds: LinkEndpoints[] = [];
+    private links: DrawnLink[] = [];
     private fogOn: boolean;
 
     // with fog shown, layers the player has not uncovered yet have no button (mapHtml leaves them out)
@@ -439,17 +442,29 @@ export class MapView {
     // undefined until the home box is worked out for the current draw
     private homeCache: Box | null | undefined = undefined;
 
-    private hitList: HitTarget[] | null = null;
     private hover: Element | null = null;
     private tipHtml = '';
+    private tipShown = false;
+
+    // scratch for the copy range of the frame being laid out; wantedCopies and keptCopies: the copies of the overlay
+    // marks the view reaches, and the wider ones that stay once made
+    private copies = newCopyRange();
+    private wantedCopies = newCopyRange();
+    private keptCopies = newCopyRange();
+
+    // the zoom the selection's lines are drawn for, 0 until they are drawn again
+    private linksScale = 0;
+
+    // the toolbar's insets, measured when its box changes size; null until measured
+    private insetsCache: MapInsets | null = null;
 
     // the marks of each layer drawn so far, by layer key, and those of the layer shown; the lines, labels, fog edge
-    // and hatch follow the view
+    // follow the view
     private layerMarks = new Map<string, LayerMarks>();
 
     private marks: LayerMarks | null = null;
 
-    // The area labels sit outside the repeated overlay group: each copy of the map has a text element of its own,
+    // The area labels sit outside the overlay group: each copy of the map has a text element of its own,
     // made the first time that copy's label is shown. labels: the labels of the last draw;
     // labelPool: the text elements by label and copy; labelsOn: the ones shown
     private labelsGroup: SVGGElement;
@@ -458,30 +473,35 @@ export class MapView {
     private labelsLayer: string | null = null;
     private labels: PlacedLabel[] = [];
     private labelsOn = new Set<SVGTextElement>();
+    private labelsNext = new Set<SVGTextElement>();
+    private placedLabels: PixelRect[] = [];
 
     // The images of the objects the layer shown has and the fog leaves, made the first time the map is zoomed in on the
-    // layer (objectsLayer); drawnObjects: the ones in the view the pool shows, null when the pool's content is unknown
+    // layer (objectsLayer); drawnObjects: the ones in the view the marks show, null when they are not known;
+    // visibleObjects: the ones in the view of the frame being drawn
     private layerObjects: ObjectImage[] = [];
     private objectsLayer: string | null = null;
     private drawnObjects: ObjectImage[] | null = null;
+    private visibleObjects: ObjectImage[] = [];
     private fogGroup: SVGGElement;
     private fogCore: SVGGElement;
     private blur: SVGFEGaussianBlurElement;
-    private hatch: SVGPatternElement | null;
-    private reachFogGroup: SVGGElement;
     private fogBlur = 0;
-    private hatchWidth = 0;
 
-    // the layer images under the svg, and the terrain group of the svg, which holds the Reachable images; both are
-    // `crisp` once a map image pixel is wider than a screen pixel
+    // the layer images under the svg, `crisp` once a map image pixel is wider than a screen pixel (crisp: the last value
+    // set, null until set)
     private terrain: TerrainImages;
-    private terrainGroup: SVGGElement;
+    private crisp: boolean | null = null;
+
+    // whether the overlay group has the `far` class, which the stylesheet hides the images of objects and of what cages
+    // hold under
+    private far = false;
 
     // the Reachable overlay image of each layer of this map, built the first time the layer is shown
     private reachUrls: Record<string, string | null> = {};
 
-    // the layer's image, fogged rectangles, Reachable image and hatch, and changed water: drawn again when the
-    // layer or the Reachable switch changes (drawnLayer); reachEmpty: no Reachable image or hatch on the layer
+    // the layer's image, fogged rectangles, Reachable image and changed water: drawn again when the
+    // layer or the Reachable switch changes (drawnLayer); reachEmpty: no Reachable image on the layer
     private drawnLayer: string | null = null;
 
     private reachEmpty = true;
@@ -523,37 +543,37 @@ export class MapView {
             terrainImages.set(id, terrain);
         }
         this.terrain = terrain;
-        this.terrainGroup = find(this.svg, `#${id}-w`, SVGGElement);
         this.fogGroup = find(this.svg, '.fog', SVGGElement);
         this.fogCore = find(this.svg, '.fogc', SVGGElement);
         this.blur = find(this.svg, 'feGaussianBlur', SVGFEGaussianBlurElement);
-        this.hatch = this.svg.querySelector<SVGPatternElement>('.hatch');
-        this.reachFogGroup = find(this.svg, '.rfog', SVGGElement);
 
         this.viewport = panZoom(this.svg, this.keep, {
             insets: () => this.insets(),
-            pick: (event) => this.pick(event),
             home: () => this.homeBox(),
             cap: () => this.capBox(),
             onView: (view) => this.viewChanged(view),
             onIdle: () => gestureEndListener?.(),
-            scaled: [this.overlayGroup, this.labelsGroup],
+            scaled: [this.overlayGroup],
             onPixelScale: (scale, closest) => {
                 this.overlayGroup.style.setProperty('--mk', String(markScale(scale)));
-                this.overlayGroup.classList.toggle('far', scale > CAGE_LABEL_MAX_SCALE);
+                this.setFar(scale > CAGE_LABEL_MAX_SCALE);
                 this.labelsGroup.style.setProperty('--mk', String(labelScale(scale)));
                 this.labelsGroup.classList.toggle('close', scale < closest * AREA_LABEL_FADE_ZOOM);
+                this.softenFog(scale);
             },
-            reach: (group, scale) => this.copyReach(group, scale),
         });
 
         this.wireControls();
         this.wirePointer();
 
         new ResizeObserver(() => {
+            this.measureInsets();
             if (this.box.isConnected) this.viewport.resize();
             this.settle();
         }).observe(this.box);
+
+        // observers run after layout, so the measurement reads clean layout
+        new ResizeObserver(() => this.measureInsets()).observe(this.controls);
 
         // a box that is never laid out (hidden)
         setTimeout(() => this.settle(), 500);
@@ -585,8 +605,13 @@ export class MapView {
 
     // the toolbar floats over the top of the map: a framed view keeps below it
     private insets(): MapInsets {
+        return this.insetsCache ?? this.measureInsets();
+    }
+
+    private measureInsets(): MapInsets {
         const controlsBottom = this.controls.offsetTop + this.controls.offsetHeight;
-        return { top: controlsBottom + 4 };
+        this.insetsCache = { top: controlsBottom + 4 };
+        return this.insetsCache;
     }
 
     // with fog shown, the home view frames the uncovered regions of the layer plus the markers a click revealed under
@@ -633,11 +658,41 @@ export class MapView {
         return { x: box.x - margin, y: box.y - margin, w: box.w + 2 * margin, h: box.h + 2 * margin };
     }
 
-    // how far the copies of a group reach past the map, in squares: the terrain not at all (it is clipped to the map),
-    // the marks by their size and the selection's lines by their far ends
-    private copyReach(group: string | null, scale: number): number {
-        if (group !== `#${this.box.id}-o`) return 0;
+    // how far the overlay marks reach past the map, in squares: the marks by their size and the selection's lines by their
+    // far ends
+    private overlayReach(scale: number): number {
         return MARK_REACH * markScale(scale) + this.linkReach;
+    }
+
+    // Makes the overlay marks have a copy for each copy of the map the view reaches. A copy that the view left stays
+    // until it is a fifth of the view away, so a view that wavers at a copy's edge does not make it again each time.
+    private placeCopies({ x0, y0, scale, rect }: ViewCorner): void {
+        const [width, height] = PROG.map.size;
+        const reach = this.overlayReach(scale);
+        const viewWidth = rect.width * scale;
+        const viewHeight = rect.height * scale;
+        const right = x0 + viewWidth;
+        const bottom = y0 + viewHeight;
+
+        // the copy at (copyX, copyY) spans [copyX * width, (copyX + 1) * width): its left edge is no further than the
+        // view's right edge and its right edge no less than the view's left
+        const wanted = this.wantedCopies;
+        copyRange(wanted, 0, 0, x0 - reach - width, y0 - reach - height, right + reach, bottom + reach);
+
+        const slackX = 0.2 * viewWidth;
+        const slackY = 0.2 * viewHeight;
+        const kept = this.keptCopies;
+        copyRange(
+            kept,
+            0,
+            0,
+            x0 - reach - slackX - width,
+            y0 - reach - slackY - height,
+            right + reach + slackX,
+            bottom + reach + slackY,
+        );
+
+        this.shownMarks.setCopies(wanted, kept, width, height);
     }
 
     // the zoom-out cap is the layer's MAIN_MAP camera box, the view of the in-game overhead map: it fits the box on
@@ -650,58 +705,11 @@ export class MapView {
         return { x: mapX - camera.e[0], y: mapY - camera.e[1], w: 2 * camera.e[0], h: 2 * camera.e[1] };
     }
 
-    // The interactive elements of the first copy of the map, with their positions
-    private hitTargets(): HitTarget[] {
-        if (!this.hitList) {
-            const elements = this.shownMarks.root.querySelectorAll<SVGGeometryElement>(INTERACTIVE);
-            this.hitList = [...elements].map((element) => ({
-                element,
-                x: parseFloat(element.style.getPropertyValue('--x')),
-                y: parseFloat(element.style.getPropertyValue('--y')),
-            }));
-        }
-
-        return this.hitList;
-    }
-
-    // A copy of the map answers pointer events as its use element, so the element under the pointer is found by
-    // geometry among the interactive elements of the first copy (the last in document order is on top); null where a
-    // copy has nothing. The first copy's own elements are their own targets.
-    private pick(event: MouseEvent): Element | null {
-        const target = event.target;
-        if (!(target instanceof Element)) return null;
-        if (!target.matches('use[data-kx]')) return target;
-
-        const hitList = this.hitTargets();
-        const point = this.viewport.toWorld(event);
-        const [width, height] = PROG.map.size;
-        const reach = 20 * markScale(this.viewport.scale().scale);
-        let hit: Element | null = null;
-
-        for (const candidate of hitList) {
-            const dx = wrapDelta(candidate.x - point.x, width);
-            const dy = wrapDelta(candidate.y - point.y, height);
-            if (Math.abs(dx) > reach || Math.abs(dy) > reach) continue;
-
-            const style = getComputedStyle(candidate.element);
-            if (style.display === 'none' || style.pointerEvents === 'none') continue;
-
-            const local = new DOMMatrix(style.transform)
-                .inverse()
-                .transformPoint(new DOMPoint(candidate.x - dx, candidate.y - dy));
-            const inFill = style.fill !== 'none' && candidate.element.isPointInFill(local);
-            const inStroke = style.stroke !== 'none' && candidate.element.isPointInStroke(local);
-            if (inFill || inStroke) hit = candidate.element;
-        }
-
-        return hit;
-    }
-
     // the layer images follow the view in the same task as the viewBox, so they never lag the svg by a frame
     private viewChanged(view: ViewCorner | null): void {
         if (view) this.terrain.place(view);
 
-        this.tip.style.display = 'none';
+        this.showTipBox(false);
         if (this.layoutFrame) return;
 
         this.layoutFrame = requestAnimationFrame(() => {
@@ -710,14 +718,22 @@ export class MapView {
         });
     }
 
+    // shows or hides the tooltip's box, writing only when its state changes
+    private showTipBox(shown: boolean): void {
+        if (shown === this.tipShown) return;
+
+        this.tipShown = shown;
+        this.tip.style.display = shown ? 'block' : 'none';
+    }
+
     private layout(): void {
         const view = this.viewport.view();
         if (!view) return;
 
+        this.placeCopies(view);
         this.placeLinks(view);
         this.cullLabels(view);
         this.drawObjects(view);
-        this.softenFog(view);
         this.sharpenImages(view);
     }
 
@@ -725,30 +741,23 @@ export class MapView {
     // pixels are shown as blocks
     private sharpenImages({ scale }: ViewCorner): void {
         const crisp = scale < 1 / MAP_IMAGE_PIXELS_PER_SQUARE;
-        this.terrainGroup.classList.toggle('crisp', crisp);
+        if (crisp === this.crisp) return;
+
+        this.crisp = crisp;
         this.terrain.setCrisp(crisp);
     }
 
+    private setFar(far: boolean): void {
+        if (far === this.far) return;
+
+        this.far = far;
+        this.overlayGroup.classList.toggle('far', far);
+    }
+
     // the fog's feathered edge keeps about the same width on screen: its blur and growth (a stroke in the fog colour,
-    // 0.7 std outside each rectangle) follow the zoom; the hatch over fogged regions keeps its stripes 10 px apart on
-    // screen
-    private softenFog(view: ViewCorner): void {
-        // the stripes are 45 degrees: one world size along an axis is W / sqrt(2) along the stripe normal, so a period
-        // that divides gcd(W, H) / sqrt(2) puts the stripes of every copy of the map on those of the first
-        const [width, height] = PROG.map.size;
-        const unit = greatestCommonDivisor(width, height) / Math.SQRT2;
-        const hatchWidth = unit / Math.max(1, Math.round(unit / (10 * view.scale)));
-        if (this.hatch && hatchWidth !== this.hatchWidth) {
-            this.hatchWidth = hatchWidth;
-            this.hatch.setAttribute('width', String(hatchWidth));
-            this.hatch.setAttribute('height', String(hatchWidth));
-
-            const stripe = this.hatch.firstElementChild;
-            stripe?.setAttribute('width', String(hatchWidth * 0.2));
-            stripe?.setAttribute('height', String(hatchWidth));
-        }
-
-        const blurRadius = Math.round(Math.min(2.2, Math.max(0.15, 7 * view.scale)) * 20) / 20;
+    // 0.7 std outside each rectangle) follow the zoom once it settles
+    private softenFog(scale: number): void {
+        const blurRadius = Math.round(Math.min(2.2, Math.max(0.15, 7 * scale)) * 20) / 20;
         if (blurRadius === this.fogBlur) return;
 
         this.fogBlur = blurRadius;
@@ -761,43 +770,61 @@ export class MapView {
     // overlaps no label placed before it, in label order
     private cullLabels(view: ViewCorner): void {
         const { x0, y0, scale, rect: viewRect } = view;
-        const placed: PixelRect[] = [];
-        const shownTexts = new Set<SVGTextElement>();
+        const placed = this.placedLabels;
+        let placedCount = 0;
+        const shownTexts = this.labelsNext;
+        shownTexts.clear();
         const grow = Math.max(1, 0.09 / scale);
-        const overlaps = (first: PixelRect, second: PixelRect): boolean =>
-            first[0] < second[2] && first[2] > second[0] && first[1] < second[3] && first[3] > second[1];
         const [width, height] = PROG.map.size;
         const right = x0 + viewRect.width * scale;
         const bottom = y0 + viewRect.height * scale;
+        const copies = this.copies;
 
         this.labels.forEach((label, index) => {
             const labelWidth = label.width * grow;
 
             // the copies whose anchor lies inside the view
-            const firstCopyY = Math.ceil((y0 - label.y) / height);
-            const lastCopyY = Math.floor((bottom - label.y) / height);
-            const firstCopyX = Math.ceil((x0 - label.x) / width);
-            const lastCopyX = Math.floor((right - label.x) / width);
+            copyRange(copies, label.x, label.y, x0, y0, right, bottom);
 
-            for (let copyY = firstCopyY; copyY <= lastCopyY; copyY++) {
-                for (let copyX = firstCopyX; copyX <= lastCopyX; copyX++) {
+            for (let copyY = copies.firstY; copyY <= copies.lastY; copyY++) {
+                for (let copyX = copies.firstX; copyX <= copies.lastX; copyX++) {
                     const x = (label.x + copyX * width - x0) / scale;
                     const y = (label.y + copyY * height - y0) / scale;
-                    const rect: PixelRect = [x - labelWidth / 2, y - 17 * grow, x + labelWidth / 2, y + 5 * grow];
-                    if (placed.some((other) => overlaps(rect, other))) continue;
+                    if (placedCount === placed.length) placed.push([0, 0, 0, 0]);
 
-                    placed.push(rect);
+                    const rect = placed[placedCount];
+                    rect[0] = x - labelWidth / 2;
+                    rect[1] = y - 17 * grow;
+                    rect[2] = x + labelWidth / 2;
+                    rect[3] = y + 5 * grow;
+
+                    let covered = false;
+                    for (let other = 0; other < placedCount; other++) {
+                        if (overlaps(rect, placed[other])) {
+                            covered = true;
+                            break;
+                        }
+                    }
+                    if (covered) continue;
+
+                    placedCount++;
                     shownTexts.add(this.labelText(label, index, copyX, copyY));
                 }
             }
         });
 
-        for (const text of this.labelsOn) {
+        // only the labels whose state changed get a class write
+        const shownBefore = this.labelsOn;
+        for (const text of shownBefore) {
             if (!shownTexts.has(text)) text.classList.add('off');
         }
 
-        for (const text of shownTexts) text.classList.remove('off');
+        for (const text of shownTexts) {
+            if (!shownBefore.has(text)) text.classList.remove('off');
+        }
+
         this.labelsOn = shownTexts;
+        this.labelsNext = shownBefore;
     }
 
     // the objects of the layer shown that the fog does not hide, with their images
@@ -820,57 +847,49 @@ export class MapView {
         return images;
     }
 
-    // While the map is zoomed in, each object in the view is an image one square wide on its square. The pool holds only
-    // the objects in the view, so a view change that brings in or drops none leaves the elements alone, and a map zoomed
-    // out holds none. An object is in the view when any copy of the map puts it there.
+    // While the map is zoomed in, each object in the view is an image one square wide on its square. An object keeps its
+    // mark while it is in the view, so a view change that brings in or drops some touches only their marks, and a map
+    // zoomed out draws none (the stylesheet hides them under `far`) and leaves the marks as they are. An object is in the
+    // view when any copy of the map puts it there.
     private drawObjects({ x0, y0, scale, rect }: ViewCorner): void {
-        const pool = this.shownMarks.objectIcons;
-        if (scale > CAGE_LABEL_MAX_SCALE) {
-            if (this.drawnObjects?.length === 0) return;
+        if (scale > CAGE_LABEL_MAX_SCALE) return;
 
-            pool.fit([]);
-            this.drawnObjects = [];
-            return;
-        }
+        const marks = this.shownMarks.objectIcons;
 
         if (this.objectsLayer !== this.currentLayer) {
             this.objectsLayer = this.currentLayer;
             this.layerObjects = this.objectImages(this.currentLayer);
         }
 
-        const [width, height] = PROG.map.size;
         const left = x0 - OBJECT_REACH;
         const top = y0 - OBJECT_REACH;
         const right = x0 + rect.width * scale + OBJECT_REACH;
         const bottom = y0 + rect.height * scale + OBJECT_REACH;
 
-        const inView: ObjectImage[] = [];
+        const copies = this.copies;
+        const inView = this.visibleObjects;
+        inView.length = 0;
         for (const image of this.layerObjects) {
-            const firstCopyX = Math.ceil((left - image.x) / width);
-            const lastCopyX = Math.floor((right - image.x) / width);
-            if (firstCopyX > lastCopyX) continue;
-
-            const firstCopyY = Math.ceil((top - image.y) / height);
-            const lastCopyY = Math.floor((bottom - image.y) / height);
-            if (firstCopyY > lastCopyY) continue;
+            copyRange(copies, image.x, image.y, left, top, right, bottom);
+            if (copies.firstX > copies.lastX || copies.firstY > copies.lastY) continue;
 
             inView.push(image);
         }
 
         const drawn = this.drawnObjects;
-        if (drawn && drawn.length === inView.length && drawn.every((image, index) => image === inView[index])) return;
+        if (drawn && sameImages(drawn, inView)) return;
 
+        // the drawn list and the list being filled swap places
         this.drawnObjects = inView;
-        pool.draw(
-            inView.map((image): MarkAttributes => ({
-                class: 'ho',
-                href: image.url,
-                x: image.x - OBJECT_REACH,
-                y: image.y - OBJECT_REACH,
-                width: 2 * OBJECT_REACH,
-                height: 2 * OBJECT_REACH,
-            })),
-        );
+        this.visibleObjects = drawn ?? [];
+        marks.show(inView, (image): MarkAttributes => ({
+            class: 'ho',
+            href: image.url,
+            x: image.x - OBJECT_REACH,
+            y: image.y - OBJECT_REACH,
+            width: 2 * OBJECT_REACH,
+            height: 2 * OBJECT_REACH,
+        }));
     }
 
     // the text element of one copy of a label, made the first time it is shown
@@ -899,29 +918,13 @@ export class MapView {
         return levelMarkerRadius(style, focused) + 1;
     }
 
-    // lines run from marker edge to marker edge; one with no visible stretch left is hidden
+    // draws the lines for the zoom. They depend on the zoom only, so a pan draws nothing, and a draw writes only the
+    // attributes that changed.
     private placeLinks({ scale }: ViewCorner): void {
-        const unit = markScale(scale);
-        const marks = this.shownMarks.linkLines.marks;
+        if (scale === this.linksScale) return;
 
-        this.linkEnds.forEach(([x1, y1, startRadius, x2, y2, endRadius], index) => {
-            const length = Math.hypot(x2 - x1, y2 - y1);
-            const startGap = startRadius * unit;
-            const endGap = endRadius * unit;
-            const visible = length - startGap - endGap >= 6 * scale;
-            const lines = [marks[2 * index].element, marks[2 * index + 1].element];
-            for (const line of lines) line.style.display = visible ? '' : 'none';
-            if (!visible) return;
-
-            const ux = (x2 - x1) / length;
-            const uy = (y2 - y1) / length;
-            for (const line of lines) {
-                line.setAttribute('x1', String(x1 + ux * startGap));
-                line.setAttribute('y1', String(y1 + uy * startGap));
-                line.setAttribute('x2', String(x2 - ux * endGap));
-                line.setAttribute('y2', String(y2 - uy * endGap));
-            }
-        });
+        this.linksScale = scale;
+        this.shownMarks.linkLines.draw(this.linkAttributes(scale));
     }
 
     // markers drawn over fog get a dark halo: one a click revealed, or one uncovered below a fog box the map draws over it
@@ -971,28 +974,16 @@ export class MapView {
 
         this.terrain.show(layer);
 
-        if (options.reach && !(layer in this.reachUrls)) {
+        if (!(layer in this.reachUrls)) {
             this.reachUrls[layer] = reachImage(mapLayer(layer), options.reach, options.fog);
         }
 
-        const reachUrl = options.reach && this.reachUrls[layer];
+        const reachUrl = this.reachUrls[layer];
         svg.querySelectorAll<SVGImageElement>('image.reach').forEach((image) => {
             const isShown = overlayOn.reach && !!reachUrl && image.dataset.layer === layer;
             if (isShown && image.getAttribute('href') !== reachUrl) image.setAttribute('href', reachUrl);
             image.style.display = isShown ? '' : 'none';
         });
-
-        // with the fog shown, fogged rectangles that hold a reached column are hatched whole, never square by square
-        let reachFog: FogRect[] = [];
-        if (this.fogOn && options.reach) reachFog = reachedRects(options.reach[layer], rects);
-
-        let hatchHtml = '';
-        if (overlayOn.reach) {
-            const hatchRects = reachFog.flatMap((rect) => wrapRect(toMap(rect)));
-            hatchHtml = hatchRects.map((rect) => rectHtml(...rect, 0)).join('');
-        }
-
-        this.reachFogGroup.innerHTML = hatchHtml;
 
         const water = options.water?.[layer] || [];
         find(svg, '.wtr', SVGGElement).innerHTML = water
@@ -1005,7 +996,7 @@ export class MapView {
         this.box
             .querySelectorAll<HTMLElement>('[data-role=layers] button')
             .forEach((button) => setButtonPressed(button, button.dataset.layer === layer));
-        this.reachEmpty = !reachUrl && !reachFog.length;
+        this.reachEmpty = !reachUrl;
     }
 
     // markers that overlap stack by relevance: the selection's focus on top, then its levels, then by style rank
@@ -1041,8 +1032,8 @@ export class MapView {
 
         this.homeCache = undefined;
         this.setHover(null);
-        this.overlayGroup.classList.toggle('picked', !!selection);
         this.showMarks(layer);
+        this.shownMarks.dimLevels(!!selection);
 
         const levels = (options.markers || [])
             .filter((marker) => mapLayerOf(marker.z) === layer)
@@ -1095,12 +1086,12 @@ export class MapView {
         const overlays = this.overlayMarkAttributes(drawnLevels);
         marks.overlayMarks.draw(overlays.discs);
         marks.overlayIcons.draw(overlays.icons);
-        marks.linkLines.draw(this.linkAttributes());
+        this.collectLinks();
         const towers = this.towerAttributes();
         marks.towerMarks.draw(towers.discs);
         marks.towerIcons.draw(towers.icons);
-        marks.levelMarks.fit(baseRings);
-        marks.levelIcons.fit(baseIcons);
+        marks.levelMarks.draw(baseRings, true);
+        marks.levelIcons.draw(baseIcons, true);
         marks.raisedMarks.draw(raisedRings);
         marks.raisedIcons.draw(raisedIcons);
         marks.cageLabels.draw(overlays.cageLabels);
@@ -1110,8 +1101,7 @@ export class MapView {
         this.drawSteps();
         if (layer !== this.labelsLayer) this.drawLabels(layer);
 
-        this.viewport.showCopies();
-        this.hitList = null;
+        this.linksScale = 0;
         this.layout();
     }
 
@@ -1206,15 +1196,14 @@ export class MapView {
         return this.options.markers[end];
     }
 
-    // lines from the selected level to the levels it requires (gold) and the ones it unlocks (blue, dashed), on this layer,
-    // under the towers and markers; placeLinks sets their ends for the current zoom
-    private linkAttributes(): MarkAttributes[] {
+    // the lines from the selected level to the levels it requires (gold) and the ones it unlocks (blue, dashed), on this
+    // layer; placeLinks draws them for the current zoom
+    private collectLinks(): void {
         const layer = this.currentLayer;
         const [width, height] = PROG.map.size;
         const isGone = (end: LinkEnd): boolean =>
             !isPosition(end) && this.options.style(this.options.markers[end]).gone;
-        const list: MarkAttributes[] = [];
-        this.linkEnds = [];
+        this.links = [];
         this.linkReach = 0;
 
         for (const [from, to, kind] of this.selection?.links || []) {
@@ -1223,17 +1212,38 @@ export class MapView {
             if (!start || !finish || mapLayerOf(start.z) !== layer || mapLayerOf(finish.z) !== layer) continue;
             if (isGone(from) || isGone(to)) continue;
 
-            // a dark halo under each line keeps it readable on any terrain
-            list.push({ class: 'link halo' }, { class: `link ${kind}` });
-
             // the far end is placed in the copy of the map nearest the near end, so a line over the seam runs the short
             // way
             const [x1, y1] = mapXY(start.x, start.y);
             const [x2, y2] = mapXY(finish.x, finish.y);
             const farX = x1 + wrapDelta(x2 - x1, width);
             const farY = y1 + wrapDelta(y2 - y1, height);
-            this.linkEnds.push([x1, y1, this.endRadius(from), farX, farY, this.endRadius(to)]);
+            const startRadius = this.endRadius(from);
+            const endRadius = this.endRadius(to);
+            this.links.push({ kind, x1, y1, startRadius, x2: farX, y2: farY, endRadius });
             this.linkReach = Math.max(this.linkReach, -farX, farX - width, -farY, farY - height);
+        }
+    }
+
+    // the attributes of the link lines at a zoom, a halo line and a coloured line per link, under the towers and markers.
+    // Lines run from marker edge to marker edge; one with no visible stretch left is hidden. The dark halo keeps a line
+    // readable on any terrain.
+    private linkAttributes(scale: number): MarkAttributes[] {
+        const unit = markScale(scale);
+        const list: MarkAttributes[] = [];
+
+        for (const { kind, x1, y1, startRadius, x2, y2, endRadius } of this.links) {
+            const length = Math.hypot(x2 - x1, y2 - y1);
+            const startGap = startRadius * unit;
+            const endGap = endRadius * unit;
+            let ends: MarkAttributes = { display: 'none' };
+            if (length - startGap - endGap >= 6 * scale) {
+                const ux = (x2 - x1) / length;
+                const uy = (y2 - y1) / length;
+                ends = { x1: x1 + ux * startGap, y1: y1 + uy * startGap, x2: x2 - ux * endGap, y2: y2 - uy * endGap };
+            }
+
+            list.push({ class: 'link halo', ...ends }, { class: `link ${kind}`, ...ends });
         }
 
         return list;
@@ -1366,20 +1376,20 @@ export class MapView {
         const marks = this.shownMarks;
         const hero = this.options.hero;
         if (!hero || mapLayerOf(hero.z) !== this.currentLayer) {
-            marks.heroMark.hide();
+            marks.heroMarks.draw([]);
             return;
         }
 
         const [x, y] = mapXY(hero.x, hero.y);
         const attributes = iconAttributes(ICON_URLS['hero'], DISC_RADIUS, placedAt(x, y));
-        marks.heroMark.set({ class: 'k mi hero', ...attributes });
+        marks.heroMarks.draw([{ class: 'k mi hero', ...attributes }]);
     }
 
     // the ring round the drawn level the save is in, undefined when there is none
     private drawRing(current: StyledMarker | undefined): void {
         const marks = this.shownMarks;
         if (!current) {
-            marks.ringMark.hide();
+            marks.ringMarks.draw([]);
             return;
         }
 
@@ -1387,7 +1397,7 @@ export class MapView {
         const [x, y] = mapXY(marker.x, marker.y);
         const focused = this.selection?.focus === marker.levelIndex;
         const radius = levelMarkerRadius(style, focused) + 3;
-        marks.ringMark.set({ class: 'k cur', d: discPath(radius), style: placedAt(x, y) });
+        marks.ringMarks.draw([{ class: 'k cur', d: discPath(radius), style: placedAt(x, y) }]);
     }
 
     // the steps of the unlock chain are numbered on top of the markers
@@ -1405,8 +1415,10 @@ export class MapView {
             count++;
             badge.set({ class: 'bd', style: placedAt(x, y) });
 
-            const label = badge.element.lastElementChild;
-            if (label && label.textContent !== String(stepLabel)) label.textContent = String(stepLabel);
+            for (const element of badge.elements) {
+                const label = element.lastElementChild;
+                if (label && label.textContent !== String(stepLabel)) label.textContent = String(stepLabel);
+            }
         }
 
         stepMarks.hideFrom(count);
@@ -1425,7 +1437,7 @@ export class MapView {
     }
 
     private wireControls(): void {
-        const { box, options } = this;
+        const box = this.box;
         box.querySelectorAll<HTMLElement>('[data-z]').forEach((button) =>
             button.addEventListener('click', () => this.viewport.zoom(Number(button.dataset.z))),
         );
@@ -1433,22 +1445,34 @@ export class MapView {
         box.querySelectorAll<HTMLElement>('[data-role=layers] button').forEach((button) =>
             button.addEventListener('click', () => this.switchLayerWhenDecoded(button.dataset.layer ?? '')),
         );
-        find(box, '[data-role=ovl]', HTMLElement).hidden = !options.reach;
         box.querySelectorAll<HTMLElement>('[data-ov]').forEach((button) => {
             const kind = overlayKindOf(button);
-            button.hidden = kind === 'reach' && !options.reach;
             button.addEventListener('click', () => this.setOverlay(kind, !overlayOn[kind]));
         });
     }
 
-    // the marker under the pointer is highlighted by a class, which the copies of the map follow (:hover does not reach
-    // them)
+    // the level marker under the pointer is highlighted by a ring that sits over the marks, in every copy of the overlay
     private setHover(element: Element | null): void {
         if (element === this.hover) return;
 
-        this.hover?.classList.remove('hv');
         this.hover = element;
-        this.hover?.classList.add('hv');
+        const ring = this.marks?.hoverMarks;
+        if (!ring) return;
+
+        const path = element?.getAttribute('d');
+        const style = element?.getAttribute('style');
+        if (!path || !style) {
+            ring.draw([]);
+            return;
+        }
+
+        ring.draw([{ class: 'k hvr', d: path, style }]);
+    }
+
+    // the element a pointer event is on
+    private targetOf(event: MouseEvent): Element | null {
+        if (event.target instanceof Element) return event.target;
+        return null;
     }
 
     // the tooltips of the drawn markers that overlap under the cursor, up to eight
@@ -1473,17 +1497,17 @@ export class MapView {
     }
 
     private showTip(event: MouseEvent): void {
-        const { svg, tip } = this;
-        if (svg.classList.contains('drag')) {
+        const { tip } = this;
+        if (this.viewport.dragging) {
             this.setHover(null);
             return;
         }
 
-        const target = this.pick(event)?.closest<SVGElement>('[data-tip],[data-i]');
+        const target = this.targetOf(event)?.closest<SVGElement>('[data-tip],[data-i]');
         if (target?.matches('.lv')) this.setHover(target);
         else this.setHover(null);
         if (!target) {
-            tip.style.display = 'none';
+            this.showTipBox(false);
             return;
         }
 
@@ -1498,7 +1522,7 @@ export class MapView {
             tip.innerHTML = html;
         }
 
-        tip.style.display = 'block';
+        this.showTipBox(true);
 
         const cursorX = event.clientX - boxRect.left;
         const cursorY = event.clientY - boxRect.top;
@@ -1513,7 +1537,7 @@ export class MapView {
     private clicked(event: MouseEvent): void {
         if (this.viewport.wasDragged || event.detail > 1) return;
 
-        const target = this.pick(event);
+        const target = this.targetOf(event);
         const tower = target?.closest<SVGElement>('[data-tw]');
         const level = target?.closest<SVGElement>('[data-i]');
         const gate = target?.closest<SVGElement>('[data-gate]');
@@ -1531,7 +1555,7 @@ export class MapView {
         const { svg } = this;
         svg.addEventListener('mousemove', (event) => this.showTip(event));
         svg.addEventListener('mouseleave', () => {
-            this.tip.style.display = 'none';
+            this.showTipBox(false);
             this.setHover(null);
         });
 

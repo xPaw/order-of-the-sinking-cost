@@ -1,6 +1,7 @@
 // The walk model on a synthetic campaign: reachability, level roles and next steps
 import { beforeAll, describe, expect, test } from 'vitest';
-import { PROG, worldReady } from '../src/data.ts';
+import { PROG } from '../src/data.ts';
+import { WORLD_FILE, worldReady } from '../src/world-data.ts';
 import { latestOf, protectedHeroes } from '../src/save.ts';
 import type { ParsedHistory } from '../src/history-file.ts';
 import type { DemoStatus } from '../src/status-file.ts';
@@ -10,7 +11,7 @@ import { ROLE } from '../src/model/level-roles.ts';
 import { nextSteps } from '../src/model/next-steps.ts';
 import { computeProgress, setProgressCache } from '../src/model/progress.ts';
 import type { CampaignProgress } from '../src/model/progress.ts';
-import { RANK_ONE_SIGN_PID, syntheticCampaign, TOWER_SIGN_PID } from './fixtures.ts';
+import { RANK_ONE_SIGN_PID, reachedByNeedsOf, syntheticCampaign, TOWER_SIGN_PID } from './fixtures.ts';
 
 beforeAll(async () => {
     await worldReady;
@@ -25,7 +26,7 @@ test('static roles', () => {
     expect(levelRoles.filter((role) => role === 1).length).toBe(156);
     expect(levelRoles.filter((role) => !role).length).toBe(147);
     expect(ROLE!.need.g.length).toBe(PROG.freezers.length);
-    expect(ROLE!.bg.l.length).toBe(PROG.levels.length);
+    expect(ROLE!.bg.g.length).toBe(PROG.freezers.length);
 });
 
 // kept hero positions outside the cells reachability() fills (seeded as it seeds them: a position that lands nowhere
@@ -40,7 +41,7 @@ function heroesOutside(status: DemoStatus, history: ParsedHistory, progress: Cam
         progress.gateOpen.map((open) => !open),
     );
     const flags = new Map(status.levels.map((level) => [level.name, level.flags])),
-        protectedKeys = protectedHeroes(history, PROG.world.guy || [0, 0]);
+        protectedKeys = protectedHeroes(history, WORLD_FILE.world.guy || [0, 0]);
     const seeds: Seed[] = [history.hero ? heroSeed(history.hero) : -1];
     for (const position of history.heroes.values()) {
         const cell = land(cellOf(...position), false);
@@ -79,12 +80,13 @@ describe('a campaign at rank 1 with two Signs read', () => {
         expect(history.hero).toBeTruthy();
         const progress = computeProgress(status, history),
             levels = PROG.levels;
-        expect(progress.reach).toBeTruthy();
-        expect(progress.reach!.level.length).toBe(levels.length);
-        expect(progress.reach!.level.some(Boolean)).toBe(true);
+        expect(progress.reachKnown).toBe(true);
+        const reachedByNeeds = reachedByNeedsOf(progress);
+        expect(reachedByNeeds.length).toBe(levels.length);
+        expect(reachedByNeeds.some(Boolean)).toBe(true);
         expect(progress.state.length).toBe(levels.length);
-        // a level the walk calls unreachable says why, a reachable one does not
-        progress.state.forEach((levelState, i) => expect(!!progress.why[i]).toBe(levelState === 'blocked'));
+        // a level the table does not reach has a way-in list, a reachable one does not
+        progress.state.forEach((levelState, i) => expect(!!progress.wayIn[i]).toBe(levelState === 'blocked'));
         expect(progress.needed.length).toBe(levels.length);
         expect(nextSteps(progress, status)).toEqual(progress.needed);
         // next steps are levels not solved yet

@@ -1353,8 +1353,8 @@ main > .mapbox {
     background: var(--water);
     overflow: hidden;
 }
-/* the layer images lie in a holder under the svg, which is transparent over them; each is placed by a transform, so the
-   browser composites it instead of redrawing it as the view changes */
+/* the layer images lie in a holder under the svg, which is transparent over them; each is a box over the holder whose
+   background repeats the world, sized and offset by the view, so the wrap needs no copies and no layers of its own */
 .mapbox > .terrain {
     position: absolute;
     inset: 0;
@@ -1362,20 +1362,13 @@ main > .mapbox {
     pointer-events: none;
     z-index: 0;
 }
-.mapbox > .terrain img {
+.mapbox > .terrain > div {
     position: absolute;
-    left: 0;
-    top: 0;
-    max-width: none;
-    transform-origin: 0 0;
-    will-change: transform;
-    user-select: none;
+    inset: 0;
+    background-repeat: repeat;
 }
-.mapbox > .terrain img.pending {
-    visibility: hidden;
-}
-.mapbox > .terrain img.thumb,
-.mapbox > .terrain.crisp img {
+.mapbox > .terrain > div.thumb,
+.mapbox > .terrain.crisp > div {
     image-rendering: pixelated;
 }
 .mapbox > svg {
@@ -1389,7 +1382,11 @@ main > .mapbox {
     cursor: grab;
     user-select: none;
 }
-.mapbox > svg.drag {
+/* covers the map while it is dragged, so the cursor is not changed on the svg, which every element of the map inherits */
+.mapbox > .grab {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
     cursor: grabbing;
 }
 .mapbox .ctl {
@@ -1698,22 +1695,13 @@ main > .mapbox {
     text-align: right;
     white-space: nowrap;
 }
-/* .mw is the map's group that the wrapped copies repeat; a copy matches selectors only through ancestors inside the group.
-   Reachable images are always pixelated; once the map is zoomed in far enough the layer images are as well */
-.mw image.reach,
-.mw.crisp image {
+/* .mw is a group of the map: the terrain group is repeated by use elements, which match selectors only through ancestors
+   inside the group, and the overlay group holds real copies of its marks. Reachable images are always pixelated; once the map is zoomed in far enough the layer images (under the svg) are as well */
+.mw image.reach {
     image-rendering: pixelated;
 }
 .mw image.reach {
     pointer-events: none;
-}
-/* fogged regions the walk reaches: stripes in the Reachable colour over the fog */
-.mw .rfog {
-    opacity: 0.45;
-    pointer-events: none;
-}
-.mw .hatch rect {
-    fill: var(--reach);
 }
 .mw .fog rect,
 .mw .fogc rect {
@@ -1787,7 +1775,6 @@ main > .mapbox {
     stroke: rgba(5, 10, 14, 0.8);
     stroke-width: 6;
 }
-.mw .lv.hv,
 .mw .lv.hl,
 .mw .lv.chosen {
     stroke: #fff;
@@ -1798,9 +1785,15 @@ main > .mapbox {
     stroke-width: 3.5;
     filter: drop-shadow(0 0 3px rgba(245, 216, 74, 0.9));
 }
-/* while there is a selection (the overlay group's .picked), the levels outside it dim; a mark of a level in it is .hl */
-.mw .ov.picked .lv:not(.hl),
-.mw .ov.picked .mi.lvi:not(.sel) {
+/* the ring on the hovered level, over the marks of each copy of the overlay */
+.mw .hvr {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 2;
+    pointer-events: none;
+}
+/* while there is a selection, the groups of level markers outside it dim */
+.mw .dimmed {
     opacity: 0.3;
 }
 /* the level the save is in: a pulsing white ring */
@@ -1868,9 +1861,13 @@ main > .mapbox {
 .mw .area.off {
     display: none;
 }
-/* the image of an object in the world lies under the marks and takes no pointer */
+/* the image of an object in the world lies under the marks and takes no pointer; it is hidden while the map is zoomed out
+   (.far) */
 .mw .ho {
     pointer-events: none;
+}
+.mw .far .ho {
+    display: none;
 }
 /* the image of what a cage holds sits on its mark; it is hidden while the map is zoomed out (.far) */
 .mw .cl {

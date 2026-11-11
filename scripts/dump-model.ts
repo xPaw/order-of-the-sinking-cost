@@ -185,6 +185,7 @@ async function loadModules() {
     registerHooks({ load: loadWithoutPageStart });
     installDomStandIns();
     const data = await import('../src/data.ts');
+    const worldData = await import('../src/world-data.ts');
     const walkData = await import('../src/walk-data.ts');
     const shared = await import('../src/shared.ts');
     const save = await import('../src/save.ts');
@@ -199,7 +200,7 @@ async function loadModules() {
     const nextSteps = await import('../src/model/next-steps.ts');
     const goalRoles = await import('../src/model/goal-roles.ts');
     domOpen = false;
-    await data.worldReady;
+    await worldData.worldReady;
     await walkData.walkReady;
     return {
         data,

@@ -1,6 +1,6 @@
 // The room answers against the walk's own searches, which run on a walker built without the answers. What those searches
 // find from the start region of a room (the Rocks' bridges, the objects that reach the Switches and the Gem_Slots, the
-// Monsters that die) is held by the answer of the room: the stored one (data/walk.json `rooms`) in a room the save leaves
+// Monsters that die) is held by the answer of the room: the stored one (data/rooms.json) in a room the save leaves
 // as the level data has it, else the one searched on the walker's own grid. The Rocks the room search does not push are
 // left out: a crystal Rock and a Rock a Spawner puts back stand in no cell of the grid it searches, and a skipping stone
 // it pushes into water makes no bridge. The live searches take every cell of the start region as a push cell for every

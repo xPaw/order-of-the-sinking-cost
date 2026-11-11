@@ -17,19 +17,24 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { PROG, worldReady } from '../../src/data.ts';
+import { PROG } from '../../src/data.ts';
+import { worldReady } from '../../src/world-data.ts';
 import { DEMO_STATUS, demoHistory } from '../../src/demo-save.ts';
 import { computeProgress, setProgressCache, type ProgressStatus } from '../../src/model/progress.ts';
+import { levelNeedsMet, metPadRoutes } from '../../src/model/route-needs.ts';
 import { staticRoles } from '../../src/model/static-roles.ts';
+import { isEntered } from '../../src/model/unlocking.ts';
 import type { History } from '../../src/history-file.ts';
 import { parseHistory, parseStatus } from '../../src/save.ts';
 import type { DemoStatus, Status } from '../../src/status-file.ts';
-import { floorHeights, NO_HISTORY } from '../../src/walk/reachability.ts';
+import { floorHeights, NO_HISTORY, reachability } from '../../src/walk/reachability.ts';
+import { setRoomAnswers } from '../../src/walk/room-answers.ts';
 import { teleporterStatesOf } from '../../src/walk/teleporters.ts';
 import { walker, type Walker } from '../../src/walk/walker.ts';
 import { walkReady } from '../../src/walk-data.ts';
 import { savesDir } from '../saves.ts';
 import { isTypedArray, type Canonical } from './plain.ts';
+import { storedRooms } from './stored-rooms.ts';
 
 const STATUS_FILE = 'Status.sokoban_status';
 const HISTORY_FILE = 'overworld.history';
@@ -37,19 +42,7 @@ const HASH_LENGTH = 12;
 const DIFFERENCE_LINES = 8;
 const LISTED_ITEMS = 6;
 
-const PROGRESS_FIELDS = [
-    'state',
-    'why',
-    'wayIn',
-    'wayInChains',
-    'wayInFixed',
-    'access',
-    'ice',
-    'behind',
-    'needed',
-    'plans',
-    'goals',
-] as const;
+const PROGRESS_FIELDS = ['state', 'wayIn', 'access', 'ice', 'behind', 'needed', 'plans', 'goals'] as const;
 
 /** The walk outputs by field name, as the walk computes them. */
 export interface WalkOutputs {
@@ -71,10 +64,11 @@ export interface Campaign {
 
 type CanonicalObject = { [key: string]: Canonical };
 
-/** Loads the level data and the stored walk data; await it before fingerprinting. */
+/** Loads the level data, the stored floor heights and the stored room answers, which the walkers use; await it before fingerprinting. */
 export async function walkLoaded(): Promise<void> {
     await worldReady;
     await walkReady;
+    setRoomAnswers(storedRooms());
 }
 
 function compareCanonical(left: Canonical, right: Canonical): number {
@@ -227,15 +221,24 @@ export function saveOutputs(status: ProgressStatus, history: History): WalkOutpu
 
     for (const name of PROGRESS_FIELDS) outputs[`progress.${name}`] = progress[name];
 
-    if (!progress.reach) return outputs;
+    if (!progress.reachKnown || progress.lt === null) return outputs;
 
-    for (const [name, value] of Object.entries(progress.reach)) {
+    const closedFreezers = progress.gateOpen.map((open) => !open);
+    const entered = progress.state.map(isEntered);
+    const reach = reachability(
+        history,
+        progress.lt,
+        progress.tst,
+        closedFreezers,
+        entered,
+        metPadRoutes(progress.needsView),
+        levelNeedsMet(progress.needsView),
+    );
+    for (const [name, value] of Object.entries(reach)) {
         if (name === 'cols') outputs['reach.cols'] = columnsSet(value);
         else outputs[`reach.${name}`] = value;
     }
 
-    if (progress.lt === null) throw new Error('the progress has a reachability result but no latest values');
-    const closedFreezers = progress.gateOpen.map((open) => !open);
     Object.assign(outputs, walkerOutputs('walker', walker(progress.lt, progress.tst, closedFreezers)));
     return outputs;
 }
@@ -263,7 +266,6 @@ export function staticRolesOutputs(): WalkOutputs {
     return {
         'need.l': roles.need.l,
         'need.g': roles.need.g,
-        'bg.l': roles.bg.l,
         'bg.g': roles.bg.g,
     };
 }

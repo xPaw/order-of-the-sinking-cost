@@ -1,7 +1,8 @@
 // Routes on tiny synthetic overworlds: rock bridges in pocket floods, magic-mirror hops, the skip lane + TELEPORT
 // swap, ALTER beams, OPEN beams opening Gates, requirement cycles, overlapping areas and mirror marks
 import { describe, expect, test, vi } from 'vitest';
-import { PROG, WORLD } from '../src/data.ts';
+import { PROG } from '../src/data.ts';
+import { WORLD } from '../src/world-data.ts';
 import { levelAreaOf } from '../src/model/areas.ts';
 import { levelsNeedingLevel } from '../src/model/unlocking.ts';
 import type { LatestValues, OceanChange } from '../src/save.ts';
@@ -17,6 +18,7 @@ import type { Walker } from '../src/walk/walker.ts';
 import { f32, freezerAt, NONE, progressLevel } from './fixtures.ts';
 import type { Columns, Rows } from './fixtures.ts';
 
+vi.mock('../src/world-data.ts', () => import('./world-data-mock.ts'));
 vi.mock('../src/data.ts', async () => {
     const SCHEMA = (await import('../data/schema.json')).default;
     return { SCHEMA, PROG: {}, WORLD: {}, worldReady: Promise.resolve() };
@@ -578,7 +580,6 @@ describe('levels whose requirements need a level', () => {
 
 describe('areas named by activated pins', () => {
     const area: Area = {
-        local_area_name: '',
         display: '',
         image: '',
         p: [0, 0, 0],

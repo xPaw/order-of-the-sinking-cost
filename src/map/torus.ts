@@ -6,9 +6,10 @@ import { mod } from '../walk/cells.ts';
 /** A map rectangle: x, y, width, height. */
 export type Rect = [x: number, y: number, width: number, height: number];
 
-// The overworld wraps on both axes. The terrain group and the overlay group (markers, lines, labels) are drawn once and
-// use elements repeat each for two world sizes around; panzoom shows the ones the view reaches. The overlay group is
-// separate so that no copy's terrain covers the overhang of a neighbouring copy's markers and labels.
+// The overworld wraps on both axes. The svg terrain group (water, reach images, fog) is drawn once and use elements repeat
+// it for two world sizes around; panzoom shows the ones the view reaches. The terrain image is not in the svg: it is a
+// repeating background. The overlay group (markers, lines) is separate, with real copies of its marks, so that no copy's
+// terrain covers the overhang of a neighbouring copy's markers.
 const WRAP_REACH = 2;
 
 /**
@@ -32,11 +33,57 @@ export function wrapRect([x, y, width, height]: Rect): Rect[] {
     return copies;
 }
 
+/** The copies of the map as shifts in whole map sizes: copyX from firstX to lastX, copyY from firstY to lastY. */
+export interface CopyRange {
+    firstX: number;
+    lastX: number;
+    firstY: number;
+    lastY: number;
+}
+
+/** Whether the copy shifted by (copyX, copyY) maps is in the range. */
+export function isInRange(range: CopyRange, copyX: number, copyY: number): boolean {
+    return copyX >= range.firstX && copyX <= range.lastX && copyY >= range.firstY && copyY <= range.lastY;
+}
+
+/** Whether two ranges hold the same copies. */
+export function sameRange(first: CopyRange, second: CopyRange): boolean {
+    return (
+        first.firstX === second.firstX &&
+        first.lastX === second.lastX &&
+        first.firstY === second.firstY &&
+        first.lastY === second.lastY
+    );
+}
+
+/** A range to pass to copyRange, which a per-frame caller keeps and fills again each frame. */
+export const newCopyRange = (): CopyRange => ({ firstX: 0, lastX: 0, firstY: 0, lastY: 0 });
+
 /**
- * The use elements that repeat one group of the map (id-group) around the first copy, hidden until the view reaches
- * them.
+ * Sets `range` to the copies of the map that put the map position (x, y) inside the box [left, top, right, bottom]
+ * (the view box widened by the reach of what is drawn there).
  */
-export function wrapCopies(id: string, group: string, mapWidth: number, mapHeight: number): string {
+export function copyRange(
+    range: CopyRange,
+    x: number,
+    y: number,
+    left: number,
+    top: number,
+    right: number,
+    bottom: number,
+): void {
+    const [width, height] = PROG.map.size;
+    range.firstX = Math.ceil((left - x) / width);
+    range.lastX = Math.floor((right - x) / width);
+    range.firstY = Math.ceil((top - y) / height);
+    range.lastY = Math.floor((bottom - y) / height);
+}
+
+/**
+ * The use elements that repeat the terrain group of the map (id-w) around the first copy, hidden until the view
+ * reaches them. A hidden use has no href; its data-group holds the reference that panzoom sets when the use is shown.
+ */
+export function wrapCopies(id: string, mapWidth: number, mapHeight: number): string {
     let html = '';
 
     for (let copyY = -WRAP_REACH; copyY <= WRAP_REACH; copyY++) {
@@ -44,7 +91,7 @@ export function wrapCopies(id: string, group: string, mapWidth: number, mapHeigh
             if (!copyX && !copyY) continue;
             const copyIndex = `data-kx="${copyX}" data-ky="${copyY}"`;
             const copyAt = `x="${copyX * mapWidth}" y="${copyY * mapHeight}"`;
-            html += `<use href="#${id}-${group}" ${copyIndex} ${copyAt} style="display:none"/>`;
+            html += `<use data-group="#${id}-w" ${copyIndex} ${copyAt} style="display:none"/>`;
         }
     }
 

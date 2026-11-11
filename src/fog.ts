@@ -3,6 +3,7 @@ import { PROG } from './data.ts';
 import { historyEntry } from './files.ts';
 import { FOG_LAYER_KEYS } from './model/layers.ts';
 import type { FoundOfTotal } from './model/totals.ts';
+import { FOG_TYPE } from './schema-types.ts';
 import { decodeBlob } from './save.ts';
 import type { History } from './save.ts';
 import type { Position } from './types.ts';
@@ -57,11 +58,11 @@ function regionStates(history: History): Map<number, Uint8Array> {
         if (action.type === 3) continue;
 
         const pid = action.pid >>> 0;
-        if (!pids.has(pid) || history.types[action.etype]?.name !== 'Fog_Of_War') continue;
+        if (!pids.has(pid) || history.types[action.etype]?.name !== FOG_TYPE) continue;
 
         let diff;
         try {
-            diff = decodeBlob(action.blob, 'Fog_Of_War', action.type === 1);
+            diff = decodeBlob(action.blob, FOG_TYPE, action.type === 1);
         } catch {
             continue;
         }

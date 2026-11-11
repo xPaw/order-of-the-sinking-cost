@@ -1,7 +1,8 @@
 // With spoilers hidden, no goal names or counts anything under fog: the demo ("Example: a new game") and a campaign
 // at rank 1 with the ground shown and a few Signs read
 import { beforeAll, describe, expect, test, vi } from 'vitest';
-import { PROG, worldReady } from '../src/data.ts';
+import { PROG } from '../src/data.ts';
+import { worldReady } from '../src/world-data.ts';
 import { setProgressCache } from '../src/model/progress.ts';
 import { towerName } from '../src/model/towers.ts';
 import { setSpoilersHidden } from '../src/shared.ts';

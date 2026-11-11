@@ -1,7 +1,7 @@
 // Ground layers and water: the Ocean_Maps per column and the surface over a cell (WORLD.md "Ground layers", STATE.md
 // "Water in the save", MOVEMENT.md "Water")
-import type { WorldCells } from '../data.ts';
 import type { World } from '../types.ts';
+import type { WorldCells } from '../world-data.ts';
 import { mod, Z_BIAS } from './cells.ts';
 import type { GridShape } from './cells.ts';
 import { place, put } from './groups.ts';

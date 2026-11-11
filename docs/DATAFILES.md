@@ -1,12 +1,12 @@
 # Derived data and the map images
 
 The schema of every data file the viewer is built from (`schema.json`, `levels.json`, `level_areas.json`, `fog.json`,
-`map.json`, `world.json`, `progress.json`, `walk.json`) and the map images.
+`map.json`, `world.json`, `progress.json`, `walk.json`, `level-cells.json`) and the map images.
 
 ## Derived data files
 
-The pipeline turns the game data into these files in `data/`, and the viewer embeds `schema.json`, `progress.json` and
-`walk.json`. It also embeds `wikitactics.txt`, which is not derived: it is a copy of
+The pipeline turns the game data into these files in `data/`, and the viewer embeds `schema.json`, `progress.json`,
+`walk.json` and `level-cells.json`. It also embeds `wikitactics.txt`, which is not derived: it is a copy of
 [joric/ootss data/wt.txt](https://github.com/joric/ootss/blob/main/data/wt.txt), refreshed by replacing the file. Each
 row is `level,area,anchor`, and a level's panel links to `https://sinkingstar.wikitactics.com/areas/<area>/#<anchor>`.
 Positions are world units; a cell is (i, j) = ((x − corner.x) mod W, (y − corner.y) mod H) with the overworld grid
@@ -19,7 +19,8 @@ overworld's alone. A row's trailing `(, exists)` column is described under
 
 `{base: {name: "Undoable_Entity_Data", fields}, types: {<type>: {version, size, fields}}, enums: {<key>: {flags, values}}}`.
 
-- `types` has every entity type. A type the exporter could not find is `{missing: true}`.
+- `types` has every entity type. A type the exporter could not find is `{missing: true}`. The page's copy keeps only
+  the types it decodes, the `Achievement` enum, and the keys `n`, `v`, `k`, `sz`, `t` and `e` of a field.
 - A field: `i` index, `n` name (flattened, `position.x`), `v` [first, last] version (−1 = none), `k` kind, `sz` size
   in bytes (plain data), `t` type name (`f32`, `u8`, `bool`, `Vector3`, `enum <name>`, `[]u8`, `*Material`, ...),
   `enum` the enum key and `enum_t` its integer type (enum fields), `e` the element description and `at` the
@@ -108,7 +109,8 @@ The current-area rule applied at each overworld Level_Entry (the rule itself is 
 ### data/world.json
 
 `{world, teleporters, treasure_displays, gold_rooms}`: the overworld as walkable cells, for the walk model
-([The walk model (viewer)](VIEWER.md#the-walk-model-viewer)). `l` and `zlayer` values are ground-layer table indices:
+([The walk model (viewer)](VIEWER.md#the-walk-model-viewer)). Only scripts and tests read it, through `src/world-data.ts`;
+the page does not embed it, and `progress.json` holds the few keys the page reads. `l` and `zlayer` values are ground-layer table indices:
 0 ground, 1 underworld, 2 sky, 3-5 the fast-travel map rooms (underworld, ground, sky).
 
 **`exists` column.** A row whose entity can be absent ends in `exists`: its state when the level loads. On load every
@@ -171,28 +173,29 @@ Rows without the column always exist. The save overrides it: member `entity_flag
 
 ### data/progress.json
 
-Everything the viewer knows about the overworld in one file: progression rows, `world.json` merged in whole, `map.json`
-as `map`, and fog. Level roles (Required / Optional, the Freezers each level sits behind) are not in it; they are in
+Everything the page knows about the overworld in one file: progression rows, the keys of `world.json` the page reads,
+`map.json` as `map`, and fog. Level roles (Required / Optional, the Freezers each level sits behind) are not in it; they are in
 [data/walk.json](#datawalkjson).
 
 | Key | Shape |
 |---|---|
-| `levels[]` | the overworld Level_Entries that are not `currently_broken` or `currently_disfavored`, in level-data order: {n (level_name), p, req (indices into `levels` of `unlocked_by_id`..`id3`; may be empty), or (`unlock_is_or_gate` with 2+ ids), en (gated but `enabled_t_target` 1 in the data, so open from the start), t (`tower_flags` bits: HEROES 1, MIRRORS 2, SKIPPING 4, PROMESST 8, UPSTAIRS 16, DOWNSTAIRS 32), glow (the glow colour group of its pad: green, orange, yellow, blue or purple, the group whose hue its `color_active` is nearest to; reds count as orange, cyans as blue, magentas as purple; [The marker icons](#the-marker-icons)), tower (1 when its `style` is SIXTEEN_POINTS, the 16-point star pad of the tower levels, which is also the pad of a few levels with no `tower_flags`), d (dropdown), a (achievement name), set: [index into `sets`, place in the set from 1], area (index into `areas`), areaNear (outside every area box, grouped with the nearest), overlap (in boxes of more than one area: [[index into `areas`, float_parameter]] in record order; the viewer picks among them by activated pins, [Level areas (viewer)](VIEWER.md#level-areas-viewer)), needs (what the level asks for to be reachable: the levels that unlock it and what play adds, from the hand-written table in `scripts/lib/level-table.ts`; absent when the table adds nothing to the unlocks, and the walk decides; [Level needs and pad routes](VIEWER.md#level-needs-and-pad-routes)), from ('sky' for a blocked level entered from the sky)} |
-| `sets[]` | {name, n (levels in the set that exist)}: each level's first level set by set name, a `drafts*` set only when it has no other |
+| `levels[]` | the overworld Level_Entries that are not `currently_broken` or `currently_disfavored`, in level-data order: {n (level_name), p, req (indices into `levels` of `unlocked_by_id`..`id3`; may be empty), or (`unlock_is_or_gate` with 2+ ids), en (gated but `enabled_t_target` 1 in the data, so open from the start), t (`tower_flags` bits: HEROES 1, MIRRORS 2, SKIPPING 4, PROMESST 8, UPSTAIRS 16, DOWNSTAIRS 32), glow (the glow colour group of its pad: green, orange, yellow, blue or purple, the group whose hue its `color_active` is nearest to; reds count as orange, cyans as blue, magentas as purple; [The marker icons](#the-marker-icons)), tower (1 when its `style` is SIXTEEN_POINTS, the 16-point star pad of the tower levels, which is also the pad of a few levels with no `tower_flags`), d (dropdown), a (achievement name), set: [index of its level set, place in the set from 1], area (index into `areas`), areaNear (outside every area box, grouped with the nearest), overlap (in boxes of more than one area: [[index into `areas`, float_parameter]] in record order; the viewer picks among them by activated pins, [Level areas (viewer)](VIEWER.md#level-areas-viewer)), needs (what the level asks for to be reachable: the levels that unlock it and what play adds, from the hand-written table in `scripts/lib/level-table.ts`; absent when the table adds nothing to the unlocks, and the walk decides; [Level needs and pad routes](VIEWER.md#level-needs-and-pad-routes)), from ('sky' for a blocked level entered from the sky)} |
 | `towers[]` | {pid, t (tower_flags bits), req (`levels_required`, type default filled in), p, pad (index into `teleporters` of the tower's `teleporter_id` pad when that is a MINOR pad: a ground or low tower's pad stands on or beside the tower, a high tower's is a MAJOR pad elsewhere and has no `pad`), hub (index into `teleporters` of the tower's `teleporter_id` pad when that is a MAJOR pad: a sky tower's pad in the sky hub)}, sorted ground first, then sky, then underworld, then by t |
 | `freezers[]` | {pid, p, l (ground layer by z), req (indices into `levels` of `unlocked_by_id`..`id4`), or, partial (`partial_solve_count` set), judge (`judge_unlock_level`), doorway (model B, `base.mesh` `GAME_OVER_Freezer_B`), holds (the icon name, a file in `src/assets/icons/`, of the one kind of existing Rock, skipping stone, movable, Goblin, Dragon, Wardrobe, Tree or Lily in its cell, left out for none or several), signs when some unlock ids are not levels: [{pid, rank} \| {pid, tower: index into towers} \| {pid, gold: 4} \| {pid}]} |
 | `objects` | {icons (icon names, files in `src/assets/icons/`, in order of first use), rows: [[x, y, z, index into icons]]}: one row per kind of existing object with an icon in each cell (Rocks, Crystals, skipping stones, movables, Goblins, Dragons, Wardrobes, Trees, Lilies) at its level-data position, left out where a Freezer stands in the cell |
 | `signs[]` | {pid, p, l, rank \| tower (index) \| gold: 4, status (a TOWER_STATUS sign), gates (indices into `freezers` that list it)}: the Signs that open gates by rank, tower or gold rooms, and the tower status signs |
 | `treasures` | the number of Treasure_Displays |
-| `voice_logs[]` | {pid, p, l, name, author, d (already `played` in the level data)} |
+| `voice_logs[]` | {pid, p, l, name, d (already `played` in the level data)} |
 | `view_givers[]` | {pid, p, l}: the map scrolls |
-| `areas[]` | {local_area_name, display (en name, else the key), image (`local_area_image`, the emblem), p (label position: the `map_label_marker_id` Marker, else the pin), pin (Area_Pin pid), boxes (as `level_areas.json`), layer (ground / sky / underworld from the name's g/s/u), order}. order sorts by layer (ground, sky, underworld), then by the wrapped distance from that layer's hub area (`area_g_crossroads`, `area_s_upper_crossroads`, `area_u_crossroads_low`) |
+| `areas[]` | {display (en name, else the key), image (`local_area_image`, the emblem), p (label position: the `map_label_marker_id` Marker, else the pin), pin (Area_Pin pid), boxes (as `level_areas.json`), layer (ground / sky / underworld from the name's g/s/u), order}. order sorts by layer (ground, sky, underworld), then by the wrapped distance from that layer's hub area (`area_g_crossroads`, `area_s_upper_crossroads`, `area_u_crossroads_low`) |
 | `fog` | {grid, primary: [{pid, layer}], boxes: [{pid, layer, min, max}] (boxes with `only_overhang` left out), levels: {level name: [layer, region]}, start} from `fog.json` |
 | `map` | `map.json`, plus `main_box`: {underworld \| ground \| sky: {c: centre, e: extents}} of each layer's MAIN_MAP Camera_Marker box, the overhead map's view of the whole layer. Ground: c (79, 76, 2), e (94.57, 78.94, 4.62) |
 | `endgame_way_ins` | [[level, [freezer index], replace]]: the way-in gates of the endgame levels ([Endgame way-in gates](VIEWER.md#endgame-way-in-gates)). replace 1: the gates are alternatives and stand in for the walk's; 0: the gates are all needed together, besides the walk's way in (they are the way in where the walk finds none) |
 | `pad_routes[]` | the hand-written routes to pads the walk does not find ([Level needs and pad routes](VIEWER.md#level-needs-and-pad-routes)), written in `scripts/lib/level-table.ts` with names and entity ids that the build resolves to indices (a name or id the data lacks fails the build). A row: {id, to, needs, area?, tower?}. `to` is one of {pad: index into `teleporters`} or {at: [x, y, z]} (the cell of another overworld entity). `needs` is [[need]]: all of the groups, one need of a group; a need is {level: index into `levels`} solved or {sign: index into `signs`} read, and an empty group is one nothing meets; the `needs` of a `levels` row are the same. `area` (index into `areas`) and `tower` (index into `towers`) mark a sky Way: the Way area, and the sky tower whose hub pad `to` is |
 | `ending_stages[]` | the hand-written stages of the second and third endings ([Goals (viewer)](VIEWER.md#goals-viewer)), written in `scripts/lib/ending-stages.ts` with names (levels, areas, tower flags, achievements) and Freezer and pad Pids that the build resolves to indices (a name the data lacks fails the build). A row is {ending (the ending's achievement), stages: [{name, done, seen}]} with the stages in order. `name`: {area} \| {level} \| {tower} \| {route}, an index into `areas`, `levels`, `towers` or `pad_routes` (a sky Way's row, written by its id). `done`: {rule: 'achievement', name} (earned), {rule: 'tower', tower} (active), {rule: 'freezers', freezers} (all open: indices into `freezers`), {rule: 'solved', level}, {rule: 'pads', pads} (one of the pads, indices into `teleporters`, discovered), {rule: 'all', all} (every one of the rules). `seen`: pads whose discovery shows the stage though its area is not named. The rows are ENDGAME2 and ENDGAME3; the stages are listed in [Goals (viewer)](VIEWER.md#goals-viewer), and the first ending's children come from `gold_rooms` |
-| `world`, `teleporters`, `treasure_displays`, `gold_rooms` | from `world.json`; `gold_rooms[].tower` becomes an index into `towers` (−1 if none) |
+| `world` | the `grid`, `area_pins` and `movables` of `world.json` `world` |
+| `teleporters[]` | the `pid`, `p`, `l`, `major`, `target`, `en`, `disc` and `gold` of each `world.json` pad |
+| `treasure_displays`, `gold_rooms` | from `world.json`; `gold_rooms[].tower` becomes an index into `towers` (−1 if none) |
 
 ### data/walk.json
 
@@ -205,9 +208,28 @@ in the pipeline.
 |---|---|
 | `inputs` | {`progress.json`, `world.json`, `room-search sources`}: the SHA-256 (hex) of each input file's bytes, and of `src/walk/room-search.ts` with every `.ts` file it imports (the stored room answers depend on them). `tests/walk-data.test.ts` fails when they no longer match, or (with `WALK_FULL=1`) when the walk on the current code gives other roles, floors or room answers |
 | `roles.need` | {l, g}: one digit per level (`progress.json` `levels` order) and per Freezer (`freezers` order): 2 Required, 1 Required as one of several, 0 Optional ([Level roles (viewer)](VIEWER.md#level-roles-viewer)) |
-| `roles.bg` | {l, g}: per level and per Freezer, the indices into `freezers` of the Freezers it sits behind, ascending |
+| `roles.bg` | {g, s}: per Freezer and per Sign, the indices into `freezers` of the Freezers it sits behind, ascending; a Sign the build walk never reaches is null |
 | `floors` | {underworld, ground, sky}: per map layer key, zlib + base64 of one byte per map column (W × H = 29640, row-major, row 0 = north, as `map.json`): the highest z where the walk on the level data stands the hero there, plus 128; 0 where it stands him nowhere. The flood: gates as stored, no Freezer closed, every teleporter enabled and discovered, seeded at every Level_Entry, pad and Area_Pin. All values are whole numbers |
-| `rooms` | {searched, variants, answered, empty, states, capped, data}: the exhaustive push search of the screen rooms ([Room answers](VIEWER.md#room-answers)) on the level data, with every Freezer closed and, for a room with up to three Freezers around it, with each other combination of them open. `searched`: rooms with an object and a place for the hero to start, searched with every Freezer closed; `variants`: rooms searched with some Freezers open (a merged room counts once for each combination that makes it); `answered`: answers stored that have entries; `empty`: answers stored with no entries, for rooms with no start, nothing to tell or too many positions (a walker that finds such a room as the level data has it does not search it again); `states`: positions visited in all; `capped`: the first cell of each room (or merged room) that hit the cap of 200 000 positions (no entries). `data`: zlib + base64 of JSON, a list of rooms `[cells, attackers, entries, opens]`: `cells` the room's cells (grid cell keys, ascending, each as the difference from the one before, the first from 0); `attackers` the pids of the Monsters whose attacks cross the room or the cells beside it, with the Freezers of `opens` open; `entries` the answers, one per start and one for all starts together, each `[reps, bridges, holders, filled, dead]`: `reps` a cell of each start piece of ground; `bridges`, `holders` and `filled` flat lists of `key, count, values…` (per Rock its water cells, per Switch cell its objects, per Gem_Slot cell its Gems, a Rock, object or Gem by the cell the level data puts it in); `dead` the cells of the Monsters that die; `opens` the states of the Freezers around the room (the Freezers in its cells or beside them, above or below, ascending by index) the answer holds for, each a bit set with bit n set when the nth of those Freezers is open (0: all closed). A cell key is `(z + 80) × W × H + row × W + column` on the walk's grid |
+
+### data/level-cells.json
+
+For each map layer, the level whose door each standable cell is nearest to by walking, which the Reachable overlay
+([The page (viewer)](VIEWER.md#the-page-viewer)) shades by. `scripts/build-level-cells.ts` reads the floors of
+`walk.json` and runs after it. Per map layer key (underworld, ground, sky) it holds zlib + base64 of one little-endian
+u16 per map column (row-major, row 0 = north, as `floors`): the index into `progress.json` `levels` of the nearest level,
+0xFFFF where no door reaches the column. The search runs from every level's door at once, one step to a side at a time,
+over the cells that have a floor, wrapping at the map's edges. A step goes onto a cell that stands no higher than the one
+it leaves; a cell two doors reach at the same distance goes to the lower level index.
+
+### data/rooms.json
+
+The exhaustive push search of the screen rooms ([Room answers](VIEWER.md#room-answers)) on the level data, written by
+`scripts/build-walk.ts` beside `walk.json`; the scripts and the tests load it, the page does not. It is
+{searched, variants, answered, empty, states, capped, data}: `searched` the rooms searched with every Freezer closed,
+`variants` the rooms searched with some Freezers open, `answered` the answers stored that have entries, `empty` the
+answers stored with none, `states` the positions visited, `capped` the first cell of each room that hit the cap of
+200 000 positions. `data` is zlib + base64 of JSON, a list of rooms `[cells, attackers, entries, opens]` as
+`packRooms()` in `src/walk/room-answers.ts` packs them.
 
 ## The map images
 

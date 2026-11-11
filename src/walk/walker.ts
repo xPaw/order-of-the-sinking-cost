@@ -1,6 +1,6 @@
 // The walk model of one overworld state: the walker's grid, built step by step, and what the walker gives its callers
 // (VIEWER.md "The walk model (viewer)")
-import type { WorldCells } from '../data.ts';
+import type { WorldCells } from '../world-data.ts';
 import { latestFlag } from '../save.ts';
 import type { LatestValues } from '../save.ts';
 import type { ExistenceGroup, Position, Teleporter, World } from '../types.ts';

@@ -12,10 +12,10 @@ import { planAll } from '../src/model/plans.ts';
 import type { BaseProgress, ShownProgress } from '../src/model/progress.ts';
 import type { TowerProgress } from '../src/model/towers.ts';
 import type { LevelState, SignRule } from '../src/model/unlocking.ts';
-import type { WhyBlocked } from '../src/model/way-in.ts';
 import { level } from './fixtures.ts';
 
 // the sign table is read when requirements loads, so the gold Sign is in it from the start
+vi.mock('../src/world-data.ts', () => import('./world-data-mock.ts'));
 vi.mock('../src/data.ts', async () => {
     const schema = (await import('../data/schema.json')).default;
     const data = { signs: [{ pid: 90, gold: 2, gates: [0, 1], p: [0, 0, 0] }] };
@@ -114,20 +114,20 @@ function setup({ rooms = 3, achievements = 0n, activated = [], visited = [] }: S
     const tst = PROG.teleporters.map(() => ({ en: true, disc: false }));
     for (const room of visited) tst[PROG.gold_rooms[room].endpoint].disc = true;
     const signOk = (sign: SignRule) => !!sign.gold && visited.length >= sign.gold;
-    const blockedWhy = (): WhyBlocked => ({ gates: [], pad: [], via: [], viaTowers: [], mech: [] });
     const baseProgress: BaseProgress & { hidden: boolean[]; towerHidden: boolean[] } = {
         state,
         unlocks: state.map(() => ({ levels: [] })),
         wayIn,
-        wayInChains: state.map(() => null),
-        wayInFixed: new Set(),
-        why: state.map((levelState) => (levelState === 'blocked' ? blockedWhy() : null)),
         behind: wayIn.map((gates) => gates || []),
+        leads: [],
         access: state.map(() => null),
+        signFaced: [],
         signAccess: [],
         signWayIn: [],
         ice: [],
-        reach: null,
+        reachKnown: false,
+        doorReached: state.map(() => true),
+        layersReached: new Set(),
         lt: null,
         gateOpen: PROG.freezers.map(() => false),
         towers,

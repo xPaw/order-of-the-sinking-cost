@@ -10,9 +10,19 @@ declare module '*/progress.json' {
     export default progress;
 }
 
+declare module '*/world.json' {
+    const world: import('./types.ts').WorldFile;
+    export default world;
+}
+
 declare module '*/walk.json' {
     const walk: import('./types.ts').WalkFile;
     export default walk;
+}
+
+declare module '*/level-cells.json' {
+    const cells: Record<'underworld' | 'ground' | 'sky', string>;
+    export default cells;
 }
 
 // Vite's import.meta.glob, as the page uses it: the default exports of the matched files, loaded with the page

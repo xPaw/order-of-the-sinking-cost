@@ -67,7 +67,7 @@ export function showGatePanel(context: PanelContext, freezerIndex: number, how?:
     html += `<div class="h">Opens with${withMode}</div><div>${opensChips(context, freezer)}</div>`;
 
     let leadsAll: number[] = [];
-    if (!isOpen) leadsAll = progress.reach?.leads.get(freezerIndex) || [];
+    if (!isOpen) leadsAll = progress.leads[freezerIndex];
     const leads = leadsAll.filter((level) => !progress.hidden[level]);
 
     let plan = null;

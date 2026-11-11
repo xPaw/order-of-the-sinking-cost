@@ -13,6 +13,7 @@ import type { EndingStages } from '../src/types.ts';
 import { level, pad } from './fixtures.ts';
 
 // the sign table is read when requirements loads, so the two hub Signs are in it from the start
+vi.mock('../src/world-data.ts', () => import('./world-data-mock.ts'));
 vi.mock('../src/data.ts', async () => {
     const schema = (await import('../data/schema.json')).default;
     const data = {
@@ -158,15 +159,16 @@ function setup({
         state,
         unlocks: state.map(() => ({ levels: [] })),
         wayIn: state.map(() => null),
-        wayInChains: state.map(() => null),
-        wayInFixed: new Set(),
-        why: state.map(() => null),
         behind: state.map(() => []),
+        leads: [],
         access: state.map(() => null),
+        signFaced: [],
         signAccess: [],
         signWayIn: [],
         ice: [],
-        reach: null,
+        reachKnown: false,
+        doorReached: state.map(() => true),
+        layersReached: new Set(),
         lt: null,
         gateOpen: [...open, roomOpen],
         towers,

@@ -1,6 +1,6 @@
 // Which level needs and pad routes a save has met the needs of (VIEWER.md "Level needs and pad routes")
 import { PROG } from '../data.ts';
-import type { PadRoute, RouteNeed } from '../types.ts';
+import type { PadRoute, ProgressLevel, RouteNeed } from '../types.ts';
 
 /** What a save says about the things a route can ask for. */
 export interface NeedsView {
@@ -42,7 +42,60 @@ export function metPadRoutes(view: NeedsView): PadRoute[] {
     return (PROG.pad_routes || []).filter((route) => needsMet(route.needs, view));
 }
 
-/** Per level, whether its needs hold; undefined for a level with no needs in the data, which the walk decides. */
+/**
+ * Per level, whether it is reached by what its data lists: it is when the save entered it, or its needs hold and it is
+ * not frozen in a closed Freezer. Undefined for a level with no needs in the data.
+ */
+export function reachedByNeeds(
+    needsHold: ReadonlyArray<boolean | undefined>,
+    entered: readonly boolean[],
+    frozenIn: ReadonlyArray<number | undefined>,
+): Array<boolean | undefined> {
+    return PROG.levels.map((_, levelIndex) => {
+        const hold = needsHold[levelIndex];
+        if (hold === undefined) return undefined;
+        if (entered[levelIndex]) return true;
+        return hold && frozenIn[levelIndex] === undefined;
+    });
+}
+
+// whether a level's needs hold when a need on a level of its own `req` counts as met once that level is reached
+function doorNeedsMet(level: ProgressLevel, view: NeedsView, reached: readonly boolean[]): boolean {
+    const groups = level.needs ?? [];
+    return groups.every((group) =>
+        group.some((need) => {
+            if ('level' in need && level.req.includes(need.level) && reached[need.level]) return true;
+            return needMet(need, view);
+        }),
+    );
+}
+
+/** Per level, whether it is reached by its needs, and whether the hero can walk up to its door. */
+export interface NeedsReach {
+    /** Whether the save entered the level, or its needs hold and it is not frozen in a closed Freezer; true for a level with no needs in the data. */
+    reached: boolean[];
+    /** Whether the level is reached, or its needs hold with a need on a level of its own `req` counting once that level is reached. */
+    doorReached: boolean[];
+}
+
+/** Per level, the reach by its needs and the reach of its door. */
+export function needsReach(
+    view: NeedsView,
+    entered: readonly boolean[],
+    frozenIn: ReadonlyArray<number | undefined>,
+): NeedsReach {
+    const tableReach = reachedByNeeds(levelNeedsMet(view), entered, frozenIn);
+    const reached = tableReach.map((levelReached) => levelReached ?? true);
+    const doorReached = PROG.levels.map((level, levelIndex) => {
+        if (reached[levelIndex]) return true;
+        // the plain needs failed: only a need on a level of its own `req` can still be met
+        if (frozenIn[levelIndex] !== undefined || level.req.length === 0) return false;
+        return doorNeedsMet(level, view, reached);
+    });
+    return { reached, doorReached };
+}
+
+/** Per level, whether its needs hold; undefined for a level with no needs in the data. */
 export function levelNeedsMet(view: NeedsView): Array<boolean | undefined> {
     return PROG.levels.map((level) => {
         if (level.needs === undefined) return undefined;

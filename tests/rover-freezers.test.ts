@@ -7,6 +7,7 @@ import { NO_HISTORY, reachability } from '../src/walk/reachability.ts';
 // Three rows of 10 at z 0. Row 1: the pocket of level A at 0..2, water at 3 (surface 0), the far shore of level B at
 // 4..5, walls at 6, 8 and 9 (the grid wraps) and the hero at 7. Column 3 is water in rows 0 and 2 too and wall elsewhere in those rows. A
 // movable (30) at (1, 1, 0) is a Rover running north-south; Freezer 0 holds it.
+vi.mock('../src/world-data.ts', () => import('./world-data-mock.ts'));
 vi.mock('../src/data.ts', async () => {
     const SCHEMA = (await import('../data/schema.json')).default;
     const WIDTH = 10,

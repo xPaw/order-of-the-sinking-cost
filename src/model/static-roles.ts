@@ -1,8 +1,9 @@
 // Level roles from the walk on the level data (VIEWER.md "Level roles (viewer)"). Imported by scripts/build-walk.ts, so
 // it must not import src/walk-data.ts, which reads the file that script writes.
-import { PROG, WORLD } from '../data.ts';
+import { PROG } from '../data.ts';
 import type { Position } from '../types.ts';
-import { addTo, DIRS } from '../walk/cells.ts';
+import { WORLD } from '../world-data.ts';
+import { addTo, DIRS, STEP } from '../walk/cells.ts';
 import { ICE } from '../walk/freezers.ts';
 import { NO_HISTORY } from '../walk/reachability.ts';
 import { teleporterStatesOf } from '../walk/teleporters.ts';
@@ -13,7 +14,7 @@ import { optionCount } from './unlocking.ts';
 /**
  * Level roles (VIEWER.md "Level roles (viewer)"): the walk on the level data from a new game's start, opening the closed
  * Freezers on the edge of the reached cells in rounds. need: 2 Required, 1 Required as one of several, 0 Optional, per
- * level ('l') and Freezer ('g'); bg: the Freezers each sits behind.
+ * level ('l') and Freezer ('g'); bg: the Freezers each Freezer ('g') and Sign ('s') sits behind.
  */
 export function staticRoles(): StoredRoles | null {
     const levels = PROG.levels;
@@ -21,7 +22,7 @@ export function staticRoles(): StoredRoles | null {
     const start = PROG.fog?.start;
     if (!start?.hero || !PROG.world || !WORLD) return null;
 
-    const { flood, land, cellOf, neighbourOf, frozen, thaw, freeze, layerCells } = walker(
+    const { flood, land, cellOf, neighbourOf, fenced, frozen, thaw, freeze, layerCells } = walker(
         NO_HISTORY,
         teleporterStatesOf(null),
         freezers.map(() => true),
@@ -33,8 +34,38 @@ export function staticRoles(): StoredRoles | null {
     const inside = (cells: Set<number>, cell: number) => cells.has(cell) || cells.has(land(cell));
     const levelCells = levels.map((level) => cellOf(...level.p));
 
+    // a hero faces a Sign from a cell beside it with no Fence between, unless a closed Freezer holds the Sign's own cell
+    const signs = PROG.signs || [];
+    const signCells = signs.map((sign) => cellOf(...sign.p));
+    const signOwn = signCells.map((signCell) => frozen.get(signCell));
+    const signSpots = signCells.map((signCell): number[] => {
+        const spots: number[] = [];
+        if (signCell < 0) return spots;
+
+        for (let side = 0; side < STEP.length; side++) {
+            const [dx, dy] = STEP[side];
+            const spotCell = neighbourOf(signCell, dx, dy);
+            if (spotCell < 0 || fenced(signCell, side, spotCell)) continue;
+
+            spots.push(spotCell);
+        }
+        return spots;
+    });
+    const signGates = new Map<number, number[]>();
+
+    // the Freezers to open before a hero can face the Sign: the ones in `found`, and the one in the Sign's own cell
+    const signGatesOf = (signIndex: number, found: number[]): number[] => {
+        const gates = new Set(found);
+        const own = signOwn[signIndex];
+        if (own !== undefined) gates.add(own);
+        return [...gates].toSorted((first, second) => first - second);
+    };
+
     let front = new Set<number>();
     const reached = flood(seeds, null, front);
+    signSpots.forEach((spots, signIndex) => {
+        if (spots.some((spot) => inside(reached, spot))) signGates.set(signIndex, signGatesOf(signIndex, []));
+    });
     const levelGates = new Map<number, number[]>();
     const gatesBehindGate = new Map([...front].map((gate): [number, number[]] => [gate, []]));
 
@@ -77,6 +108,14 @@ export function staticRoles(): StoredRoles | null {
             if (levelGates.has(i) || !inside(roundCells, levelCells[i])) return;
             const reachingGates = roundGates.filter((gate) => inside(alone.get(gate)!.cells, levelCells[i]));
             levelGates.set(i, orRound(reachingGates));
+        });
+        signSpots.forEach((spots, signIndex) => {
+            if (signGates.has(signIndex) || !spots.some((spot) => inside(roundCells, spot))) return;
+
+            const reachingGates = roundGates.filter((gate) =>
+                spots.some((spot) => inside(alone.get(gate)!.cells, spot)),
+            );
+            signGates.set(signIndex, signGatesOf(signIndex, orRound(reachingGates)));
         });
         for (const frontGate of front) {
             if (gatesBehindGate.has(frontGate)) continue;
@@ -138,6 +177,7 @@ export function staticRoles(): StoredRoles | null {
     const behind = {
         l: levels.map((level, i) => sorted(levelGates.get(i))),
         g: freezers.map((freezer, freezerIndex) => sorted(gatesBehindGate.get(freezerIndex))),
+        s: signs.map((sign, signIndex) => signGates.get(signIndex) ?? null),
     };
 
     const need = { l: new Uint8Array(levels.length), g: new Uint8Array(freezers.length) };
@@ -194,5 +234,5 @@ export function staticRoles(): StoredRoles | null {
         for (const gate of sittingBehind) mark('g', gate, strong && sittingBehind.length === 1);
     }
 
-    return { need, bg: behind };
+    return { need, bg: { g: behind.g, s: behind.s } };
 }

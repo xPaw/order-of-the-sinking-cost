@@ -1,8 +1,9 @@
 // The needs of the levels past the orange light and the way to 4wcn_all_fast through the orange light above simultaneous_x, and what opens after it
 import { beforeAll, describe, expect, test } from 'vitest';
-import { PROG, worldReady } from '../src/data.ts';
+import { PROG } from '../src/data.ts';
+import { worldReady } from '../src/world-data.ts';
 import { computeProgress, setProgressCache } from '../src/model/progress.ts';
-import { syntheticCampaign } from './fixtures.ts';
+import { reachedByNeedsOf, syntheticCampaign } from './fixtures.ts';
 
 const SOLVED = 1;
 
@@ -10,12 +11,33 @@ function reachOf(solvedNames: string[], reachedNames: string[]): boolean[] {
     const { status, history } = syntheticCampaign({ rank: 1 });
     const levels = solvedNames.map((name) => ({ name, flags: SOLVED }));
     const progress = computeProgress({ ...status, levels }, history);
-    return reachedNames.map((name) => progress.reach!.level[PROG.levels.findIndex((level) => level.n === name)]);
+    const reached = reachedByNeedsOf(progress);
+    return reachedNames.map((name) => reached[PROG.levels.findIndex((level) => level.n === name)]);
 }
 
 beforeAll(async () => {
     await worldReady;
     setProgressCache(new WeakMap());
+});
+
+function doorsOf(solvedNames: string[], names: string[]): boolean[] {
+    const { status, history } = syntheticCampaign({ rank: 1 });
+    const levels = solvedNames.map((name) => ({ name, flags: SOLVED }));
+    const progress = computeProgress({ ...status, levels }, history);
+    return names.map((name) => progress.doorReached[PROG.levels.findIndex((level) => level.n === name)]);
+}
+
+describe('the doors of endpoint_holder3 and endpoint_holder4', () => {
+    const HOLDERS = ['endpoint_holder3', 'endpoint_holder4'];
+
+    test('with skip_purple_drop_alt solved both doors are reached, though endpoint_holder4 is not', () => {
+        expect(doorsOf(['skip_purple_drop_alt'], HOLDERS)).toEqual([true, true]);
+        expect(reachOf(['skip_purple_drop_alt'], HOLDERS)).toEqual([true, false]);
+    });
+
+    test('with skip_purple_drop_alt unsolved neither door is reached', () => {
+        expect(doorsOf([], HOLDERS)).toEqual([false, false]);
+    });
 });
 
 describe('the row 77 walk to simultaneous_x and its Surprise', () => {
@@ -30,11 +52,11 @@ describe('the row 77 walk to simultaneous_x and its Surprise', () => {
         }
     });
 
-    test('with torus_mirrors unsolved the walk reaches neither level', () => {
+    test('with torus_mirrors unsolved the table reaches neither level', () => {
         expect(reachOf([], LEVELS)).toEqual([false, false]);
     });
 
-    test('with torus_mirrors and simultaneous_x solved the walk reaches both, and nothing beyond them', () => {
+    test('with torus_mirrors and simultaneous_x solved the table reaches both, and nothing beyond them', () => {
         expect(reachOf(['torus_mirrors'], [...LEVELS, 'three_artifacts_v3'])).toEqual([true, false, false]);
         expect(reachOf(['torus_mirrors', 'simultaneous_x'], [...LEVELS, 'three_artifacts_v3'])).toEqual([
             true,
@@ -54,12 +76,12 @@ describe('the orange light above simultaneous_x', () => {
         expect(level?.needs).toEqual(needs);
     });
 
-    test('with one of the two levels solved the walk reaches neither level beyond the light', () => {
+    test('with one of the two levels solved the table reaches neither level beyond the light', () => {
         expect(reachOf(['three_artifacts_v3'], ARRIVALS)).toEqual([false, false]);
         expect(reachOf(['magnitudes_v3'], ARRIVALS)).toEqual([false, false]);
     });
 
-    test('with both solved the walk reaches 4wcn_all_fast, and the level it unlocks once it is solved', () => {
+    test('with both solved the table reaches 4wcn_all_fast, and the level it unlocks once it is solved', () => {
         expect(reachOf(['three_artifacts_v3', 'magnitudes_v3'], ARRIVALS)).toEqual([true, false]);
         expect(reachOf(['three_artifacts_v3', 'magnitudes_v3', '4wcn_all_fast'], ARRIVALS)).toEqual([true, true]);
     });

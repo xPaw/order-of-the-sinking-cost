@@ -9,6 +9,7 @@ import type { TeleporterState } from '../src/walk/teleporters.ts';
 // A row of 16 at z 0 on the implicit ground floor, which wraps around: the hero at 0..2, a closed Freezer 0 in column
 // 3, the empty pocket 4..6, the pocket 8..10 with level L (column 10) and the pocket 12..14 with level Q (column 13),
 // shut off from each other by walls at z 0 in columns 7, 11 and 15.
+vi.mock('../src/world-data.ts', () => import('./world-data-mock.ts'));
 vi.mock('../src/data.ts', async () => {
     const SCHEMA = (await import('../data/schema.json')).default;
     const WIDTH = 16,

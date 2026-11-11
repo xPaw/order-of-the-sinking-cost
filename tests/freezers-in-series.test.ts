@@ -7,6 +7,7 @@ import { level } from './fixtures.ts';
 
 // A row of 9 at z 0 on the implicit ground floor, between the high walls of columns 0 and 8: level A at 1, Freezer 0
 // at 2, an empty cell at 3, Freezer 1 at 4 and the hero at 6.
+vi.mock('../src/world-data.ts', () => import('./world-data-mock.ts'));
 vi.mock('../src/data.ts', async () => {
     const SCHEMA = (await import('../data/schema.json')).default;
     const WIDTH = 9,

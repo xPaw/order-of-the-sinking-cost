@@ -1,6 +1,7 @@
-// The page's data: the entity schema and data/progress.json, inlined at build time, and the world cells
+// The page's data: the entity schema and data/progress.json, inlined at build time
 import SCHEMA from '../data/schema.json' with { type: 'json' };
 import PROG from '../data/progress.json' with { type: 'json' };
+import type { MapLayerValues } from './types.ts';
 
 /** The bytes of a base64 string. */
 export function fromBase64(base64: string): Uint8Array<ArrayBuffer> {
@@ -17,33 +18,17 @@ export const inflate = async (base64: string): Promise<Uint8Array> => {
     return new Uint8Array(await new Response(inflated).arrayBuffer());
 };
 
-/** The world cells of data/world.json, unpacked: static solid voxels, Wall_Set group cells and water per column. */
-export interface WorldCells {
-    solid: Uint8Array;
-    groups: Uint8Array;
-    water: Uint8Array;
+/** The three zlib + base64 layer strings of a data file, inflated and each one decoded to its layer's values. */
+export async function inflateLayers<Value>(
+    values: MapLayerValues<string>,
+    decode: (bytes: Uint8Array) => Value,
+): Promise<MapLayerValues<Value>> {
+    const [underworld, ground, sky] = await Promise.all([
+        inflate(values.underworld),
+        inflate(values.ground),
+        inflate(values.sky),
+    ]);
+    return { underworld: decode(underworld), ground: decode(ground), sky: decode(sky) };
 }
-
-/** null until `worldReady` settles. */
-export let WORLD: WorldCells | null = null;
-
-async function unpackWorld(): Promise<void> {
-    const world = PROG.world;
-    if (!world) return;
-
-    try {
-        const [solid, groups, water] = await Promise.all([
-            inflate(world.solid),
-            inflate(world.group_cells),
-            inflate(world.water),
-        ]);
-        WORLD = { solid, groups, water };
-    } catch (error) {
-        console.error('world data', error);
-    }
-}
-
-/** Settles once the world cells are unpacked (or failed to be). */
-export const worldReady: Promise<void> = unpackWorld();
 
 export { SCHEMA, PROG };

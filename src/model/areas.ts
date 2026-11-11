@@ -3,7 +3,7 @@
 import { PROG } from '../data.ts';
 import { latestFlag, latestOf } from '../save.ts';
 import type { History } from '../save.ts';
-import type { Area, ProgressLevel } from '../types.ts';
+import type { Area, AreaBox, ProgressLevel } from '../types.ts';
 
 /**
  * An area's name as the game shows it: its `area_*` localization text, which the data build stores as `display`, with
@@ -29,6 +29,16 @@ export function activePins(history?: History | null): Set<number> {
     return pinsOn;
 }
 
+/** A vector turned by a unit quaternion (x, y, z, w). */
+function rotate(vector: number[], quaternion: AreaBox['q']): number[] {
+    const [qx, qy, qz, qw] = quaternion;
+    const [vx, vy, vz] = vector;
+    const tx = 2 * (qy * vz - qz * vy);
+    const ty = 2 * (qz * vx - qx * vz);
+    const tz = 2 * (qx * vy - qy * vx);
+    return [vx + qw * tx + (qy * tz - qz * ty), vy + qw * ty + (qz * tx - qx * tz), vz + qw * tz + (qx * ty - qy * tx)];
+}
+
 /**
  * The area the hero stands in: of the local_area boxes containing the point, those whose pin is activated, the lowest
  * float_parameter first; a box wraps with the world in x and y (`w`) and is rotated by its quaternion.
@@ -52,16 +62,8 @@ export function heroAreaAt(position: number[] | null | undefined, pinsOn: Set<nu
                 }
             }
 
-            const [qx, qy, qz, qw] = [-box.q[0], -box.q[1], -box.q[2], box.q[3]];
-            const [vx, vy, vz] = offset;
-            const tx = 2 * (qy * vz - qz * vy);
-            const ty = 2 * (qz * vx - qx * vz);
-            const tz = 2 * (qx * vy - qy * vx);
-            const local = [
-                vx + qw * tx + (qy * tz - qz * ty),
-                vy + qw * ty + (qz * tx - qx * tz),
-                vz + qw * tz + (qx * ty - qy * tx),
-            ];
+            const inverse: AreaBox['q'] = [-box.q[0], -box.q[1], -box.q[2], box.q[3]];
+            const local = rotate(offset, inverse);
             const inside = local.every((value, axis) => {
                 const scaled = box.s[axis] ? value / box.s[axis] : value;
                 return Math.abs(scaled) - box.e[axis] <= 0;

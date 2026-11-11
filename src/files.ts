@@ -1,5 +1,6 @@
 // The save files given to the page, by path, and the campaigns they make up (SAVES.md "Files and versions")
 import { DEMO_STATUS, demoHistory } from './demo-save.ts';
+import { levelCellsReady } from './level-cells.ts';
 import { walkReady } from './walk-data.ts';
 import { apolloDate } from './util.ts';
 import { parseHistory, parseStatus } from './save.ts';
@@ -130,7 +131,7 @@ export async function addFiles(list: SaveFile[]): Promise<void> {
                 entry.buf = new Uint8Array(await entry.file!.arrayBuffer());
             }),
     );
-    await walkReady;
+    await Promise.all([walkReady, levelCellsReady]);
 
     for (const entry of state.files.values()) {
         if (!entry.parsed && !entry.error) parseEntry(entry);
@@ -171,7 +172,7 @@ export const realFiles = (): SaveEntry[] => [...state.files.values()].filter((en
 export async function showDemo(): Promise<void> {
     if (realFiles().some(isStatus)) return;
 
-    await walkReady;
+    await Promise.all([walkReady, levelCellsReady]);
     if (realFiles().some(isStatus) || state.camp != null) return;
 
     const demoFiles: Array<[string, Status | DemoStatus | History]> = [
