@@ -1134,7 +1134,7 @@ export const LEVEL_TABLE: Record<string, LevelRow> = {
 
     // Partial Resets
     easy_reset_small: { needs: [[{ level: 'wrap_music' }]] },
-    chain_reaction: { needs: [[{ level: 'easy_reset_small' }]] },
+    chain_reaction: { needs: [[{ level: 'smash_midskip_simpler4' }]] },
     falling_button: { needs: [[{ level: 'easy_reset_small' }]] },
     reset_mirror: { needs: [[{ level: 'easy_reset_small' }]] },
     wrong_reset: { needs: [[{ level: 'reset_mirror' }]] },
