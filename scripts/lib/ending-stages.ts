@@ -141,7 +141,8 @@ const ENDING_SOURCES: EndingSource[] = [
                 done: { rule: 'pads', pads: [LOW_HUB_MAJOR_PAD] },
                 seen: [LOW_HUB_MAJOR_PAD],
             },
-            // the eight rooms of the set in Exit Low, done once their exit Freezers are open
+            // the eight rooms of the set in Exit Low, done once their exit Freezers are open; the pipeline room also
+            // once end3_pipeline_aesthetics is solved
             {
                 name: { area: 'area_u_exit_low' },
                 done: {
@@ -154,13 +155,15 @@ const ENDING_SOURCES: EndingSource[] = [
                         { rule: 'freezers', freezers: [115520818] },
                         { rule: 'freezers', freezers: [115520928] },
                         { rule: 'solved', level: 'environment_art_objects' },
-                        { rule: 'freezers', freezers: [115589257, 115589258, 115589259, 115589260, 115589263] },
+                        {
+                            rule: 'all',
+                            all: [
+                                { rule: 'freezers', freezers: [115589257, 115589258, 115589259, 115589260, 115589263] },
+                                { rule: 'solved', level: 'end3_pipeline_aesthetics' },
+                            ],
+                        },
                     ],
                 },
-            },
-            {
-                name: { level: 'end3_pipeline_aesthetics' },
-                done: { rule: 'solved', level: 'end3_pipeline_aesthetics' },
             },
         ],
     },
