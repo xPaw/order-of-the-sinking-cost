@@ -31,6 +31,16 @@ export function findLabel(kind: FindKind): string {
 
 export const isFindKind = (kind: string): kind is FindKind => FIND_KINDS.some(([each]) => each === kind);
 
+/** The Credits entry, listed beside the kinds of mark but on no map layer: the `intro` level's finds. */
+export const CREDITS_ENTRY = 'credits';
+
+export const CREDITS_LABEL = 'Credits';
+
+/** What a Find on the map row lists: a kind of mark, or the Credits entry. */
+export type FindEntry = FindKind | typeof CREDITS_ENTRY;
+
+export const isFindEntry = (kind: string): kind is FindEntry => kind === CREDITS_ENTRY || isFindKind(kind);
+
 /**
  * The layer Find on the map counts for the goal shown: for an ending and its stages, the layer of the level that
  * carries the ending's achievement; null (every layer) for the other goals.

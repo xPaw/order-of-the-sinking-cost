@@ -7,6 +7,7 @@ import { hooks } from '../shared.ts';
 import type { PanelKey, PanelKind } from '../shared.ts';
 import { overlayOn } from '../map/map-html.ts';
 import type { SelectHow } from '../map/map-view.ts';
+import { isFindKind } from '../model/find-kinds.ts';
 import { mapLayerOf } from '../model/layers.ts';
 import { revealLevel, syncSide } from '../sidebar.ts';
 import { findListShown } from '../sidebar/find.ts';
@@ -243,7 +244,7 @@ function onPageClick(context: PanelContext, event: Event): void {
         let item: FindItem | undefined;
         if (kind === '') {
             item = cageItemOf(context, data.findItem);
-        } else {
+        } else if (isFindKind(kind)) {
             item = findItemOf(context, kind, data.findItem);
         }
 

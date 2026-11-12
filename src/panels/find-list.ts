@@ -5,8 +5,11 @@ import type { PanelKey } from '../shared.ts';
 import { iconHtml } from '../map/icons.ts';
 import type { IconName } from '../map/icons.ts';
 import type { MapOptions, MapOverlay, MapTower } from '../map/map-view.ts';
-import { findLabel, findLayerOf, inFindLayer } from '../model/find-kinds.ts';
-import type { FindKind } from '../model/find-kinds.ts';
+import { levelIconName } from '../map/level-icons.ts';
+import type { LevelIconState } from '../map/level-icons.ts';
+import type { CreditsChain } from '../model/credits.ts';
+import { CREDITS_ENTRY, CREDITS_LABEL, findLabel, findLayerOf, inFindLayer } from '../model/find-kinds.ts';
+import type { FindEntry, FindKind } from '../model/find-kinds.ts';
 import { areaName } from '../model/areas.ts';
 import { isDoorway } from '../model/freezer-names.ts';
 import { AREA_LAYERS, mapLayerOf } from '../model/layers.ts';
@@ -184,10 +187,12 @@ function rowHtml(context: PanelContext, item: FindItem, tab: boolean, note = '')
     return `<button class="plain rr fi" ${attributes}>${iconHtml(item.icon, iconClass)}${name}</button>`;
 }
 
+const groupHeadHtml = (title: string, count: number): string =>
+    `<div class="rg">${title} <span class="c muted">· ${count}</span></div>`;
+
 function groupHtml(context: PanelContext, title: string, items: FindItem[], first: boolean): string {
-    const head = `<div class="rg">${title} <span class="c muted">· ${items.length}</span></div>`;
     const rows = items.map((item, index) => rowHtml(context, item, first && index === 0));
-    return head + rows.join('');
+    return groupHeadHtml(title, items.length) + rows.join('');
 }
 
 // where a Sign is: its area while that area is shown, else the nearest level not under fog; empty for none
@@ -257,30 +262,94 @@ export function rankCageGroupHtml(context: PanelContext, first: boolean): string
     return head + rows.join('');
 }
 
-/** Draws the list of a kind into the results column's heading, chips and rows. */
-export function drawFindList(context: PanelContext, kind: FindKind): void {
+// the heading and the Done chip of a list of one entry of Find on the map
+function drawFindHead(context: PanelContext, label: string, todoCount: number, doneCount: number): void {
     const filters = context.filters;
-    const items = findItemsOf(context, kind);
-    const todo = items.filter((item) => !item.done);
-    const done = items.filter((item) => item.done);
-
     const back = '<button class="plain lnk" data-find-back title="Back to the goal\'s levels">‹ Back</button>';
-    const left = `<b>${escapeHtml(findLabel(kind))}</b> · ${todo.length} left`;
+    const left = `<b>${escapeHtml(label)}</b> · ${todoCount} left`;
     setHtml($('#pgCount'), `<span class="fh">${back}<span>${left}</span></span>`);
 
     let pressedClass = '';
     if (filters.findDone) pressedClass = ' on';
 
     let disabled = '';
-    if (!filters.findDone && !done.length) disabled = ' disabled';
+    if (!filters.findDone && !doneCount) disabled = ' disabled';
 
     const chipAttributes = `data-find-done aria-pressed="${filters.findDone}"${disabled}`;
-    const count = `<span class="n">${done.length}</span>`;
+    const count = `<span class="n">${doneCount}</span>`;
     setHtml($('#pgChips'), `<button class="plain chip st${pressedClass}" ${chipAttributes}>Done ${count}</button>`);
+}
+
+/** Draws the list of a kind, or of the Credits entry, into the results column's heading, chips and rows. */
+export function drawFindList(context: PanelContext, kind: FindEntry): void {
+    if (kind === CREDITS_ENTRY) {
+        drawCreditsList(context);
+        return;
+    }
+
+    const filters = context.filters;
+    const items = findItemsOf(context, kind);
+    const todo = items.filter((item) => !item.done);
+    const done = items.filter((item) => item.done);
+    drawFindHead(context, findLabel(kind), todo.length, done.length);
 
     let html = '';
     if (todo.length) html += groupHtml(context, 'Still to do', todo, true);
     if (filters.findDone && done.length) html += groupHtml(context, 'Done', done, !todo.length);
+    if (!html) html = `<div class="none muted">Nothing left to find here.</div>`;
+    setHtml($('#pgRows'), html);
+}
+
+// a voice log of the Credits list: nothing on the map to open, so it is no button
+function creditsLogHtml(heard: boolean): string {
+    if (heard)
+        return `<div class="rr fi">${iconHtml('voice-log', 'dn')}<span class="nm">Voice log · heard</span></div>`;
+    return `<div class="rr fi">${iconHtml('voice-log')}<span class="nm">Voice log · not heard</span></div>`;
+}
+
+// a chain of levels as a numbered path, each step a chip with its pad and, beside it, its state
+function creditsChainHtml(chain: CreditsChain): string {
+    const steps = chain.steps.map((step, index) => {
+        let chipClass = 'chip';
+        let iconState: LevelIconState = 'locked';
+        let word = 'not found';
+        if (step.status === 'entered') {
+            chipClass = 'chip open';
+            iconState = 'available';
+            word = 'entered';
+        } else if (step.status === 'solved') {
+            chipClass = 'chip done';
+            iconState = 'solved';
+            word = 'solved';
+        }
+
+        const icon = iconHtml(levelIconName({ glow: 'green' }, iconState));
+        const chip = `<span class="${chipClass}">${icon}${escapeHtml(step.label)}</span>`;
+        return `<li class="pth"><b class="stp">${index + 1}</b><div>${chip}<span class="muted">${word}</span></div></li>`;
+    });
+    return `<ol class="steps">${steps.join('')}</ol>`;
+}
+
+// the Credits list's voice logs and chains as rows, each with whether it is done
+function creditsRows(context: PanelContext): Array<{ done: boolean; html: string }> {
+    const { heard, chains } = context.model.credits;
+    const rows = heard.map((done) => ({ done, html: creditsLogHtml(done) }));
+    for (const chain of chains) rows.push({ done: chain.done, html: creditsChainHtml(chain) });
+    return rows;
+}
+
+// the Credits list into the results column's heading, chips and rows
+function drawCreditsList(context: PanelContext): void {
+    const rows = creditsRows(context);
+    const todo = rows.filter((row) => !row.done);
+    const done = rows.filter((row) => row.done);
+    drawFindHead(context, CREDITS_LABEL, todo.length, done.length);
+
+    let html = '';
+    if (todo.length) html += groupHeadHtml('Still to do', todo.length) + todo.map((row) => row.html).join('');
+    if (context.filters.findDone && done.length) {
+        html += groupHeadHtml('Done', done.length) + done.map((row) => row.html).join('');
+    }
     if (!html) html = `<div class="none muted">Nothing left to find here.</div>`;
     setHtml($('#pgRows'), html);
 }

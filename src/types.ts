@@ -130,6 +130,27 @@ export interface VoiceLog {
     d?: number;
 }
 
+/** data/progress.json `credits`: what the `intro` level holds that the overworld does not. */
+export interface Credits {
+    /** The `intro` level's voice logs. */
+    logs: CreditsLog[];
+    /** The `intro` Level_Entries as chains, each in unlock order from a level nothing opens. */
+    chains: CreditsLevel[][];
+}
+
+/** A voice log of the `intro` level: its pid and the ending achievement that gates it (none when open from the start). */
+export interface CreditsLog {
+    pid: number;
+    e?: string;
+}
+
+/** A level of a Credits chain: its name, the ending achievement that gates it, and 1 when an overworld level has it too. */
+export interface CreditsLevel {
+    n: string;
+    e?: string;
+    o?: number;
+}
+
 /** One row of data/progress.json `view_givers`: a map scroll. */
 export interface ViewGiver {
     pid: number;
@@ -577,6 +598,7 @@ export interface Progress {
     signs: Sign[];
     treasures: number;
     voice_logs: VoiceLog[];
+    credits: Credits;
     view_givers: ViewGiver[];
     areas: Area[];
     fog: ProgressFog;

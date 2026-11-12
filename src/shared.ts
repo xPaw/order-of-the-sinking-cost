@@ -1,7 +1,7 @@
 // State shared across modules; the ones other modules change have setters
 import type { SaveEntry } from './files.ts';
 import type { OverlayKind } from './map/map-html.ts';
-import type { FindKind } from './model/find-kinds.ts';
+import type { FindEntry } from './model/find-kinds.ts';
 import type { ProgressModel } from './model/progress-model.ts';
 
 /** A remembered setting in localStorage (or the Storage named by `store`); null when storage is unavailable. */
@@ -58,7 +58,7 @@ export interface ProgressFilters {
     show: 'todo' | 'solved' | 'all';
     tower: string;
     area: string;
-    find: FindKind | '';
+    find: FindEntry | '';
     findDone: boolean;
 }
 
@@ -128,7 +128,7 @@ export interface Hooks {
     area: (() => void) | null;
     hero: (() => void) | null;
     overlay: ((kind: OverlayKind) => void) | null;
-    find: ((kind: FindKind) => void) | null;
+    find: ((kind: FindEntry) => void) | null;
     list: (() => void) | null;
     panelOpen: (() => boolean) | null;
     reveal: (() => void) | null;

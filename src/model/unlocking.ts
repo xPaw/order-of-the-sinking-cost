@@ -18,7 +18,8 @@ export function isEntered(state: LevelState): boolean {
 
 const statusFlagCache = new WeakMap<object, Map<string, number>>();
 
-function statusFlags(status: { levels: Status['levels'] }): Map<string, number> {
+/** The flags of each level in the status's level table, by level name. */
+export function statusFlags(status: { levels: Status['levels'] }): Map<string, number> {
     let flags = statusFlagCache.get(status);
     if (!flags) {
         flags = new Map(status.levels.map((level) => [level.name, level.flags]));
@@ -37,8 +38,11 @@ export function levelFlagsOf(status: { levels: Status['levels'] }): LevelFlags {
     return PROG.levels.map((level) => flags.get(level.n));
 }
 
+/** Whether a level's status flags say it is solved. */
+export const flagsSolved = (flags: number | undefined): boolean => ((flags ?? 0) & 1) === 1;
+
 export function isSolved(levelFlags: LevelFlags, level: number): boolean {
-    return ((levelFlags[level] ?? 0) & 1) === 1;
+    return flagsSolved(levelFlags[level]);
 }
 
 export function isPartlySolved(levelFlags: LevelFlags, level: number): boolean {

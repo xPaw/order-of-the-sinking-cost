@@ -14,7 +14,7 @@ import {
 } from './shared.ts';
 import type { ProgressFilters } from './shared.ts';
 import { baseName, campaignOf, campaigns, campaignLabel, realFiles, statusEntry } from './files.ts';
-import { isFindKind } from './model/find-kinds.ts';
+import { isFindEntry, isFindKind } from './model/find-kinds.ts';
 import { RANKS } from './model/progress.ts';
 import type { ProgressModel } from './model/progress-model.ts';
 import { CHEVRON } from './map/icons.ts';
@@ -300,7 +300,7 @@ function onFindClick(event: Event): void {
     }
 
     const findKind = target.closest<HTMLElement>('[data-find]')?.dataset.find;
-    if (findKind !== undefined && isFindKind(findKind)) hooks.find?.(findKind);
+    if (findKind !== undefined && isFindEntry(findKind)) hooks.find?.(findKind);
 }
 
 export function renderSide(model?: ProgressModel | null): void {

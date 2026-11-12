@@ -6,7 +6,8 @@ import type { ProgressFilters } from '../shared.ts';
 import { findSectionOpen } from './sections.ts';
 import { CHEVRON, checkIcon, fogIcon, OVERLAY_ICONS } from '../map/icons.ts';
 import { overlayOn } from '../map/map-html.ts';
-import { findLabel, findLayerOf, FIND_KINDS, inFindLayer } from '../model/find-kinds.ts';
+import type { CreditsView } from '../model/credits.ts';
+import { CREDITS_ENTRY, CREDITS_LABEL, findLabel, findLayerOf, FIND_KINDS, inFindLayer } from '../model/find-kinds.ts';
 import type { FindKind } from '../model/find-kinds.ts';
 import { layerName } from '../model/layers.ts';
 import type { ProgressModel } from '../model/progress-model.ts';
@@ -61,6 +62,25 @@ function findRowHtml(
     return `<div class="${className}">${iconButton}${nameButton}</div>`;
 }
 
+// the Credits row: a count and a list like the others, with no kind of mark to show on the map; it is left out while
+// nothing is listed
+function creditsRowHtml(credits: CreditsView, listed: boolean): string {
+    const { done, total } = credits;
+    if (total <= 0) return '';
+
+    let className = 'sr on';
+    let check = '';
+    if (done >= total) {
+        className += ' done';
+        check = checkIcon;
+    }
+
+    const count = `<span class="cnt">${check}${done} / ${total}</span>`;
+    const nameAttributes = `data-find="${CREDITS_ENTRY}" aria-pressed="${listed}" title="List them"`;
+    const name = `<button class="plain sn" ${nameAttributes}><span class="n">${CREDITS_LABEL}</span>${count}</button>`;
+    return `<div class="${className}"><span class="si">${OVERLAY_ICONS.logs}</span>${name}</div>`;
+}
+
 // the share of the map uncovered, with the cleared screens per layer in its tooltip; a count, not a kind of mark
 function uncoveredRowHtml(model: ProgressModel, scope: string | null): string {
     const { screens, byLayer } = uncoveredOf(model.fog, model.known, scope);
@@ -104,6 +124,9 @@ export function sideFindHtml(model: ProgressModel): string {
         }
         rows.push(findRowHtml(kind, label, count, byLayer, findListShown(model.F, kind), note));
     }
+
+    // the intro level is no layer, so a goal of one layer leaves it out
+    if (scope === null) rows.push(creditsRowHtml(model.credits, findListShown(model.F, CREDITS_ENTRY)));
 
     rows.push(uncoveredRowHtml(model, scope));
 

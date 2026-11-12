@@ -1259,21 +1259,36 @@ main > .mapbox {
     border-radius: var(--r1);
 }
 /* the unlock path: a numbered badge per step, joined by a line down to the next one */
-.detail .steps {
+.detail .steps,
+.rows .steps {
     display: grid;
     gap: var(--s2);
     margin: 0;
     padding: 0;
     list-style: none;
 }
-.detail .pth {
+.rows .steps {
+    padding: var(--s1) var(--s2) var(--s2);
+}
+.detail .pth,
+.rows .pth {
     position: relative;
     display: grid;
     grid-template-columns: 20px minmax(0, 1fr);
     column-gap: var(--s2);
     align-items: start;
 }
-.detail .pth:not(:last-child)::before {
+.rows .pth .chip {
+    padding: 3px var(--s2);
+    line-height: 20px;
+}
+.rows .pth .chip .ico {
+    width: 20px;
+    height: 20px;
+    vertical-align: top;
+}
+.detail .pth:not(:last-child)::before,
+.rows .pth:not(:last-child)::before {
     content: '';
     position: absolute;
     top: 28px;
@@ -1283,7 +1298,8 @@ main > .mapbox {
     border-radius: 1px;
     background: var(--line);
 }
-.detail .stp {
+.detail .stp,
+.rows .stp {
     width: 20px;
     height: 20px;
     margin-top: 4px;

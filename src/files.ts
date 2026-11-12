@@ -35,13 +35,13 @@ export interface StatusEntry extends SaveEntry {
     parsed: Status | DemoStatus | null;
 }
 
-/** An overworld.history. */
+/** An overworld.history or an intro.history. */
 export interface HistoryEntry extends SaveEntry {
     parsed: History | null;
 }
 
-/** Only the campaign status and the overworld history (for fog) are read. */
-export const SAVE_RE = /(\.sokoban_status|(^|\/)overworld\.history)$/i;
+/** Only the campaign status and the overworld and intro histories are read. */
+export const SAVE_RE = /(\.sokoban_status|(^|\/)(overworld|intro)\.history)$/i;
 
 /** The path of a file given to the page, with forward slashes. */
 export function relPath(file: SaveFile): string {
@@ -242,10 +242,13 @@ function newestCampaign(camps: string[]): string | null {
 /** The name a campaign shows under; saves in no folder read "Saves". */
 export const campaignLabel = (camp: string): string => camp || 'Saves';
 
-/** The overworld history of a campaign. */
-export const historyEntry = (camp: string): HistoryEntry | undefined =>
-    [...state.files.values()]
-        .filter(isHistory)
-        .find(
-            (entry) => entry.parsed && campaignOf(entry.path) === camp && baseName(entry.path) === 'overworld.history',
-        );
+/** The history of a campaign's level (the overworld unless the intro is named). */
+export function historyEntry(camp: string, level: 'overworld' | 'intro' = 'overworld'): HistoryEntry | undefined {
+    const fileName = `${level}.history`;
+    for (const entry of state.files.values()) {
+        if (!isHistory(entry) || !entry.parsed) continue;
+        if (campaignOf(entry.path) === camp && baseName(entry.path) === fileName) return entry;
+    }
+
+    return undefined;
+}

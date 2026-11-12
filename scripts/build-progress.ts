@@ -10,6 +10,9 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import type { GlowGroup } from '../src/map/level-icons.ts';
 import type {
     Area,
+    Credits,
+    CreditsLevel,
+    CreditsLog,
     EndgameWayIn,
     Freezer,
     FreezerSign,
@@ -34,6 +37,7 @@ import type {
 } from '../src/types.ts';
 import type { FogFile, LevelAreasFile, LevelEntry, LevelsFile, PlacedEntity } from './lib/data-files.ts';
 import { allHeldObjects, cellKey, heldByCages } from './lib/cage-contents.ts';
+import { creditsEnding, ENDING_EXCEPTIONS } from './lib/credits-gates.ts';
 import { buildEndingStages } from './lib/ending-stages.ts';
 import { flagsOf, get, positionOf, refOf, vectorOf, type Fields } from './lib/fields.ts';
 import { resolveLevelTable } from './lib/level-needs.ts';
@@ -204,6 +208,72 @@ function buildLevels(overworld: Overworld): { levels: ProgressLevel[]; index: Ma
         };
     });
     return { levels, index };
+}
+
+// What the `intro` level holds beyond the overworld: its voice logs, and its Level_Entries as chains in unlock order
+// (each opens the next through `unlocked_by_id`), the levels no overworld Level_Entry has marked `o`; each find carries
+// the ending achievement that gates it
+function buildCredits(levelData: LevelsFile, overworld: Overworld): Credits {
+    const introLevel = levelData.levels.find((level) => level.name === 'intro');
+    if (!introLevel) throw new Error('data/levels.json has no intro level');
+
+    const intro = introLevel.entities;
+    const overworldNames = new Set(
+        entitiesOf(overworld, 'Level_Entry').map((entry) => get(entry.fields, 'level_name', '')),
+    );
+
+    const entries = entitiesOf(intro, 'Level_Entry');
+    const openedBy = new Map<number, PlacedEntity[]>();
+    const roots: PlacedEntity[] = [];
+    for (const entry of entries) {
+        const opener = refOf(entry.fields.unlocked_by_id);
+        if (!opener) {
+            roots.push(entry);
+            continue;
+        }
+
+        const opened = openedBy.get(opener) ?? [];
+        opened.push(entry);
+        openedBy.set(opener, opened);
+    }
+
+    const chains: CreditsLevel[][] = [];
+    const findNames = new Set<string>();
+    for (const root of roots) {
+        const chain: CreditsLevel[] = [];
+        let counted = false;
+        let entry: PlacedEntity | undefined = root;
+        while (entry) {
+            const name = get(entry.fields, 'level_name', '');
+            if (overworldNames.has(name)) {
+                chain.push({ n: name, o: 1 });
+            } else {
+                chain.push({ n: name, e: creditsEnding(name) });
+                findNames.add(name);
+                counted = true;
+            }
+
+            const opened: PlacedEntity[] = openedBy.get(entry.pid) ?? [];
+            if (opened.length > 1) throw new Error(`intro level ${name} opens more than one level`);
+            entry = opened[0];
+        }
+
+        if (counted) chains.push(chain);
+    }
+
+    const logs: CreditsLog[] = [];
+    for (const log of entitiesOf(intro, 'Voice_Log')) {
+        const name = get(log.fields, 'name', '');
+        findNames.add(name);
+        logs.push({ pid: log.pid, e: creditsEnding(name) });
+    }
+
+    // a renamed find must not fall back to the default ending unnoticed
+    for (const name of ENDING_EXCEPTIONS.keys()) {
+        if (!findNames.has(name)) throw new Error(`credits-gates.ts names a find that intro does not have: ${name}`);
+    }
+
+    return { logs, chains };
 }
 
 function buildTowers(pkg: Package, raw: RawEntities, overworld: Overworld): Tower[] {
@@ -662,6 +732,7 @@ function main(): void {
             d: flag(Boolean(log.fields.played)),
         };
     });
+    out.credits = buildCredits(levelData, overworld);
     out.view_givers = packageEntities(pkg, raw, 'View_Giver').map((giver): ViewGiver => {
         const p = roundedPosition(giver.fields);
         return { pid: giver.pid, p, l: layerOf(p[2]) };

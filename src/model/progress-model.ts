@@ -4,12 +4,16 @@ import { PROG } from '../data.ts';
 import { historyEntry, statusEntry } from '../files.ts';
 import { fogOf, NO_FOG } from '../fog.ts';
 import type { Fog } from '../fog.ts';
+import { latestOf } from '../save.ts';
+import type { LatestValues } from '../save.ts';
 import { filtersOf, revealedOf, spoilersHidden } from '../shared.ts';
 import type { ProgressFilters } from '../shared.ts';
 import type { DemoStatus, Status } from '../status-file.ts';
 import type { AreaPinRow, GoldRoom, ProgressLevel, Teleporter, ViewGiver, VoiceLog } from '../types.ts';
 import { achievementRules, ENDINGS, hasAchievement } from './achievements.ts';
 import { activePins, areaName, heroAreaAt, levelAreaOf } from './areas.ts';
+import { creditsOf } from './credits.ts';
+import type { CreditsView } from './credits.ts';
 import { goalsView } from './goals-view.ts';
 import type { EndingStatus, GoalLevel, GoalView } from './goals-view.ts';
 import { FOG_LAYER_KEYS, mapLayerOf, wrapDelta } from './layers.ts';
@@ -97,6 +101,8 @@ export interface ProgressModel {
     treasures: TreasureTotals;
     stats: TotalsStats;
     marks: TotalsMarks;
+    /** The Credits entry of Find on the map, which has no place on the map. */
+    credits: CreditsView;
     readySignLayers: Array<string | undefined>;
     /** The layers the fog has uncovered; null when nothing is hidden. */
     known: string[] | null;
@@ -162,6 +168,12 @@ export function progressModel(camp: string): ProgressModel {
     // the layers the fog has uncovered; null when nothing is hidden
     const known = hide ? fog.knownLayers() : null;
     const totals = totalsOf({ status, progress: shownProgress, hide, shownAt, known, towerHidden, pinsOn });
+
+    // the intro level's own history, which the overworld's does not hold
+    const introHistory = historyEntry(camp, 'intro')?.parsed;
+    let introLatest: LatestValues | null = null;
+    if (introHistory) introLatest = latestOf(introHistory);
+    const credits = creditsOf(status, introLatest, hide);
 
     // signs: the ones that open gates and the tower status signs; a status sign of a tower under fog is left out
     const allSigns = PROG.signs || [];
@@ -357,6 +369,7 @@ export function progressModel(camp: string): ProgressModel {
         treasures: totals.treasures,
         stats: totals.stats,
         marks: totals.marks,
+        credits,
         readySignLayers: totals.readySignLayers,
         known,
         hero,
