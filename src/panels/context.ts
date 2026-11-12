@@ -207,12 +207,18 @@ export class PanelContext {
     listedLevels(): number[] {
         if (!this.listsByName()) return this.goalIds.filter((levelIndex) => this.match(levelIndex));
 
-        const found: number[] = [];
+        const named: number[] = [];
+        const unnamed: number[] = [];
         this.levels.forEach((_level, levelIndex) => {
-            if (this.match(levelIndex)) found.push(levelIndex);
+            if (!this.match(levelIndex)) return;
+
+            if (this.progress.nameHidden[levelIndex]) unnamed.push(levelIndex);
+            else named.push(levelIndex);
         });
 
-        return found.toSorted((first, second) => compareText(this.levels[first].n, this.levels[second].n));
+        // the order of the hidden names would give them away: they follow the named levels in the data's order
+        const byName = named.toSorted((first, second) => compareText(this.levels[first].n, this.levels[second].n));
+        return [...byName, ...unnamed];
     }
 
     // a level of the goal, which the list shows
@@ -257,7 +263,9 @@ export class PanelContext {
         panelKeep[this.camp] = key;
         this.current = key;
 
-        setHash(panelHash(key, this));
+        // the address names a level by its name, so a level with a hidden name leaves it empty
+        if (key[0] === 'level' && this.progress.nameHidden[key[1]]) setHash('');
+        else setHash(panelHash(key, this));
     }
 
     open([kind, id]: PanelKey, how?: SelectHow): void {

@@ -13,7 +13,7 @@ import { refreshSideFind, syncSide } from '../sidebar.ts';
 import { refreshSideGoals } from '../sidebar/goals.ts';
 import type { ListedLevel, PanelContext } from './context.ts';
 import { drawFindList, rankCageGroupHtml } from './find-list.ts';
-import { layerTagHtml, levelPadHtml, NEAR, wrappable } from './plan-chips.ts';
+import { layerTagHtml, levelNameHtml, levelPadHtml, NEAR } from './plan-chips.ts';
 import { APPROX_TIP, whyText } from './why.ts';
 
 type ListGroup = ListedLevel['group'];
@@ -91,7 +91,7 @@ function rowHtml(context: PanelContext, levelIndex: number, tab: boolean): strin
     const title = escapeHtml(tip);
     const attributes = `id="pg-${levelIndex}" data-sel="${levelIndex}" tabindex="${tabIndex}" title="${title}"`;
     const dots = levelPadHtml(context.progress, levelIndex) + roleDot(role);
-    const name = `<span class="nm">${wrappable(level.n)}</span>`;
+    const name = `<span class="nm">${levelNameHtml(context.progress, levelIndex)}</span>`;
     const areaLine = `<span class="ar">${layerTag}${line}</span>`;
     return `<button class="${classes.join(' ')}" ${attributes}>${dots}${name}${areaLine}</button>`;
 }

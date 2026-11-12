@@ -589,6 +589,9 @@ With "No spoilers" on (the default), nothing under fog shows: no names, counts, 
 names. Fog is the game's own ([Fog of war](state.md#fog-of-war)), read from the save.
 
 - A level is hidden unless it is solved, the level the save is in, revealed by the viewer (a click on its fog chip, for the visit), or not under fog: its Level_Entry's fog region on its layer is cleared and it is outside every FILLED fog box. Without fog data only entered and solved levels count as uncovered.
+- A level's name is hidden unless the level is solved or revealed by a click, whether or not it is under fog. Where the
+  name would show, a click-to-reveal "Level" stands in; inside a sentence, a tooltip or a title it reads "a level". A
+  search still matches a hidden name; a hidden name is not sorted by, not in the page address and not in the level's wiki link.
 - A tower is hidden while not activated and its position is under fog. A tower status sign of a hidden tower is hidden.
 - An area is named only while its pin is activated (the game names an area only then). A level shows its area only while that area is shown. A Freezer is named by the area it stands in (by the box rule over activated pins), else by "near" the closest level not under fog.
 - Totals (Freezers, MAJOR pads, gold rooms, treasures, voice logs, map scrolls, signs) list only things not under fog, or already found (gold rooms only once visited). Per-layer splits ("Overworld a / b · High c / d") cover only the layers the fog has uncovered.

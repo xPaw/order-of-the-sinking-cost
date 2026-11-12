@@ -38,7 +38,8 @@ npx vp test --reporter=default
 - Endings use their Steam achievement names, each listed only once the one before it is earned. A gold room is known
   only once visited. Treasures are not a goal; their count sits in "Find on the map".
 - Every label is the game's own word (its localization strings) or the Steam achievement name, never an internal
-  entity, field or file name. Where the game has no word, use a plain descriptive one. Raw level ids are fine.
+  entity, field or file name. Where the game has no word, use a plain descriptive one. Raw level ids are fine, but
+  with No spoilers on, an unsolved level's id is hidden until it is clicked.
 - The default list is what is left for the goal. The goals ladder runs the three endings, towers, achievements, then
   Completionist; the first unfinished goal is active.
 - The map wraps like the game. The wheel zooms with easing, the trackpad pans and pinches. The closest zoom shows one

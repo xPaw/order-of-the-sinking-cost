@@ -49,7 +49,8 @@ function checkHidden(model: ProgressModel) {
     const { progress, levels } = model;
     const texts = goalTexts(model).join('\n');
     const words = new Set(texts.split(/[^\w]+/));
-    for (const [i, level] of levels.entries()) if (progress.hidden[i]) expect(words.has(level.n), level.n).toBe(false);
+    for (const [i, level] of levels.entries())
+        if (progress.nameHidden[i]) expect(words.has(level.n), level.n).toBe(false);
     for (const [ti, tower] of progress.towers.entries())
         if (progress.towerHidden[ti]) expect(texts).not.toContain(towerName(tower.t));
     for (const ending of model.endings) if (!ending.shown) expect(texts).not.toContain(achievementName(ending.name));

@@ -8,6 +8,7 @@ import { freezerNoun } from './freezer-names.ts';
 import { goalRoutes, roleFor } from './goal-roles.ts';
 import type { GoalRoles } from './goal-roles.ts';
 import type { AchievementGoal, AntipodeGoal, EndingGoal, GoalKind, StageGoal, TowerGoal } from './goals.ts';
+import { levelNameText } from './level-names.ts';
 import { roleOf } from './level-roles.ts';
 import { downKeyOf, levelGroup, orderNextSteps } from './next-steps.ts';
 import type { Plans } from './plans.ts';
@@ -205,8 +206,9 @@ function describe(context: GoalsContext, id: number, below: number): string | nu
 
         const belowNode = graph.node[below];
         const unlocked = belowNode?.t === 'l' && levels[node.id].req.includes(belowNode.id);
-        if (unlocked) return `unlocks ${levels[node.id].n}`;
-        return `opens the way to ${levels[node.id].n}`;
+        const name = levelNameText(progress.nameHidden, levels, node.id);
+        if (unlocked) return `unlocks ${name}`;
+        return `opens the way to ${name}`;
     }
 
     if (node.t === 'e') {
@@ -359,7 +361,10 @@ function goalOf(context: GoalsContext, level: number): string {
         const [kind, id] = required[0];
         let more = '';
         if (required.length > 1) more = ` +${required.length - 1}`;
-        if (kind === 'l') return `Required ${levels[id].n}${more}`;
+        if (kind === 'l') {
+            if (progress.nameHidden[id]) return `Required level${more}`;
+            return `Required ${levels[id].n}${more}`;
+        }
 
         const place = context.gatePlace(id);
         let placeNote = '';
@@ -502,7 +507,8 @@ function wayStageGoal(context: GoalsContext, raw: StageGoal): GoalView {
 function stageGoal(context: GoalsContext, raw: StageGoal): GoalView {
     if (raw.route !== undefined) return wayStageGoal(context, raw);
     if (raw.area !== undefined) return baseGoal(raw, areaName(PROG.areas[raw.area]), raw.parts ?? null, 'levels');
-    const goal = baseGoal(raw, context.levels[raw.level!].n, null, 'levels');
+    const { progress, levels } = context;
+    const goal = baseGoal(raw, levelNameText(progress.nameHidden, levels, raw.level!), null, 'levels');
     goal.level = raw.level;
     return goal;
 }

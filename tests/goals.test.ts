@@ -114,7 +114,7 @@ function setup({ rooms = 3, achievements = 0n, activated = [], visited = [] }: S
     const tst = PROG.teleporters.map(() => ({ en: true, disc: false }));
     for (const room of visited) tst[PROG.gold_rooms[room].endpoint].disc = true;
     const signOk = (sign: SignRule) => !!sign.gold && visited.length >= sign.gold;
-    const baseProgress: BaseProgress & { hidden: boolean[]; towerHidden: boolean[] } = {
+    const baseProgress: BaseProgress & { hidden: boolean[]; nameHidden: boolean[]; towerHidden: boolean[] } = {
         state,
         unlocks: state.map(() => ({ levels: [] })),
         wayIn,
@@ -142,6 +142,7 @@ function setup({ rooms = 3, achievements = 0n, activated = [], visited = [] }: S
         },
         solved: 0,
         hidden: state.map(() => false),
+        nameHidden: state.map(() => false),
         towerHidden: towers.map(() => false),
     };
     const status = { achievements };

@@ -76,10 +76,22 @@ export function levelPadHtml(progress: Pick<ShownProgress, 'state'>, levelIndex:
 // a fogged level's chip carries only its index; revealing it draws the chip again with the name
 const FOG_CHIP = 'Level under fog';
 
+// a level whose name is hidden is called by the plain word until the viewer clicks it
+const HIDDEN_NAME = 'Level';
+
 export const FOG_TEXT = '<span class="muted">A level under fog</span>';
 
+/** A level's name in a heading, a row or a link; a hidden name is a click-to-reveal word in its place. */
+export function levelNameHtml(progress: Pick<ShownProgress, 'nameHidden'>, levelIndex: number): string {
+    if (progress.nameHidden[levelIndex]) {
+        return `<span class="spoiler" data-pick="${levelIndex}" title="Click to reveal">${HIDDEN_NAME}</span>`;
+    }
+
+    return wrappable(PROG.levels[levelIndex].n);
+}
+
 export function levelChip(
-    progress: Pick<ShownProgress, 'hidden' | 'state' | 'reachKnown'>,
+    progress: Pick<ShownProgress, 'hidden' | 'nameHidden' | 'state' | 'reachKnown'>,
     levelIndex: number,
     attr = 'data-goto',
 ): string {
@@ -89,12 +101,18 @@ export function levelChip(
     }
 
     const levelState = progress.state[levelIndex];
-    const title = escapeHtml(stateLabel(progress, levelState));
-    const name = wrappable(PROG.levels[levelIndex].n);
     let className = 'chip';
     if (levelState === 'solved') className += ' done';
     if (levelState === 'unlocked' || levelState === 'visited' || levelState === 'partial') className += ' open';
-    return `<span class="${className}" ${target} title="${title}">${levelPadHtml(progress, levelIndex)}${name}</span>`;
+
+    const pad = levelPadHtml(progress, levelIndex);
+    if (progress.nameHidden[levelIndex]) {
+        return `<span class="${className} spoiler" ${target} title="Click to reveal">${pad}${HIDDEN_NAME}</span>`;
+    }
+
+    const title = escapeHtml(stateLabel(progress, levelState));
+    const name = wrappable(PROG.levels[levelIndex].n);
+    return `<span class="${className}" ${target} title="${title}">${pad}${name}</span>`;
 }
 
 export function towerNameHtml(context: PanelContext, towerIndex: number): string {
@@ -209,12 +227,12 @@ export function freezerIconHtml(freezerIndex: number): string {
 function gateChipPlace(context: PanelContext, freezerIndex: number): string {
     const heldLevel = context.iceLevel.get(freezerIndex);
     if (heldLevel !== undefined && !context.progress.hidden[heldLevel]) {
-        return ` · ${wrappable(context.levels[heldLevel].n)}`;
+        return ` · ${levelNameHtml(context.progress, heldLevel)}`;
     }
 
     const position = context.freezers[freezerIndex].p;
     const nearest = context.model.nearestShownLevel(position[0], position[1], mapLayerOf(position[2]));
-    if (nearest >= 0) return ` · near ${wrappable(context.levels[nearest].n)}`;
+    if (nearest >= 0) return ` · near ${levelNameHtml(context.progress, nearest)}`;
 
     return gatePlaceSuffix(context, freezerIndex);
 }

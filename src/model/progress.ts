@@ -108,8 +108,11 @@ export interface CampaignProgress extends BaseProgress {
     goals: LadderGoal[];
 }
 
-/** The progress with what the fog hides: per level and per tower. */
-export type ShownProgress = CampaignProgress & { hidden: boolean[]; towerHidden: boolean[] };
+/**
+ * The progress with what the fog hides: per level and per tower; and per level whether its name is hidden (with
+ * spoilers hidden, a level that is not solved and not revealed).
+ */
+export type ShownProgress = CampaignProgress & { hidden: boolean[]; nameHidden: boolean[]; towerHidden: boolean[] };
 
 /** The label of a level state; without a history an open level is only known to be not entered yet. */
 export const stateLabel = (progress: { reachKnown: boolean }, state: LevelState): string => {

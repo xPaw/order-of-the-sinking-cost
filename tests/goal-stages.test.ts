@@ -155,7 +155,7 @@ function setup({
     for (const levelIndex of solved) state[levelIndex] = 'solved';
 
     const signOk = (sign: SignRule) => sign.tower != null && towers[sign.tower].active;
-    const base: BaseProgress & { hidden: boolean[]; towerHidden: boolean[] } = {
+    const base: BaseProgress & { hidden: boolean[]; nameHidden: boolean[]; towerHidden: boolean[] } = {
         state,
         unlocks: state.map(() => ({ levels: [] })),
         wayIn: state.map(() => null),
@@ -182,6 +182,7 @@ function setup({
         },
         solved: 0,
         hidden: state.map(() => false),
+        nameHidden: state.map(() => false),
         towerHidden: towers.map(() => false),
     };
     let achievements = 0n;

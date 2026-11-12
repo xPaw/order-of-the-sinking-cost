@@ -1115,9 +1115,12 @@ summary {
     flex-wrap: wrap;
     gap: var(--s1);
 }
-.chip.spoiler {
+.spoiler {
     color: var(--muted);
     font-style: italic;
+    cursor: pointer;
+}
+.chip.spoiler {
     border-style: dashed;
 }
 main > .mapbox {

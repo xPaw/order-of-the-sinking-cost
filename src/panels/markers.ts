@@ -14,6 +14,7 @@ import type { FindKind } from '../model/find-kinds.ts';
 import { capitalized, freezerNoun, isDoorway } from '../model/freezer-names.ts';
 import { roleFor } from '../model/goal-roles.ts';
 import { FOG_LAYER_KEYS, layerName, mapLayerOf } from '../model/layers.ts';
+import { levelNameText } from '../model/level-names.ts';
 import { stateLabel } from '../model/progress.ts';
 import { towerName } from '../model/towers.ts';
 import { signStateOf } from '../model/unlocking.ts';
@@ -85,7 +86,7 @@ export function levelMarkers(context: PanelContext): MapMarker[] {
                     gate = `<br>In a ${freezerNoun(freezerIndex)} · ${openness}`;
                 }
 
-                const name = escapeHtml(level.n);
+                const name = escapeHtml(levelNameText(progress.nameHidden, context.levels, levelIndex));
                 const state = stateLabel(progress, progress.state[levelIndex]);
                 const role = roleTip(context, levelIndex);
                 return `<b>${name}</b><br>${state}${role}${tower}${achievement}${gate}`;
@@ -178,7 +179,8 @@ export function markerStyle(context: PanelContext, marker: MapMarker): MarkerSty
 
 function levelNameHtml(context: PanelContext, levelIndex: number): string {
     if (context.progress.hidden[levelIndex]) return FOG_TEXT;
-    return levelPadHtml(context.progress, levelIndex) + escapeHtml(context.levels[levelIndex].n);
+    const name = levelNameText(context.progress.nameHidden, context.levels, levelIndex);
+    return levelPadHtml(context.progress, levelIndex) + escapeHtml(name);
 }
 
 // overlays: Freezers, signs, MAJOR world pads, warp pads, gold rooms at their hub endpoints, voice logs, map scrolls, Area_Pins,

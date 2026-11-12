@@ -13,6 +13,7 @@ import { activePins, areaName, heroAreaAt, levelAreaOf } from './areas.ts';
 import { goalsView } from './goals-view.ts';
 import type { EndingStatus, GoalLevel, GoalView } from './goals-view.ts';
 import { FOG_LAYER_KEYS, mapLayerOf, wrapDelta } from './layers.ts';
+import { levelNameText } from './level-names.ts';
 import { computeProgress, progressCached } from './progress.ts';
 import type { ShownProgress } from './progress.ts';
 import { isEntered } from './unlocking.ts';
@@ -141,10 +142,13 @@ export function progressModel(camp: string): ProgressModel {
         return !isEntered(progress.state[i]);
     });
 
+    // a level's name tells its solution: it shows once the level is solved or the viewer revealed it
+    const nameHidden = levels.map((_level, i) => hide && !revealedLevels.has(i) && progress.state[i] !== 'solved');
+
     const towerHidden = progress.towers.map(
         (tower) => hide && !tower.active && fog.at(mapLayerOf(tower.p[2]), tower.p[0], tower.p[1], tower.p[2]),
     );
-    const shownProgress = Object.assign(progress, { hidden, towerHidden });
+    const shownProgress = Object.assign(progress, { hidden, nameHidden, towerHidden });
 
     // the game names an area only while its pin is activated; a level in an unnamed area (or outside every area box) shows none
     const areas = PROG.areas || [];
@@ -275,7 +279,7 @@ export function progressModel(camp: string): ProgressModel {
         const position = PROG.freezers[freezer].p;
         const nearest = nearestShownLevel(position[0], position[1], mapLayerOf(position[2]));
         if (nearest < 0) return '';
-        return `near ${levels[nearest].n}`;
+        return `near ${levelNameText(nameHidden, levels, nearest)}`;
     };
 
     const goalView = goalsView({

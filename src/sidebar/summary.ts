@@ -8,6 +8,7 @@ import { areaName } from '../model/areas.ts';
 import type { ProgressModel } from '../model/progress-model.ts';
 import { CHEVRON, areaEmblemHtml, heroIcon } from '../map/icons.ts';
 import type { DemoStatus, Status } from '../status-file.ts';
+import { levelNameHtml } from '../panels/plan-chips.ts';
 
 /** The solved levels out of the levels not under fog, as a percentage and a bar with the partially solved ones in it. */
 export function solvedHtml(model: ProgressModel): string {
@@ -78,7 +79,7 @@ function heroPadLevel(model: ProgressModel): number {
 
 export function inLevelHtml(status?: Status | DemoStatus | null, model?: ProgressModel | null): string {
     if (model?.inLevel != null) {
-        const name = escapeHtml(model.levels[model.inLevel].n);
+        const name = levelNameHtml(model.progress, model.inLevel);
         const attributes = 'id="inLevel" title="Show it on the map"';
         return `<button class="plain inlv" ${attributes}>${heroIcon}<span class="n">${name}</span></button>`;
     }
@@ -93,7 +94,7 @@ export function inLevelHtml(status?: Status | DemoStatus | null, model?: Progres
         }
 
         const padLevel = heroPadLevel(model);
-        if (padLevel >= 0) place = escapeHtml(model.levels[padLevel].n);
+        if (padLevel >= 0) place = levelNameHtml(model.progress, padLevel);
 
         const line = `${heroIcon}${emblem}<span class="n">${place}</span>`;
         if (!model.hero) return `<div class="inlv">${line}</div>`;

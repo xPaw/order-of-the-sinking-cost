@@ -9,7 +9,7 @@ import type { NeedsView } from '../model/route-needs.ts';
 import type { Position, RouteNeed } from '../types.ts';
 import { escapeHtml } from '../util.ts';
 import type { PanelContext } from './context.ts';
-import { signOn } from './plan-chips.ts';
+import { levelNameHtml, signOn } from './plan-chips.ts';
 
 const TABLE_FILE_URL = 'https://github.com/xPaw/order-of-the-sinking-cost/blob/main/scripts/lib/level-table.ts';
 
@@ -65,6 +65,7 @@ function chainWorld(context: PanelContext): ChainWorld {
 }
 
 function levelLink(context: PanelContext, levelIndex: number): string {
+    if (context.progress.nameHidden[levelIndex]) return levelNameHtml(context.progress, levelIndex);
     return `<button class="plain lnk" data-pick="${levelIndex}">${escapeHtml(context.levels[levelIndex].n)}</button>`;
 }
 

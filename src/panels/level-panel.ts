@@ -26,6 +26,7 @@ import {
     gateMode,
     gatePlaceSuffix,
     layerNote,
+    levelNameHtml,
     levelPadHtml,
     opensChips,
     panelHead,
@@ -37,7 +38,6 @@ import {
     signOn,
     stepsOf,
     uniqueLinks,
-    wrappable,
 } from './plan-chips.ts';
 import type { Chain } from './plan-chips.ts';
 import { fullChainSection, panelFootHtml, routeSection } from './route.ts';
@@ -375,7 +375,7 @@ export function showLevelPanel(context: PanelContext, levelIndex: number, how?: 
     let near = '';
     if (level.areaNear) near = NEAR;
     const place = areaPlaceHtml(context, context.areaOf(levelIndex), near);
-    let html = panelHead(context, levelPadHtml(progress, levelIndex), wrappable(level.n), place);
+    let html = panelHead(context, levelPadHtml(progress, levelIndex), levelNameHtml(progress, levelIndex), place);
     html += stateChipsHtml(context, levelIndex);
 
     const ice = context.iceOf[levelIndex];
@@ -407,7 +407,7 @@ export function showLevelPanel(context: PanelContext, levelIndex: number, how?: 
         ? fullChainSection(context, level.p[2], { level: levelIndex })
         : routeSection(context, level.p[2], { level: levelIndex });
     html += route.html;
-    html += panelFootHtml(wikiTacticsUrl(level.n));
+    if (!progress.nameHidden[levelIndex]) html += panelFootHtml(wikiTacticsUrl(level.n));
 
     const parts: LevelPanelParts = {
         levelIndex,

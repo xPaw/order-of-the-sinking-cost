@@ -29,15 +29,17 @@ import { findListShown, overlayActionText, sideFindHtml } from './sidebar/find.t
 import { findSectionOpen, isGoalOpen, setFindSectionOpen, setOpenGoal } from './sidebar/sections.ts';
 
 /**
- * A fogged level the viewer clicked open stays shown for the rest of the visit; everything naming it is drawn again.
+ * A fogged level or a level with a hidden name that the viewer clicked open stays shown for the rest of the visit;
+ * everything naming it is drawn again.
  */
 export function revealLevel(level: number): void {
     if (state.camp !== null) revealedOf(state.camp).add(level);
 
     const model = hooks.side;
-    if (!model || !model.progress.hidden[level]) return;
+    if (!model || !(model.progress.hidden[level] || model.progress.nameHidden[level])) return;
 
     model.progress.hidden[level] = false;
+    model.progress.nameHidden[level] = false;
     hooks.reveal?.();
     renderSide(model);
 }

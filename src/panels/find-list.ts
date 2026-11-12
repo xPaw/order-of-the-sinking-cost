@@ -10,6 +10,7 @@ import type { FindKind } from '../model/find-kinds.ts';
 import { areaName } from '../model/areas.ts';
 import { isDoorway } from '../model/freezer-names.ts';
 import { AREA_LAYERS, mapLayerOf } from '../model/layers.ts';
+import { levelNameText } from '../model/level-names.ts';
 import { rankCages } from '../model/rank-cages.ts';
 import { towerName } from '../model/towers.ts';
 import type { PanelContext } from './context.ts';
@@ -166,7 +167,8 @@ function rowHtml(context: PanelContext, item: FindItem, tab: boolean, note = '')
     if (item.nearLevel >= 0) {
         let separator = ' · ';
         if (!item.place) separator = '';
-        near = `<span class="muted">${separator}near ${escapeHtml(context.levels[item.nearLevel].n)}</span>`;
+        const nearName = levelNameText(context.progress.nameHidden, context.levels, item.nearLevel);
+        near = `<span class="muted">${separator}near ${escapeHtml(nearName)}</span>`;
     }
 
     let iconClass = '';
@@ -196,7 +198,7 @@ function signPlace(context: PanelContext, signIndex: number): string {
 
     const nearest = context.model.nearestShownLevel(position[0], position[1], mapLayerOf(position[2]));
     if (nearest < 0) return '';
-    return `near ${context.levels[nearest].n}`;
+    return `near ${levelNameText(context.progress.nameHidden, context.levels, nearest)}`;
 }
 
 // the kind of mark a cage is listed under
